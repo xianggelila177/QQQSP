@@ -3,7 +3,7 @@ from pathlib import Path
 import re, json, shutil, os
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[2]
-OUT=ROOT/'docs/evidence/v2.3';OUT.mkdir(parents=True,exist_ok=True)
+OUT=ROOT/'docs/evidence/v2.4';OUT.mkdir(parents=True,exist_ok=True)
 html=(ROOT/'public/index.html').read_text();html=re.sub(r'<script\b[^>]*>.*?</script>','',html,flags=re.S);html=re.sub(r'<link[^>]+>','',html);html=html.replace('</head>','<style>'+(ROOT/'public/style.css').read_text()+'</style></head>')
 report={'mode':'offline browser, real bundle; fixed data; native HTTP/SSE tested separately','cases':[]}
 with sync_playwright() as pw:

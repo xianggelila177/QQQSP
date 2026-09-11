@@ -1,11 +1,13 @@
 // Default: local search/route checks only. --live also exercises public quotes
 // and all historical periods; it never hides source failures or inserts fixtures.
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const expectedVersion=readFileSync(new URL('../VERSION',import.meta.url),'utf8').trim();
 const args=process.argv.slice(2),base=new URL(args.find(x=>/^https?:/.test(x))||'http://127.0.0.1:8568');
 const live=args.includes('--live'),selected=args.find(x=>/=F$|\.FUT$/.test(x))||'NQ00Y.FUT';
 async function read(route){const r=await fetch(new URL(route,base),{signal:AbortSignal.timeout(35000)});const j=await r.json();if(!r.ok)throw Error(route+' HTTP '+r.status+' '+(j.code||j.error||''));return j;}
 try{
- const ready=await read('/readyz');assert.equal(ready.ready,true);assert.equal(String(ready.version),'76','服务器不是本交付的资源版本76');
+ const ready=await read('/readyz');assert.equal(ready.ready,true);assert.equal(String(ready.version),expectedVersion,'服务器资源版本与本地交付包不一致');
  for(const q of ['NQ0W','NQW00:CME_EMINIS','纳指夜盘','NQ=F']){
   const results=await read('/api/search?q='+encodeURIComponent(q));assert.ok(results.some(x=>x.type==='FUTURE'),q+' 未返回期货');
   if(q==='NQ0W')assert.ok(results.some(x=>x.symbol==='NQ00Y.FUT'&&x.matchType==='related'));

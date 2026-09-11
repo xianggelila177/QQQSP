@@ -201,7 +201,7 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=76').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=77').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
         nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本'); });
       });
@@ -256,12 +256,12 @@
     const up = lastData.filter(d => d.change > 0).length, down = lastData.filter(d => d.change < 0).length;
     const sorted = [...lastData].filter(d => d.changePct != null).sort((a, b) => b.changePct - a.changePct);
     const best = sorted[0], worst = sorted[sorted.length - 1];
-    const pos = macroController.items().filter(n => n.sent === '利好').length, neg = macroController.items().filter(n => n.sent === '利空').length;
+    const focus=macroController.items().filter(n=>n.assessment?.importance==='focus'&&n.assessment.status!=='background').length;
     const parts = [];
     if (lastData.length) parts.push('自选 ' + up + '涨/' + down + '跌');
     if (best && best.changePct > 0) parts.push('领涨 ' + best.symbol + ' +' + best.changePct.toFixed(2) + '%');
     if (worst && worst.changePct < 0 && (!best || worst.symbol !== best.symbol)) parts.push('领跌 ' + worst.symbol + ' ' + worst.changePct.toFixed(2) + '%');
-    if (pos || neg) parts.push('宏观规则标签 利好' + pos + '/利空' + neg);
+    if(macroController.items().length)parts.push('宏观 '+focus+' 条重点证据 / '+macroController.items().length+' 条去重资讯（不汇总多空票数）');
     el.innerHTML = '<span class="dtag">市场概览</span>' + esc(parts.join(' · ') || '等待数据…');
   }
   // Foreground return always catches up, independently of the saved mode.
@@ -284,6 +284,7 @@
   refreshModeButton.addEventListener('click',()=>setRefreshMode(refreshMode==='continuous'?'economy':'continuous'));updateRefreshModeLabel();
   function tickClock() {
     chartController.tickStatus?.();
+    macroController.tick?.();
     const d8=new Date(Date.now()+8*3600e3); const p2=n=>String(n).padStart(2,'0');   // 强制 UTC+8
     $('clock').textContent=p2(d8.getUTCHours())+':'+p2(d8.getUTCMinutes())+':'+p2(d8.getUTCSeconds())+' UTC+8';
     updateRefreshModeLabel();

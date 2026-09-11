@@ -7,7 +7,8 @@ const temp=fs.mkdtempSync(path.join(os.tmpdir(),'qqqsp-assets-'));
 try {
  fs.cpSync('public',path.join(temp,'public'),{recursive:true});
  const first=buildStatic(temp);
- assert.equal(first.inputs,20);
+ assert.equal(first.inputs,21);
+ assert.ok(STATIC_INPUTS.indexOf('public/modules/panel-macro-context.js')<STATIC_INPUTS.indexOf('public/modules/panel-macro-controller.js'));
  for(const file of ['public/modules/panel-timeframes.js','public/modules/panel-history-store.js']){
   assert.ok(STATIC_INPUTS.includes(file),'history module must ship independently');
   assert.ok(STATIC_INPUTS.indexOf(file)<STATIC_INPUTS.indexOf('public/modules/panel-chart-controller.js'),'history dependencies precede consumers');

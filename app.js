@@ -25,13 +25,15 @@ import {createQuoteService} from './lib/quote.js';
 import {createQuoteCache,failCooldownMs} from './lib/quote-cache.js';
 import {createSnapshotService} from './lib/snapshot-service.js';
 import {createNewsService,NEWS_TTL,parseGoogleRss} from './lib/news.js';
+import {createMacroCalendar} from './lib/providers/macro-calendar.js';
+import {createMacroContext,macroIndexQuote} from './lib/macro-context.js';
 import {createMacroService} from './lib/macro.js';
 import {createSearchService,ALIAS,ALIAS_SYM,IDX_NAME} from './lib/search.js';
 import {classifyMarket} from './lib/instruments.js';
 import {calendarCoverageStatus,marketStateFor} from './mkt.mjs';
 import {createHttp} from './lib/http.js';
 import {createReferenceFx} from './lib/providers/reference-fx.js';
-import {createOfficialFeeds} from './lib/providers/official-feeds.js';
+import {createOfficialFeeds,MACRO_OFFICIAL_FEEDS} from './lib/providers/official-feeds.js';
 import {createFxService} from './lib/fx-service.js';
 import {createRecoveryStore} from './lib/recovery-store.js';
 import {createRedundancy} from './lib/redundancy.js';
@@ -68,8 +70,10 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
   const redundancyEnabled=env.PUBLIC_SOURCE_REDUNDANCY==='1';
   const referenceFx=redundancyEnabled?createReferenceFx({httpsGet,now}):null;
   const fx=referenceFx?createFxService({getPrimary:yahoo.getFxRates,primaryMetadata:yahoo.fxMetadata,getReference:referenceFx.getRates,canUsePrimary:()=>env.FX_MODE==='market'&&!breaker.state().blocked,referenceOnly:env.FX_MODE!=='market',now}):null;
-  const officialNews=redundancyEnabled?createOfficialFeeds({httpsGet,now,log:telemetry.log}):undefined;
-  const macro=createMacroService({httpsGet,yahooNews,googleNewsTopic:news.googleNewsTopic,officialNews,now,log:telemetry.log});
+  const officialNews=redundancyEnabled?createOfficialFeeds({httpsGet,now,log:telemetry.log,feeds:MACRO_OFFICIAL_FEEDS}):undefined;
+  const macroCalendar=createMacroCalendar({httpsGet,key:config.TE_API_KEY,now});
+  const macroContext=createMacroContext({now,readQuote:providerOverrides.macroQuote||(async symbol=>isFutureSymbol(symbol)?futures.getQuote(symbol):macroIndexQuote(await yahoo.fetchChart(symbol,'?interval=5m&range=1d'),symbol,now()))});
+  const macro=createMacroService({httpsGet,yahooNews,googleNewsTopic:news.googleNewsTopic,officialNews,allowYahooFallback:false,now,log:telemetry.log});
   const providerFns={...yahoo,...tx,...nasdaq,...fx,...providerOverrides};
   let quote;
   const providers=Object.freeze({...providerFns,cnSnapshot:(...args)=>quote.cnSnapshot(...args)});
@@ -95,14 +99,14 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
   engine=createQuoteEngine({readQuote:readSourceQuote,now,onMembership:list=>{snapshots?.retain(list.filter(s=>!isFutureSymbol(s)));realtimeProvider?.retain?.(list.filter(s=>!isFutureSymbol(s)));}});
   realtimeProvider?.subscribe?.(symbol=>engine.poke(symbol));
   const getCachedQuote=symbol=>engine.read([symbol])[0];
-  function cacheSizes(){return {futures:futures.diagnostics(),hosts:gate.diagnostics(),engine:engine.diagnostics(),quote:quote.cacheMap.size,slow:slowMap.size,news:news.newsCache.size,search:search.searchCache.size,sina:sina.sinaCache.size,macro:macro.macroCache.size,cnSnap:quote.cnSnapCache.size,activeSyms:news.activeSyms.size,static:httpLayer.staticCache.size,failAt:quote.failAt.size,sinaFailAt:sina.sinaFailAt.size,yahoo429Ms:Math.max(0,breaker.state().until-now()),usSnap:tx.usSnapCache.size,realtime:snapshots?.diagnostics(),alpaca:realtime?.diagnostics(),redundancy:redundancy?.diagnostics(),referenceFx:referenceFx?.diagnostics(),officialNews:officialNews?.diagnostics(),calendar:calendarCoverageStatus(now())};}
-  const httpLayer=createHttp({getCachedQuote,getMacro:macro.getMacro,cacheSizes,requestNews:news.requestNews,activateNews:news.activateNews,yahooSearch:search.yahooSearch,tencentSuggest:search.tencentSuggest,koreanSearch,futuresSearch:futures.search,classifyMarket,ALIAS,ALIAS_SYM,IDX_NAME,cacheMs,upstreamTimeout,history,engine,sourceHealth:()=>({polling:polling.diagnostics(),hosts:gate.diagnostics(),stream:realtime?.diagnostics()||{enabled:false,status:'website-polling'}})},{env,telemetry,now,monitorCore:false});
+  function cacheSizes(){return {macroContext:macroContext.snapshot(),futures:futures.diagnostics(),hosts:gate.diagnostics(),engine:engine.diagnostics(),quote:quote.cacheMap.size,slow:slowMap.size,news:news.newsCache.size,search:search.searchCache.size,sina:sina.sinaCache.size,macro:macro.macroCache.size,cnSnap:quote.cnSnapCache.size,activeSyms:news.activeSyms.size,static:httpLayer.staticCache.size,failAt:quote.failAt.size,sinaFailAt:sina.sinaFailAt.size,yahoo429Ms:Math.max(0,breaker.state().until-now()),usSnap:tx.usSnapCache.size,realtime:snapshots?.diagnostics(),alpaca:realtime?.diagnostics(),redundancy:redundancy?.diagnostics(),referenceFx:referenceFx?.diagnostics(),officialNews:officialNews?.diagnostics(),calendar:calendarCoverageStatus(now())};}
+  const httpLayer=createHttp({getCachedQuote,getMacro:macro.getMacro,getMacroContext:()=>({...macroContext.requestContext(),calendar:macroCalendar.requestCalendar()}),cacheSizes,requestNews:news.requestNews,activateNews:news.activateNews,yahooSearch:search.yahooSearch,tencentSuggest:search.tencentSuggest,koreanSearch,futuresSearch:futures.search,classifyMarket,ALIAS,ALIAS_SYM,IDX_NAME,cacheMs,upstreamTimeout,history,engine,sourceHealth:()=>({polling:polling.diagnostics(),hosts:gate.diagnostics(),stream:realtime?.diagnostics()||{enabled:false,status:'website-polling'}})},{env,telemetry,now,monitorCore:false});
   let started=false,reporterTimer=null,stopping=null;
-  function start(){if(stopping)throw new Error('Application stop in progress');if(started)return httpLayer.httpServer;accepting=true;transport.reopen?.();yahoo.reopen();auth.reopen();history.reopen();futures.reopen();quoteCache.reopen();for(const service of [tx,nasdaq,sina,quote])service.reopen();started=true;news.startNews();redundancy?.start();snapshots?.start();realtime?.start();engine.start();httpLayer.startListen();telemetry.log.info('[topology]',{mode:'single-user',delivery:'sse',snapshots:!!snapshots,alpaca:!!alpaca,finnhub:!!finnhub,fx:config.FX_MODE,recovery:!!recovery});reporterTimer=telemetry.startStatsReporter(cacheSizes);return httpLayer.httpServer;}
+  function start(){if(stopping)throw new Error('Application stop in progress');if(started)return httpLayer.httpServer;accepting=true;transport.reopen?.();yahoo.reopen();auth.reopen();history.reopen();futures.reopen();macroContext.reopen();macroCalendar.reopen();quoteCache.reopen();for(const service of [tx,nasdaq,sina,quote])service.reopen();started=true;news.startNews();redundancy?.start();snapshots?.start();realtime?.start();engine.start();httpLayer.startListen();telemetry.log.info('[topology]',{mode:'single-user',delivery:'sse',snapshots:!!snapshots,alpaca:!!alpaca,finnhub:!!finnhub,fx:config.FX_MODE,recovery:!!recovery});reporterTimer=telemetry.startStatsReporter(cacheSizes);return httpLayer.httpServer;}
   function stop(){
     if(stopping)return stopping;
     const wasStarted=started;started=false;accepting=false;
-    engine.stop();news.stopNews();realtime?.stop();snapshots?.stop();auth.close();history.close();futures.close();quoteCache.close();for(const service of [tx,nasdaq,sina,quote])service.close();
+    engine.stop();news.stopNews();realtime?.stop();snapshots?.stop();auth.close();history.close();futures.close();macroContext.close();macroCalendar.close();quoteCache.close();for(const service of [tx,nasdaq,sina,quote])service.close();
     clearInterval(reporterTimer);reporterTimer=null;
     // Reject/cancel upstream work before waiting for HTTP handlers to finish.
     const gatewayClosed=yahoo.close(),transportClosed=transport.close();
@@ -110,8 +114,8 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
     return stopping;
   }
 
-  function resetState(){yahoo.resetYahooState();tx.resetTxState();macro.resetMacro();sina.resetSina();auth.reset();breaker.reset();for(const map of [quote.cacheMap,quote.inflight,quoteCache.fallbackInflight,quote.failAt,slowMap,news.newsCache,search.searchCache,quote.cnSnapCache,news.activeSyms,tx.usSnapCache])map.clear();}
-  const services={futures,engine,gate,transport,yahoo,history,auth,breaker,quote,quoteCache,news,macro,search,tx,nasdaq,sina,em,batch,polling,snapshots,fx,referenceFx,officialNews,recovery,redundancy,realtime,http:httpLayer};
+  function resetState(){yahoo.resetYahooState();tx.resetTxState();macro.resetMacro();macroContext.clear();macroCalendar.clear();sina.resetSina();auth.reset();breaker.reset();for(const map of [quote.cacheMap,quote.inflight,quoteCache.fallbackInflight,quote.failAt,slowMap,news.newsCache,search.searchCache,quote.cnSnapCache,news.activeSyms,tx.usSnapCache])map.clear();}
+  const services={macroCalendar,macroContext,futures,engine,gate,transport,yahoo,history,auth,breaker,quote,quoteCache,news,macro,search,tx,nasdaq,sina,em,batch,polling,snapshots,fx,referenceFx,officialNews,recovery,redundancy,realtime,http:httpLayer};
   const test={rawHttpsGet:transport.rawHttpsGet,activeSyms:news.activeSyms,newsCache:news.newsCache,UA,txParseLine,TX_FIELDS,decodeGbkSmart,resetState,seedCrumb:auth.seed,
     yahoo429:{state:()=>({...breaker.state(),crumbFailUntil:auth.state().crumbFailUntil}),expire:()=>{breaker.expire();auth.resetFailure();quote.failAt.clear();},backoffMs:failCooldownMs}};
   return {start,stop,httpServer:httpLayer.httpServer,services,telemetry,cacheSizes,getCachedQuote,__test:test};

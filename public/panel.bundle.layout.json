@@ -45,62 +45,67 @@
     {
       "path": "public/modules/panel-state.js",
       "startOffset": 27480,
-      "endOffset": 35202
+      "endOffset": 35200
     },
     {
       "path": "public/modules/panel-utils.js",
-      "startOffset": 35243,
-      "endOffset": 35903
+      "startOffset": 35241,
+      "endOffset": 35901
     },
     {
       "path": "public/modules/panel-format.js",
-      "startOffset": 35945,
-      "endOffset": 38481
+      "startOffset": 35943,
+      "endOffset": 38479
     },
     {
       "path": "public/modules/panel-chart-controller.js",
-      "startOffset": 38533,
-      "endOffset": 60432
+      "startOffset": 38531,
+      "endOffset": 60430
     },
     {
       "path": "public/modules/panel-card-view.js",
-      "startOffset": 60477,
-      "endOffset": 82745
+      "startOffset": 60475,
+      "endOffset": 82743
     },
     {
       "path": "public/modules/panel-search-controller.js",
-      "startOffset": 82798,
-      "endOffset": 88181
+      "startOffset": 82796,
+      "endOffset": 88179
     },
     {
       "path": "public/modules/panel-market-directory.js",
-      "startOffset": 88233,
-      "endOffset": 94206
+      "startOffset": 88231,
+      "endOffset": 94204
     },
     {
       "path": "public/modules/panel-news-controller.js",
-      "startOffset": 94257,
-      "endOffset": 99140
+      "startOffset": 94255,
+      "endOffset": 99138
+    },
+    {
+      "path": "public/modules/panel-macro-context.js",
+      "startOffset": 99187,
+      "endOffset": 103579
     },
     {
       "path": "public/modules/panel-macro-controller.js",
-      "startOffset": 99192,
-      "endOffset": 104701
+      "startOffset": 103631,
+      "endOffset": 110648
     },
     {
       "path": "public/modules/panel-market-store.js",
-      "startOffset": 104749,
-      "endOffset": 107461
+      "startOffset": 110696,
+      "endOffset": 113408
     },
     {
       "path": "public/modules/panel-live-store.js",
-      "startOffset": 107507,
-      "endOffset": 110463
+      "startOffset": 113454,
+      "endOffset": 116410
     },
     {
       "path": "public/app.js",
-      "startOffset": 110488,
-      "endOffset": 135135
+      "startOffset": 116435,
+      "endOffset": 141157
     }
   ]
 }

@@ -8,10 +8,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>全球自选行情 · QQQ / SPY ETF</title>
 <!-- 资源版本源: panel/VERSION · 由 build_version.sh 统一注入 ?v=(P1-Q5) -->
-<link rel="manifest" href="/manifest.webmanifest?v=76">
-<link rel="icon" href="/icon.svg?v=76" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/icon.svg?v=76">
-<link rel="stylesheet" href="/style.css?v=76">
+<link rel="manifest" href="/manifest.webmanifest?v=77">
+<link rel="icon" href="/icon.svg?v=77" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg?v=77">
+<link rel="stylesheet" href="/style.css?v=77">
 </head>
 <body>
   <header class="topbar">
@@ -33,12 +33,25 @@
     <div id="sresults" class="sresults" role="listbox" hidden></div>
   </div>
 
-  <details id="marketDirectory" class="market-directory">
-    <summary>浏览全球市场 <span>富时100 · 股票 · ETF · 指数</span></summary>
-    <div class="directory-body">
-      <p id="marketDirectoryStatus" class="directory-status" role="status">展开目录，浏览各市场代表标的</p>
-      <button id="marketDirectoryRetry" type="button" hidden>重试加载市场目录</button>
-      <div id="marketDirectoryContent"></div>
+  <details class="macrobox">
+    <summary class="macrohead"><span class="mtitle">宏观资讯</span><span class="macrohint">原油 · 通胀 · 利率 · 纳指 | 展开核对证据</span></summary>
+    <div class="macrobody">
+      <p class="macro-intro">先看证据，再看影响。标签针对具体资产，属于本地条件推断，不是交易所评级、胜率或买卖信号。</p>
+      <div id="macroContextStatus" class="context-status" role="status">展开后读取国际油价与跨资产观察</div>
+      <div id="macroFactors" class="macro-factors"></div>
+      <p id="macroObservation" class="macro-observation">同窗比较需要约15分钟的有效采样；价格反向变化不证明资金转移。</p>
+      <details class="macro-method"><summary>查看方法边界与原始信息入口</summary><p>使用来源成交时间，区分WTI、布伦特和纳指连续序列；不混用昨收涨幅。美债指标保留来源数值，不猜测倍数或换算基点。读取摘要不等于阅读全文；没有同口径实际值和发布前预期时保留“待验证”。</p><div class="macro-links">
+        <a href="https://www.bls.gov/cpi/" target="_blank" rel="noopener noreferrer">美国官方CPI</a>
+        <a href="https://www.bls.gov/schedule/news_release/cpi.htm" target="_blank" rel="noopener noreferrer">CPI发布时间</a>
+        <a href="https://www.eia.gov/petroleum/supply/weekly/" target="_blank" rel="noopener noreferrer">EIA库存与供需</a>
+        <a href="https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html" target="_blank" rel="noopener noreferrer">CME利率预期</a>
+        <a href="https://finance.yahoo.com/calendar/economic/" target="_blank" rel="noopener noreferrer">Yahoo财经日历</a>
+      </div></details>
+      <div id="macroCalendar" class="macro-calendar"></div>
+      <div class="macro-status"><span id="macroStatus" role="status">正在获取宏观资讯…</span><button id="macroRetry" type="button" hidden>重试</button></div>
+      <div class="mfilters" id="mfilters"></div>
+      <div class="digest" id="digest"></div>
+      <div class="macrolist" id="macrolist"><div class="newsempty">加载中…</div></div>
     </div>
   </details>
 
@@ -48,13 +61,12 @@
 
   <main id="panels"></main>
 
-  <details class="macrobox">
-    <summary class="macrohead"><span class="mtitle">宏观资讯</span><span class="macrohint">市场动态与标题规则参考</span></summary>
-    <div class="macrobody">
-      <div class="macro-status"><span id="macroStatus" role="status">正在获取宏观资讯…</span><button id="macroRetry" type="button" hidden>重试</button></div>
-      <div class="mfilters" id="mfilters"></div>
-      <div class="digest" id="digest"></div>
-      <div class="macrolist" id="macrolist"><div class="newsempty">加载中…</div></div>
+  <details id="marketDirectory" class="market-directory">
+    <summary>浏览全球市场 <span>富时100 · 股票 · ETF · 指数</span></summary>
+    <div class="directory-body">
+      <p id="marketDirectoryStatus" class="directory-status" role="status">展开目录，浏览各市场代表标的</p>
+      <button id="marketDirectoryRetry" type="button" hidden>重试加载市场目录</button>
+      <div id="marketDirectoryContent"></div>
     </div>
   </details>
 
@@ -62,9 +74,9 @@
     <summary>数据源状态 <span>查看限流冷却与行情流连接</span></summary>
     <div class="directory-body"><p>连接状态不代表每秒产生新成交；报价年龄只按真实成交时间计算。</p><button id="sourceHealthRefresh" type="button">检查状态</button><pre id="sourceHealthContent" role="status">展开后读取，不在后台轮询。</pre></div>
   </details>
-  <p class="note">推送优先 · 断流后缓存读取兜底 · 时间均为 UTC+8 · 数据来源 Alpaca / Finnhub（可选）/ Naver / Yahoo / Nasdaq / 腾讯 / 东方财富 / 新浪 / Google News · 规则标签可能误判，仅供展示</p>
+  <p class="note">推送优先 · 断流后缓存读取兜底 · 时间均为 UTC+8 · 数据来源 Alpaca / Finnhub（可选）/ Naver / Yahoo / Nasdaq / 腾讯 / 东方财富 / 新浪 / Google News · 宏观影响为证据条件推断，非投资建议；个股新闻保留标题情绪参考</p>
 
-  <script src="/panel.bundle.js?v=76" defer></script>
+  <script src="/panel.bundle.js?v=77" defer></script>
   <script>document.addEventListener("DOMContentLoaded",function(){var p=document.getElementById("panels"),s=document.getElementById("layoutPreference");if(!p||!s)return;var k="qqqsp:layout:v1",v="auto";try{v=localStorage.getItem(k)||v}catch(e){}if(!["auto","2","3","4"].includes(v))v="auto";s.value=v;p.dataset.layout=v;s.addEventListener("change",function(){var x=["auto","2","3","4"].includes(s.value)?s.value:"auto";p.dataset.layout=x;try{localStorage.setItem(k,x)}catch(e){}})});</script>
 </body>
 </html>

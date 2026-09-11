@@ -6,7 +6,7 @@ from pathlib import Path
 import json, os, re, shutil, subprocess, threading, queue, urllib.request, urllib.error, time, sys
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[2]
-OUT=ROOT/'docs/evidence/v2.3';OUT.mkdir(parents=True,exist_ok=True)
+OUT=ROOT/'docs/evidence/v2.4';OUT.mkdir(parents=True,exist_ok=True)
 process=subprocess.Popen([os.environ.get('NODE_BIN','node'),str(ROOT/'tests/v2/futures-browser-server.mjs')],cwd=ROOT,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,text=True)
 first=json.loads(process.stdout.readline());origin='http://127.0.0.1:'+str(first['port'])
 requests=[];streams={};next_id=0

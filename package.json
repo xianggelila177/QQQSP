@@ -1,6 +1,6 @@
 {
   "name": "qqqsp-v2",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "private": true,
   "type": "module",
   "description": "单用户、零依赖的多市场行情面板",
@@ -17,6 +17,7 @@
     "build": "node scripts/build.mjs",
     "verify": "npm run check && npm test",
     "test:charts": "python3 tests/v2/chart_browser_check.py",
-    "test:futures-browser": "python3 tests/v2/futures_browser_check.py"
+    "test:futures-browser": "python3 tests/v2/futures_browser_check.py",
+    "test:macro-browser": "python3 tests/v2/macro_browser_check.py"
   }
 }

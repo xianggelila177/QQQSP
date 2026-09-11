@@ -19,8 +19,8 @@ const service=createMacroService({
 const data=await service.getMacro();
 assert.deepEqual(data.items,[]);
 assert.equal(Array.isArray(data.topics),true);
-assert.deepEqual(topics,['treasury','oil','fed','gold']);
-assert.equal(yahooCalls,4);
+assert.deepEqual(topics,['inflation','treasury','oil','fed','gold']);
+assert.equal(yahooCalls,5);
 assert.equal(flashCalls,1);
 assert.equal(data.stale,false);
 assert.equal(data.error,undefined);

@@ -48,7 +48,7 @@ async function main() {
     const r = await svc.getNews();
     check('三条固定 URL 各请求一次', () => assert.deepEqual(get.calls.sort(), Object.values(URLS).sort()));
     check('返回 items/sources/updatedAt/stale', () => { assert.ok(Array.isArray(r.items)); assert.equal(r.sources.length, 3); assert.equal(typeof r.updatedAt, 'number'); assert.equal(r.stale, false); });
-    check('每项只含规定字段并标记官方公告', () => { const allowed = new Set(['title', 'source', 'pubDate', 'link', 'topic', 'official']); assert.ok(r.items.length >= 2); for (const x of r.items) { assert.deepEqual(Object.keys(x).sort(), [...allowed].sort()); assert.equal(x.topic, '官方公告'); assert.equal(x.official, true); assert.ok(x.source); } });
+    check('每项只含规定字段并标记官方公告', () => { const allowed = new Set(['title', 'source', 'pubDate', 'link', 'topic', 'official', 'sourceText']); assert.ok(r.items.length >= 2); for (const x of r.items) { assert.deepEqual(Object.keys(x).sort(), [...allowed].sort()); assert.equal(x.topic, '官方公告'); assert.equal(x.official, true); assert.ok(x.source); } });
   }
 
   console.log('[T2] CDATA/实体、BEA item 属性、链接白名单');

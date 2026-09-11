@@ -31,7 +31,7 @@
     return {stale:!!reason,reason,quoteAt,checkedAt,cadence,checkBudgetMs,quoteBudgetMs};
   }
   function pollingPolicy(data, {mode='economy',hidden=false,now=Date.now()}={}) {
-    if(mode==='continuous')return {marketMs:2000,newsMs:60000,macroMs:120000};
+    if(mode==='continuous')return {marketMs:2000,newsMs:60000,macroMs:60000};
     // Unknown/pending symbols keep the fast initial acquisition cadence. A
     // closed instrument never slows another instrument that is still trading.
     const acquiring=data.some(d=>!d||d.pending);
@@ -40,7 +40,7 @@
     let marketMs=acquiring?2000:allClosed?Math.min(120000,Math.max(hidden?120000:60000,cadence)):hidden?15000:2000;
     const transitions=data.map(d=>timestampMs(d?.nextMarketTransitionAt)).filter(at=>at!=null&&at>=now-120000);
     if(transitions.length)marketMs=Math.min(marketMs,Math.max(2000,Math.min(...transitions)-now+500));
-    return {marketMs,newsMs:hidden?120000:60000,macroMs:hidden?240000:120000};
+    return {marketMs,newsMs:hidden?120000:60000,macroMs:hidden?240000:60000};
   }
   function scrollToCard(element, options = {}) {
     element?.scrollIntoView?.({...options,behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});

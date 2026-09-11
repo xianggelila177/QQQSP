@@ -20,6 +20,7 @@ export const STATIC_INPUTS=Object.freeze([
   'public/modules/panel-search-controller.js',
   'public/modules/panel-market-directory.js',
   'public/modules/panel-news-controller.js',
+  'public/modules/panel-macro-context.js',
   'public/modules/panel-macro-controller.js',
   'public/modules/panel-market-store.js',
   'public/modules/panel-live-store.js',
