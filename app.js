@@ -1,3 +1,5 @@
+import {createFuturesProvider} from './lib/providers/futures.js';
+import {isFutureSymbol} from './lib/futures-instruments.js';
 // Composition root. Every application owns its transport, queues, caches,
 // breaker and background lifecycle; construction does not start network work.
 import {createTelemetry,createLogger} from './log.mjs';
@@ -59,6 +61,7 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
   const naverHistory=createNaverHistory({httpsGet,now});
   const fetchHistory=createHistorySource({primary:providerOverrides.fetchChart || yahoo.fetchChart,sina:sina.getSinaDaily,naver:providerOverrides.fetchChart?null:naverHistory,alternative:providerOverrides.fetchChart?null:createPublicHistory({httpsGet,now}),now});
   const history=createHistoryService({fetchChart:fetchHistory,now,cacheTtl:60000,maxConcurrent:2,deadlineMs:25000});
+  const futures=createFuturesProvider({httpsGet,fetchChart:providerOverrides.fetchChart||yahoo.fetchChart,now});
   const koreanSearch=createKoreanSearch({httpsGet,now});
   const search=createSearchService({httpsGet,now,yGated:yahoo.yGated});
   const news=createNewsService({httpsGet,yahooNews,eastmoneyNews:em.eastmoneyNews,now,log:telemetry.log,ttl:config.NEWS_TTL,failureCooldown:config.NEWS_FAILURE_COOLDOWN,maxEntries:config.NEWS_MAX_ENTRIES,maxActive:config.NEWS_MAX_ACTIVE});
@@ -88,18 +91,18 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
   realtimeProvider=alpaca&&finnhub?createStreamPair(alpaca,finnhub):alpaca||finnhub;
   const realtime=realtimeProvider?createRealtimeQuoteService({provider:realtimeProvider,fallback:selectedGetQuote,now}):null;
   const servingGetQuote=realtime?realtime.getCachedQuote:selectedGetQuote;
-  const readSourceQuote=(...args)=>accepting?servingGetQuote(...args):Promise.reject(Object.assign(new Error('Application stopped'),{code:'STOPPED'}));
-  engine=createQuoteEngine({readQuote:readSourceQuote,now,onMembership:list=>{snapshots?.retain(list);realtimeProvider?.retain?.(list);}});
+  const readSourceQuote=(...args)=>accepting?(isFutureSymbol(args[0])?futures.getQuote(args[0]):servingGetQuote(...args)):Promise.reject(Object.assign(new Error('Application stopped'),{code:'STOPPED'}));
+  engine=createQuoteEngine({readQuote:readSourceQuote,now,onMembership:list=>{snapshots?.retain(list.filter(s=>!isFutureSymbol(s)));realtimeProvider?.retain?.(list.filter(s=>!isFutureSymbol(s)));}});
   realtimeProvider?.subscribe?.(symbol=>engine.poke(symbol));
   const getCachedQuote=symbol=>engine.read([symbol])[0];
-  function cacheSizes(){return {hosts:gate.diagnostics(),engine:engine.diagnostics(),quote:quote.cacheMap.size,slow:slowMap.size,news:news.newsCache.size,search:search.searchCache.size,sina:sina.sinaCache.size,macro:macro.macroCache.size,cnSnap:quote.cnSnapCache.size,activeSyms:news.activeSyms.size,static:httpLayer.staticCache.size,failAt:quote.failAt.size,sinaFailAt:sina.sinaFailAt.size,yahoo429Ms:Math.max(0,breaker.state().until-now()),usSnap:tx.usSnapCache.size,realtime:snapshots?.diagnostics(),alpaca:realtime?.diagnostics(),redundancy:redundancy?.diagnostics(),referenceFx:referenceFx?.diagnostics(),officialNews:officialNews?.diagnostics(),calendar:calendarCoverageStatus(now())};}
-  const httpLayer=createHttp({getCachedQuote,getMacro:macro.getMacro,cacheSizes,requestNews:news.requestNews,activateNews:news.activateNews,yahooSearch:search.yahooSearch,tencentSuggest:search.tencentSuggest,koreanSearch,classifyMarket,ALIAS,ALIAS_SYM,IDX_NAME,cacheMs,upstreamTimeout,history,engine,sourceHealth:()=>({polling:polling.diagnostics(),hosts:gate.diagnostics(),stream:realtime?.diagnostics()||{enabled:false,status:'website-polling'}})},{env,telemetry,now,monitorCore:false});
+  function cacheSizes(){return {futures:futures.diagnostics(),hosts:gate.diagnostics(),engine:engine.diagnostics(),quote:quote.cacheMap.size,slow:slowMap.size,news:news.newsCache.size,search:search.searchCache.size,sina:sina.sinaCache.size,macro:macro.macroCache.size,cnSnap:quote.cnSnapCache.size,activeSyms:news.activeSyms.size,static:httpLayer.staticCache.size,failAt:quote.failAt.size,sinaFailAt:sina.sinaFailAt.size,yahoo429Ms:Math.max(0,breaker.state().until-now()),usSnap:tx.usSnapCache.size,realtime:snapshots?.diagnostics(),alpaca:realtime?.diagnostics(),redundancy:redundancy?.diagnostics(),referenceFx:referenceFx?.diagnostics(),officialNews:officialNews?.diagnostics(),calendar:calendarCoverageStatus(now())};}
+  const httpLayer=createHttp({getCachedQuote,getMacro:macro.getMacro,cacheSizes,requestNews:news.requestNews,activateNews:news.activateNews,yahooSearch:search.yahooSearch,tencentSuggest:search.tencentSuggest,koreanSearch,futuresSearch:futures.search,classifyMarket,ALIAS,ALIAS_SYM,IDX_NAME,cacheMs,upstreamTimeout,history,engine,sourceHealth:()=>({polling:polling.diagnostics(),hosts:gate.diagnostics(),stream:realtime?.diagnostics()||{enabled:false,status:'website-polling'}})},{env,telemetry,now,monitorCore:false});
   let started=false,reporterTimer=null,stopping=null;
-  function start(){if(stopping)throw new Error('Application stop in progress');if(started)return httpLayer.httpServer;accepting=true;transport.reopen?.();yahoo.reopen();auth.reopen();history.reopen();quoteCache.reopen();for(const service of [tx,nasdaq,sina,quote])service.reopen();started=true;news.startNews();redundancy?.start();snapshots?.start();realtime?.start();engine.start();httpLayer.startListen();telemetry.log.info('[topology]',{mode:'single-user',delivery:'sse',snapshots:!!snapshots,alpaca:!!alpaca,finnhub:!!finnhub,fx:config.FX_MODE,recovery:!!recovery});reporterTimer=telemetry.startStatsReporter(cacheSizes);return httpLayer.httpServer;}
+  function start(){if(stopping)throw new Error('Application stop in progress');if(started)return httpLayer.httpServer;accepting=true;transport.reopen?.();yahoo.reopen();auth.reopen();history.reopen();futures.reopen();quoteCache.reopen();for(const service of [tx,nasdaq,sina,quote])service.reopen();started=true;news.startNews();redundancy?.start();snapshots?.start();realtime?.start();engine.start();httpLayer.startListen();telemetry.log.info('[topology]',{mode:'single-user',delivery:'sse',snapshots:!!snapshots,alpaca:!!alpaca,finnhub:!!finnhub,fx:config.FX_MODE,recovery:!!recovery});reporterTimer=telemetry.startStatsReporter(cacheSizes);return httpLayer.httpServer;}
   function stop(){
     if(stopping)return stopping;
     const wasStarted=started;started=false;accepting=false;
-    engine.stop();news.stopNews();realtime?.stop();snapshots?.stop();auth.close();history.close();quoteCache.close();for(const service of [tx,nasdaq,sina,quote])service.close();
+    engine.stop();news.stopNews();realtime?.stop();snapshots?.stop();auth.close();history.close();futures.close();quoteCache.close();for(const service of [tx,nasdaq,sina,quote])service.close();
     clearInterval(reporterTimer);reporterTimer=null;
     // Reject/cancel upstream work before waiting for HTTP handlers to finish.
     const gatewayClosed=yahoo.close(),transportClosed=transport.close();
@@ -108,7 +111,7 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
   }
 
   function resetState(){yahoo.resetYahooState();tx.resetTxState();macro.resetMacro();sina.resetSina();auth.reset();breaker.reset();for(const map of [quote.cacheMap,quote.inflight,quoteCache.fallbackInflight,quote.failAt,slowMap,news.newsCache,search.searchCache,quote.cnSnapCache,news.activeSyms,tx.usSnapCache])map.clear();}
-  const services={engine,gate,transport,yahoo,history,auth,breaker,quote,quoteCache,news,macro,search,tx,nasdaq,sina,em,batch,polling,snapshots,fx,referenceFx,officialNews,recovery,redundancy,realtime,http:httpLayer};
+  const services={futures,engine,gate,transport,yahoo,history,auth,breaker,quote,quoteCache,news,macro,search,tx,nasdaq,sina,em,batch,polling,snapshots,fx,referenceFx,officialNews,recovery,redundancy,realtime,http:httpLayer};
   const test={rawHttpsGet:transport.rawHttpsGet,activeSyms:news.activeSyms,newsCache:news.newsCache,UA,txParseLine,TX_FIELDS,decodeGbkSmart,resetState,seedCrumb:auth.seed,
     yahoo429:{state:()=>({...breaker.state(),crumbFailUntil:auth.state().crumbFailUntil}),expire:()=>{breaker.expire();auth.resetFailure();quote.failAt.clear();},backoffMs:failCooldownMs}};
   return {start,stop,httpServer:httpLayer.httpServer,services,telemetry,cacheSizes,getCachedQuote,__test:test};

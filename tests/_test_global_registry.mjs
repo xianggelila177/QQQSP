@@ -22,8 +22,10 @@ for(const symbol of ['510300.SS','NIFTYBEES.NS','BOVA11.SA','NAFTRACISHRS.MX','S
 }
 for(const symbol of ['QQQ?x=1','M&M.NS&crumb=x','<script>','../VOD.L','123456','M&M'])assert.equal(symbolValid(symbol),false,symbol);
 assert.equal(parseCv('M&M.NS:123:456').get('M&M.NS').dVer,456);
-const directory=marketDirectory();assert.equal(directory.version,1);assert.deepEqual(directory.featured,['^FTSE']);assert.equal(directory.markets.length,20);
-for(const market of directory.markets){assert.ok(market.timezone);assert.ok(market.benchmarks.length);assert.ok(market.examples.some(x=>x.type==='EQUITY'));assert.ok(market.examples.some(x=>x.type==='ETF'));assert.ok(market.examples.every(x=>['EQUITY','ETF'].includes(x.type)));}
+const directory=marketDirectory();assert.equal(directory.version,1);assert.deepEqual(directory.featured,['^FTSE']);assert.equal(directory.markets.length,21);
+assert.equal(directory.markets.filter(m=>m.key!=='futures').length,20);
+assert.ok(directory.markets.find(m=>m.key==='futures').examples.every(x=>x.type==='FUTURE'));
+for(const market of directory.markets.filter(m=>m.key!=='futures')){assert.ok(market.timezone);assert.ok(market.benchmarks.length);assert.ok(market.examples.some(x=>x.type==='EQUITY'));assert.ok(market.examples.some(x=>x.type==='ETF'));assert.ok(market.examples.every(x=>['EQUITY','ETF'].includes(x.type)));}
 let calls=0;const nasdaq=createNasdaqProvider({httpsGet:async()=>{calls++;throw new Error('foreign routing');}});
 for(const symbol of Object.values(cases).filter(s=>s!=='AAPL'))assert.deepEqual(await nasdaq.getNasdaqDaily(symbol),[]);
 assert.equal(calls,0);nasdaq.close();

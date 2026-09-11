@@ -8,10 +8,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>全球自选行情 · QQQ / SPY ETF</title>
 <!-- 资源版本源: panel/VERSION · 由 build_version.sh 统一注入 ?v=(P1-Q5) -->
-<link rel="manifest" href="/manifest.webmanifest?v=75">
-<link rel="icon" href="/icon.svg?v=75" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/icon.svg?v=75">
-<link rel="stylesheet" href="/style.css?v=75">
+<link rel="manifest" href="/manifest.webmanifest?v=76">
+<link rel="icon" href="/icon.svg?v=76" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg?v=76">
+<link rel="stylesheet" href="/style.css?v=76">
 </head>
 <body>
   <header class="topbar">
@@ -29,7 +29,7 @@
   </header>
 
   <div class="searchwrap">
-    <input id="q" class="searchbox" aria-label="搜索全球股票、ETF或指数" role="combobox" aria-autocomplete="list" aria-controls="sresults" aria-expanded="false" placeholder="搜索代码 / 名称 · 如富时100、VOD.L" autocomplete="off">
+    <input id="q" class="searchbox" aria-label="搜索全球股票、基金、指数或期货" role="combobox" aria-autocomplete="list" aria-controls="sresults" aria-expanded="false" placeholder="搜索代码 / 名称 · 如纳指夜盘、NQ00Y、海力士、VOD.L" autocomplete="off">
     <div id="sresults" class="sresults" role="listbox" hidden></div>
   </div>
 
@@ -64,7 +64,7 @@
   </details>
   <p class="note">推送优先 · 断流后缓存读取兜底 · 时间均为 UTC+8 · 数据来源 Alpaca / Finnhub（可选）/ Naver / Yahoo / Nasdaq / 腾讯 / 东方财富 / 新浪 / Google News · 规则标签可能误判，仅供展示</p>
 
-  <script src="/panel.bundle.js?v=75" defer></script>
+  <script src="/panel.bundle.js?v=76" defer></script>
   <script>document.addEventListener("DOMContentLoaded",function(){var p=document.getElementById("panels"),s=document.getElementById("layoutPreference");if(!p||!s)return;var k="qqqsp:layout:v1",v="auto";try{v=localStorage.getItem(k)||v}catch(e){}if(!["auto","2","3","4"].includes(v))v="auto";s.value=v;p.dataset.layout=v;s.addEventListener("change",function(){var x=["auto","2","3","4"].includes(s.value)?s.value:"auto";p.dataset.layout=x;try{localStorage.setItem(k,x)}catch(e){}})});</script>
 </body>
 </html>

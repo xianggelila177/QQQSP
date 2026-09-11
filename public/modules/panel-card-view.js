@@ -178,7 +178,7 @@
   function updateQuoteMeta(q, now = quoteClock ? quoteClock.now() : Date.now()) {
     const d = q.d; if (!d || !q.quoteMeta) return;
     applyStaleBadge(q,d,now);
-    const sourceNames = { 'alpaca-iex':'Alpaca · IEX 单一交易所', 'alpaca-sip':'Alpaca · 美国 SIP 数据源', 'sina-batch':'新浪批量报价',yahoo: 'Yahoo', 'tx-cn': '腾讯', 'tx-us': '腾讯', 'tx-batch': '腾讯批量报价', 'naver-us': 'Naver 美股', 'naver-kr': 'Naver 韩股', 'em-cn': '东方财富', finnhub:'Finnhub · 覆盖依账户权限',fixture: '测试数据' };
+    const sourceNames = { 'yahoo-futures':'Yahoo · 期货', 'eastmoney-futures':'东方财富 · 期货', 'eastmoney-futures-list':'东方财富 · 期货目录（成交时间未知）', 'alpaca-iex':'Alpaca · IEX 单一交易所', 'alpaca-sip':'Alpaca · 美国 SIP 数据源', 'sina-batch':'新浪批量报价',yahoo: 'Yahoo', 'tx-cn': '腾讯', 'tx-us': '腾讯', 'tx-batch': '腾讯批量报价', 'naver-us': 'Naver 美股', 'naver-kr': 'Naver 韩股', 'em-cn': '东方财富', finnhub:'Finnhub · 覆盖依账户权限',fixture: '测试数据' };
     const sessionNames = { SOURCE_SNAPSHOT:'统计来自独立快照，非逐笔同步', CACHED_REGULAR: '常规时段统计', REGULAR: '常规时段统计', PRE: '盘前统计', POST: '盘后统计', CN_SNAPSHOT: '交易日快照', UNKNOWN: '统计时段未核验' };
     const at = quoteTimeMs(d.quoteAt ?? d.ts), checked = quoteTimeMs(d.sourceCheckedAt);
     const parts = ['报价 ' + (at ? fmtTime8(at) : '时刻未知'), sourceNames[d.src] || '来源未标明'];
@@ -237,16 +237,16 @@
     const wants = cardCurOf(d.symbol);
     const canConvert = format.canConvert;
     q.unit.textContent = format.unit;
-    const fxNotes=[format.sourceDescription];
-    if(!canConvert && d.instrumentType !== 'INDEX')fxNotes.push('汇率暂缺或过期，当前显示原币 '+format.unit);
+    const fxNotes=[d.instrumentNote,format.sourceDescription];
+    if(!canConvert && !(d.instrumentType === 'INDEX' || d.priceUnit === 'POINTS'))fxNotes.push('汇率暂缺或过期，当前显示原币 '+format.unit);
     if(format.referenceConversion)fxNotes.push('按欧洲央行 '+(d.fxDate||'日期未知')+' 参考汇率交叉换算，非实时汇率');
     if(q.fxNote){q.fxNote.textContent=fxNotes.filter(Boolean).join(' · ');q.fxNote.hidden=!q.fxNote.textContent;}
-    q.el.classList.toggle('index-card', d.instrumentType === 'INDEX');
-    q.ccybtns.forEach(b => { b.disabled = d.instrumentType === 'INDEX';const selected=!b.disabled && b.dataset.ccy===cardCurOf(d.symbol);b.classList.toggle('on',selected);b.setAttribute('aria-pressed',String(selected)); });
+    q.el.classList.toggle('index-card', (d.instrumentType === 'INDEX' || d.priceUnit === 'POINTS'));
+    q.ccybtns.forEach(b => { b.disabled = (d.instrumentType === 'INDEX' || d.priceUnit === 'POINTS');const selected=!b.disabled && b.dataset.ccy===cardCurOf(d.symbol);b.classList.toggle('on',selected);b.setAttribute('aria-pressed',String(selected)); });
     // T5: 汇率缺失提示 — CNY 显示目标但 currency2cny 未提供(上游限流)时, 单位加悬停说明(显示值维持 '—'/原币, 数值逻辑不变)
-    q.unit.title = (d.instrumentType !== 'INDEX' && wants !== 'NATIVE' && !canConvert)
+    q.unit.title = (!(d.instrumentType === 'INDEX' || d.priceUnit === 'POINTS') && wants !== 'NATIVE' && !canConvert)
       ? '汇率暂缺或过期，显示原币' : '';
-    const ph = d.quoteKind==='reported-trade' ? '最新报告成交（非官方收盘价）' : {PRE:'最近盘前报价', POST:'最近盘后报价', REGULAR:'常规时段报价'}[d.priceSession];
+    const ph = d.instrumentType==='FUTURE' ? '期货来源报价（非现货指数）' : d.quoteKind==='reported-trade' ? '最新报告成交（非官方收盘价）' : {PRE:'最近盘前报价', POST:'最近盘后报价', REGULAR:'常规时段报价'}[d.priceSession];
     if (q.phasetag) { q.phasetag.hidden = !ph; if (ph) q.phasetag.textContent = ph; }
     q.change.textContent = d.change==null?'—':(d.change>=0?'+':'')+money(d.change);
     q.pct.textContent = pct(d.changePct);
@@ -260,7 +260,7 @@
     const calendar=window.PANEL_STATE.calendarStatus(d);
     const stName={REGULAR:(calendarEstimate ? '常规时段·节假日未核验' : '交易中'),PRE:'盘前',POST:'盘后',AUCTION:'集合竞价',BREAK:'午间休市',CLOSED:'已收盘',UNKNOWN:calendar.pending?'交易时段待公布':'时段未核验'}[d.marketState]||'时段未核验';
     q.marketLabel=stName;q.marketTitle=calendar.message||(calendarEstimate ? '交易日历覆盖不足，此时段状态仅为估计' : '');applyRequestState(q);
-    if(q.changeBaseline){q.changeBaseline.textContent='较昨收基准'+(d.prevClose!=null?' '+money(d.prevClose):'（基准暂缺）');q.changeBaseline.title='主涨跌以来源返回的昨收为分母；盘前或盘后行可能采用另一常规收盘基准，金额在各行注明。';}
+    if(q.changeBaseline){q.changeBaseline.textContent=(d.changeBasis==='previous-settlement'?'较前结算基准':d.instrumentType==='FUTURE'?'较来源基准':'较昨收基准')+(d.prevClose!=null?' '+money(d.prevClose):'（基准暂缺）');q.changeBaseline.title=d.instrumentType==='FUTURE'?'期货以前结算或来源给出的前值比较，不等同股票昨收。':'主涨跌以来源返回的昨收为分母；盘前或盘后行可能采用另一常规收盘基准，金额在各行注明。';}
 
     // 盘前/盘后独立报价行
     if (q.extRow) {
@@ -272,7 +272,8 @@
       q.extRow.innerHTML = eh; q.extRow.hidden = !eh;
     }
     q.open.textContent=money(d.open); q.high.textContent=money(d.dayHigh); q.low.textContent=money(d.dayLow);
-    q.prev.textContent=money(d.prevClose); q.volume.textContent=fmtVol(d.volume);
+    q.prev.textContent=money(d.prevClose);
+    const previousLabel=q.prev.parentElement?.querySelector?.('label');if(previousLabel)previousLabel.textContent=d.instrumentType==='FUTURE'?(d.changeBasis==='previous-settlement'?'前结算':'来源前值'):'昨收'; q.volume.textContent=fmtVol(d.volume);
     q.w52h.textContent=money(d.week52High); q.w52l.textContent=money(d.week52Low);
     q.exch.textContent=d.exchangeName || d.name || '—';
 
@@ -284,7 +285,7 @@
     const q = cardCache.get(d.symbol);
     const money = formatterFor(d).money;
     const up = d.change==null?null:d.change>=0;
-    q.strip.querySelector('.tp').textContent = money(d.price) + ' ' + (d.instrumentType === 'INDEX' ? '点' : q.unit.textContent);
+    q.strip.querySelector('.tp').textContent = money(d.price) + ' ' + ((d.instrumentType === 'INDEX' || d.priceUnit === 'POINTS') ? '点' : q.unit.textContent);
     const tch = q.strip.querySelector('.tch');
     tch.textContent = pct(d.changePct);
     tch.className='tch'+(up==null?'':(up?' up':' down'));

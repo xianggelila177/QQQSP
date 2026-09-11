@@ -1,5 +1,5 @@
 (() => {
-  const TYPE_NAMES = Object.freeze({ INDEX: '指数', EQUITY: '股票', ETF: 'ETF' });
+  const TYPE_NAMES = Object.freeze({ INDEX: '指数', EQUITY: '股票', ETF: 'ETF', FUTURE: '期货' });
   const validInstrument = item => item && typeof item.symbol === 'string' && /^[A-Z0-9.&^=\-]{1,16}$/.test(item.symbol)
     && typeof item.name === 'string' && item.name.length > 0 && item.name.length <= 160 && Object.hasOwn(TYPE_NAMES, item.type);
   function validateCatalog(data) {

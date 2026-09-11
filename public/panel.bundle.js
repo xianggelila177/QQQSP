@@ -593,7 +593,7 @@
   const fmtDate = (t, withTime = true) => { const d = new Date((t + 8 * 3600) * 1000), pad = n => String(n).padStart(2, '0'); const date = d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()); return withTime ? date + ' ' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) : date; };
   const fmtTime8 = t => fmtDate(t / 1000).slice(5).replace(/^0/, '');
   const createFormatter = ({ data = {}, displayCurrency = 'USD', fxMap = {} } = {}) => {
-    const sourceInfo = window.PANEL_CURRENCY.currencyUnit(data.currency), source = sourceInfo.unit, index = data.instrumentType === 'INDEX';
+    const sourceInfo = window.PANEL_CURRENCY.currencyUnit(data.currency), source = sourceInfo.unit, index = data.instrumentType === 'INDEX' || data.priceUnit === 'POINTS';
     const rates=data.fxKind?data.fxMap||{}:fxMap;
     const convert = (value, from = source, to = displayCurrency) => window.PANEL_CURRENCY.convert(value, from, to, rates, { index, fxStale: data.fxStale === true });
     const canConvert = index || displayCurrency === 'NATIVE' || displayCurrency === source || convert(data.price) != null;
@@ -1083,7 +1083,7 @@
   function updateQuoteMeta(q, now = quoteClock ? quoteClock.now() : Date.now()) {
     const d = q.d; if (!d || !q.quoteMeta) return;
     applyStaleBadge(q,d,now);
-    const sourceNames = { 'alpaca-iex':'Alpaca · IEX 单一交易所', 'alpaca-sip':'Alpaca · 美国 SIP 数据源', 'sina-batch':'新浪批量报价',yahoo: 'Yahoo', 'tx-cn': '腾讯', 'tx-us': '腾讯', 'tx-batch': '腾讯批量报价', 'naver-us': 'Naver 美股', 'naver-kr': 'Naver 韩股', 'em-cn': '东方财富', finnhub:'Finnhub · 覆盖依账户权限',fixture: '测试数据' };
+    const sourceNames = { 'yahoo-futures':'Yahoo · 期货', 'eastmoney-futures':'东方财富 · 期货', 'eastmoney-futures-list':'东方财富 · 期货目录（成交时间未知）', 'alpaca-iex':'Alpaca · IEX 单一交易所', 'alpaca-sip':'Alpaca · 美国 SIP 数据源', 'sina-batch':'新浪批量报价',yahoo: 'Yahoo', 'tx-cn': '腾讯', 'tx-us': '腾讯', 'tx-batch': '腾讯批量报价', 'naver-us': 'Naver 美股', 'naver-kr': 'Naver 韩股', 'em-cn': '东方财富', finnhub:'Finnhub · 覆盖依账户权限',fixture: '测试数据' };
     const sessionNames = { SOURCE_SNAPSHOT:'统计来自独立快照，非逐笔同步', CACHED_REGULAR: '常规时段统计', REGULAR: '常规时段统计', PRE: '盘前统计', POST: '盘后统计', CN_SNAPSHOT: '交易日快照', UNKNOWN: '统计时段未核验' };
     const at = quoteTimeMs(d.quoteAt ?? d.ts), checked = quoteTimeMs(d.sourceCheckedAt);
     const parts = ['报价 ' + (at ? fmtTime8(at) : '时刻未知'), sourceNames[d.src] || '来源未标明'];
@@ -1142,16 +1142,16 @@
     const wants = cardCurOf(d.symbol);
     const canConvert = format.canConvert;
     q.unit.textContent = format.unit;
-    const fxNotes=[format.sourceDescription];
-    if(!canConvert && d.instrumentType !== 'INDEX')fxNotes.push('汇率暂缺或过期，当前显示原币 '+format.unit);
+    const fxNotes=[d.instrumentNote,format.sourceDescription];
+    if(!canConvert && !(d.instrumentType === 'INDEX' || d.priceUnit === 'POINTS'))fxNotes.push('汇率暂缺或过期，当前显示原币 '+format.unit);
     if(format.referenceConversion)fxNotes.push('按欧洲央行 '+(d.fxDate||'日期未知')+' 参考汇率交叉换算，非实时汇率');
     if(q.fxNote){q.fxNote.textContent=fxNotes.filter(Boolean).join(' · ');q.fxNote.hidden=!q.fxNote.textContent;}
-    q.el.classList.toggle('index-card', d.instrumentType === 'INDEX');
-    q.ccybtns.forEach(b => { b.disabled = d.instrumentType === 'INDEX';const selected=!b.disabled && b.dataset.ccy===cardCurOf(d.symbol);b.classList.toggle('on',selected);b.setAttribute('aria-pressed',String(selected)); });
+    q.el.classList.toggle('index-card', (d.instrumentType === 'INDEX' || d.priceUnit === 'POINTS'));
+    q.ccybtns.forEach(b => { b.disabled = (d.instrumentType === 'INDEX' || d.priceUnit === 'POINTS');const selected=!b.disabled && b.dataset.ccy===cardCurOf(d.symbol);b.classList.toggle('on',selected);b.setAttribute('aria-pressed',String(selected)); });
     // T5: 汇率缺失提示 — CNY 显示目标但 currency2cny 未提供(上游限流)时, 单位加悬停说明(显示值维持 '—'/原币, 数值逻辑不变)
-    q.unit.title = (d.instrumentType !== 'INDEX' && wants !== 'NATIVE' && !canConvert)
+    q.unit.title = (!(d.instrumentType === 'INDEX' || d.priceUnit === 'POINTS') && wants !== 'NATIVE' && !canConvert)
       ? '汇率暂缺或过期，显示原币' : '';
-    const ph = d.quoteKind==='reported-trade' ? '最新报告成交（非官方收盘价）' : {PRE:'最近盘前报价', POST:'最近盘后报价', REGULAR:'常规时段报价'}[d.priceSession];
+    const ph = d.instrumentType==='FUTURE' ? '期货来源报价（非现货指数）' : d.quoteKind==='reported-trade' ? '最新报告成交（非官方收盘价）' : {PRE:'最近盘前报价', POST:'最近盘后报价', REGULAR:'常规时段报价'}[d.priceSession];
     if (q.phasetag) { q.phasetag.hidden = !ph; if (ph) q.phasetag.textContent = ph; }
     q.change.textContent = d.change==null?'—':(d.change>=0?'+':'')+money(d.change);
     q.pct.textContent = pct(d.changePct);
@@ -1165,7 +1165,7 @@
     const calendar=window.PANEL_STATE.calendarStatus(d);
     const stName={REGULAR:(calendarEstimate ? '常规时段·节假日未核验' : '交易中'),PRE:'盘前',POST:'盘后',AUCTION:'集合竞价',BREAK:'午间休市',CLOSED:'已收盘',UNKNOWN:calendar.pending?'交易时段待公布':'时段未核验'}[d.marketState]||'时段未核验';
     q.marketLabel=stName;q.marketTitle=calendar.message||(calendarEstimate ? '交易日历覆盖不足，此时段状态仅为估计' : '');applyRequestState(q);
-    if(q.changeBaseline){q.changeBaseline.textContent='较昨收基准'+(d.prevClose!=null?' '+money(d.prevClose):'（基准暂缺）');q.changeBaseline.title='主涨跌以来源返回的昨收为分母；盘前或盘后行可能采用另一常规收盘基准，金额在各行注明。';}
+    if(q.changeBaseline){q.changeBaseline.textContent=(d.changeBasis==='previous-settlement'?'较前结算基准':d.instrumentType==='FUTURE'?'较来源基准':'较昨收基准')+(d.prevClose!=null?' '+money(d.prevClose):'（基准暂缺）');q.changeBaseline.title=d.instrumentType==='FUTURE'?'期货以前结算或来源给出的前值比较，不等同股票昨收。':'主涨跌以来源返回的昨收为分母；盘前或盘后行可能采用另一常规收盘基准，金额在各行注明。';}
 
     // 盘前/盘后独立报价行
     if (q.extRow) {
@@ -1177,7 +1177,8 @@
       q.extRow.innerHTML = eh; q.extRow.hidden = !eh;
     }
     q.open.textContent=money(d.open); q.high.textContent=money(d.dayHigh); q.low.textContent=money(d.dayLow);
-    q.prev.textContent=money(d.prevClose); q.volume.textContent=fmtVol(d.volume);
+    q.prev.textContent=money(d.prevClose);
+    const previousLabel=q.prev.parentElement?.querySelector?.('label');if(previousLabel)previousLabel.textContent=d.instrumentType==='FUTURE'?(d.changeBasis==='previous-settlement'?'前结算':'来源前值'):'昨收'; q.volume.textContent=fmtVol(d.volume);
     q.w52h.textContent=money(d.week52High); q.w52l.textContent=money(d.week52Low);
     q.exch.textContent=d.exchangeName || d.name || '—';
 
@@ -1189,7 +1190,7 @@
     const q = cardCache.get(d.symbol);
     const money = formatterFor(d).money;
     const up = d.change==null?null:d.change>=0;
-    q.strip.querySelector('.tp').textContent = money(d.price) + ' ' + (d.instrumentType === 'INDEX' ? '点' : q.unit.textContent);
+    q.strip.querySelector('.tp').textContent = money(d.price) + ' ' + ((d.instrumentType === 'INDEX' || d.priceUnit === 'POINTS') ? '点' : q.unit.textContent);
     const tch = q.strip.querySelector('.tch');
     tch.textContent = pct(d.changePct);
     tch.className='tch'+(up==null?'':(up?' up':' down'));
@@ -1231,19 +1232,21 @@
     qEl.setAttribute('aria-activedescendant', '');
     if (clear) qEl.value = '';
   };
-  async function runSearch() {
+  async function runSearch(more = false) {
+    more = more === true;
     const myId = ++searchReqId;   // P1-U2
     const v = qEl.value.trim(); if (!v) { hideSearch(); return 0; }
     if (searchController) { try { searchController.abort(); } catch {} }
     searchController = typeof AbortController === 'function' ? new AbortController() : null;
     try {
-      const r = await panelNetwork.request('search', '/api/search?q=' + encodeURIComponent(v), { replace: true, signal: searchController?.signal });
+      const r = await panelNetwork.request('search', '/api/search?q=' + encodeURIComponent(v) + (more ? '&more=1' : ''), { replace: true, signal: searchController?.signal });
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const list = PANEL.normalizeList(await r.json());
       if (myId !== searchReqId) return;   // P1-U2: 已有更新的搜索, 本次过期响应直接丢弃
       srEl.innerHTML = (list && list.length)
-        ? list.map((x, i) => '<div class="sitem" role="option" tabindex="-1" id="sitem-' + i + '" data-sym="' + esc(x.symbol) + '" data-name="' + esc(x.name) + '"><span class="mkttag" data-mkt="' + esc(x.market) + '">' + esc(x.market) + '</span><b>' + esc(x.symbol) + '</b><span class="sname">' + esc(x.name) + '</span><span class="stype">' + ({INDEX:'指数',ETF:'ETF',EQUITY:'股票'}[x.type] || '证券') + '</span><span class="sexch">' + esc(x.exch) + '</span></div>').join('')
+        ? list.map((x, i) => '<div class="sitem" title="' + esc(x.matchNote || x.seriesNote || '') + '" role="option" tabindex="-1" id="sitem-' + i + '" data-sym="' + esc(x.symbol) + '" data-name="' + esc(x.name) + '"><span class="mkttag" data-mkt="' + esc(x.market) + '">' + esc(x.market) + '</span><b>' + esc(x.symbol) + '</b><span class="sname">' + esc(x.name) + '</span><span class="stype">' + ({INDEX:'指数',ETF:'ETF',EQUITY:'股票',FUTURE:'期货',MUTUALFUND:'基金',CURRENCY:'汇率'}[x.type] || '证券') + '</span><span class="sexch">' + esc(x.exch) + '</span>' + (x.matchNote ? '<small class="search-note">' + esc(x.matchNote) + '</small>' : '') + '</div>').join('')
         : '<div class="sempty">无结果，可尝试完整代码或展开全球市场目录，如 富时100 / VOD.L / M&amp;M.NS</div>';
+      srEl.innerHTML += more ? '<div class="sempty">已合并可用来源；目录可能不完整或限流，连续合约请核对来源。</div>' : '<div class="search-more" id="search-more-option" role="option" tabindex="0" data-search-more="1" aria-label="查询更多来源与具体合约">查询更多来源与具体合约</div>';
       srEl.hidden = false;
       qEl.setAttribute('aria-expanded', 'true'); searchIndex = -1;
       return list.length;
@@ -1260,7 +1263,7 @@
   qEl.addEventListener('compositionend', () => { composing = false; clearTimeout(sTimer); runSearch(); });   // 中文候选确认后立即联想, 并清掉挂起的防抖(P1-U2)
   qEl.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      const items = [...srEl.querySelectorAll('.sitem')]; if (!items.length || srEl.hidden) return;
+      const items = [...srEl.querySelectorAll('.sitem, .search-more')]; if (!items.length || srEl.hidden) return;
       e.preventDefault(); searchIndex = (searchIndex + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
       items.forEach((x, i) => x.setAttribute('aria-selected', String(i === searchIndex)));
       const selected = items[searchIndex]; if (selected) { selected.scrollIntoView({ block: 'nearest' }); qEl.setAttribute('aria-activedescendant', selected.id); }
@@ -1268,16 +1271,18 @@
     }
     if (e.key !== 'Enter' || e.isComposing || composing) return;    // 忽略IME确认用的回车
     e.preventDefault();
-    const items = srEl.querySelectorAll('.sitem');
+    const items = srEl.querySelectorAll('.sitem, .search-more');
     if (!srEl.hidden && items.length && searchIndex >= 0) { items[searchIndex].click(); return; }
-    if (!srEl.hidden && items.length === 1) { items[0].click(); return; }   // 唯一结果直接加入自选
+    if (!srEl.hidden && srEl.querySelectorAll('.sitem').length === 1) { srEl.querySelector('.sitem').click(); return; }   // 唯一结果直接加入自选
     runSearch();
   });
   srEl.addEventListener('click', (e) => {
+    if(e.target.closest('[data-search-more]')){runSearch(true);return;}
     const it = e.target.closest('.sitem'); if (!it || !it.dataset.sym) return;
     const sym = it.dataset.sym.toUpperCase();
     onSelect(sym, it.querySelector('.sname') ? it.querySelector('.sname').textContent : '');
   });
+  srEl.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.closest('[data-search-more]')){e.preventDefault();runSearch(true);}});
   document.addEventListener('click', (e) => { if (!e.target.closest('.searchwrap')) hideSearch(); });
   // 键盘: "/"聚焦搜索框, Esc收起联想并清空(终端式交互, 借鉴 openmarket KeyboardShortcuts)
   document.addEventListener('keydown', (e) => {
@@ -1296,7 +1301,7 @@
 
 ;/* public/modules/panel-market-directory.js */
 (() => {
-  const TYPE_NAMES = Object.freeze({ INDEX: '指数', EQUITY: '股票', ETF: 'ETF' });
+  const TYPE_NAMES = Object.freeze({ INDEX: '指数', EQUITY: '股票', ETF: 'ETF', FUTURE: '期货' });
   const validInstrument = item => item && typeof item.symbol === 'string' && /^[A-Z0-9.&^=\-]{1,16}$/.test(item.symbol)
     && typeof item.name === 'string' && item.name.length > 0 && item.name.length <= 160 && Object.hasOwn(TYPE_NAMES, item.type);
   function validateCatalog(data) {
@@ -1872,7 +1877,7 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=75').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=76').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
         nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本'); });
       });

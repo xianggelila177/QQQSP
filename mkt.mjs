@@ -1,3 +1,4 @@
+import {futureInstrumentFor,isFutureSymbol} from './lib/futures-instruments.js';
 // 交易时段判定 —— 以「当前时间」换算交易所本地墙钟, 按各市场时段表判定
 // (旧实现用 meta.regularMarketTime/最后bar时间: 盘前会滞后、周末会误判成周五盘中)
 export const SESSIONS = {   // 单一事实源: server.js extSessions 与 marketStateFor 共用此表
@@ -37,7 +38,7 @@ export function marketCalendarInfo(symbol, nowMs = Date.now(), gmtoffset = null)
   return {key,year,date:md,known:!pendingNote,source:entry.sources.join(', '),version:calendarRegistry.version,closed,earlyCloseMin:key==='us'&&halfDay?780:key==='hk'&&halfDay?720:null,halfDay,specialOpen:!!override||entry.open?.includes(md)||false,pending:!!pendingNote,...(pendingNote?{reason:'session-pending',note:String(pendingNote)}:{})};
 }
 
-export function timezoneForSymbol(symbol) { return MARKET_TIMEZONES[marketKeyFor(symbol)] || null; }
+export function timezoneForSymbol(symbol) { return futureInstrumentFor(symbol)?.timezone || MARKET_TIMEZONES[marketKeyFor(symbol)] || null; }
 const offsetFormatters=new Map();
 
 export function timezoneOffsetFor(symbol, nowMs = Date.now()) {
@@ -81,6 +82,7 @@ export function sessionFor(symbol, gmtoffset = null, nowMs = Date.now(), venue =
 }
 
 export function marketStateFor(symbol, gmtoffset, nowMs = Date.now(), venue = '') {
+  if(isFutureSymbol(symbol))return 'UNKNOWN'; // Never apply US cash hours to a Globex future.
   const s = String(symbol || '').toUpperCase();
   if (!calendarKey(s)) return 'UNKNOWN';
   const off = gmtoffset != null ? gmtoffset : timezoneOffsetFor(s, nowMs);

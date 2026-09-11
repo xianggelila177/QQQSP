@@ -14,7 +14,7 @@ test('real HTTP serves readiness without source polling; SSE propagates cached c
  assert.equal((await fetch(f.url+'/api/stream?symbols=QQQ',{method:'HEAD'})).status,200);
  assert.equal((await fetch(f.url+'/api/not-found')).status,404);assert.equal((await fetch(f.url+'/api/market?symbols=QQQ;bad')).status,400);
  const sources=await (await fetch(f.url+'/api/sources')).json();assert.ok(sources.hosts);assert.ok(!JSON.stringify(sources).includes('APCA_API_SECRET_KEY'));
- assert.equal((await (await fetch(f.url+'/api/markets')).json()).markets.length,20);
+ assert.equal((await (await fetch(f.url+'/api/markets')).json()).markets.length,21);
  socket.close();await wait(30);assert.equal(f.app.services.engine.diagnostics().subscribers,0);
 });
 test('server construction/import and two lifecycle cycles own no global network instance',async t=>{
