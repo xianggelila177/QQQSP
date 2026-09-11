@@ -1,0 +1,11 @@
+[Unit]
+Description=Retired QQQSP supervisor placeholder
+Documentation=file:///var/lib/qqqsp/current/ops/RUNBOOK.md
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/true
+RemainAfterExit=yes
+
+# Do not enable this legacy unit. Use qqqsp-panel.service,
+# qqqsp-relay-tunnel.service and qqqsp-cloudflared.service instead.

@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "encoding": "utf16",
+  "files": [
+    {
+      "path": "public/modules/panel-client.js",
+      "startOffset": 107,
+      "endOffset": 1116
+    },
+    {
+      "path": "public/modules/panel-currency.js",
+      "startOffset": 1160,
+      "endOffset": 2580
+    },
+    {
+      "path": "public/modules/panel-chart.js",
+      "startOffset": 2621,
+      "endOffset": 3104
+    },
+    {
+      "path": "public/modules/panel-timeframes.js",
+      "startOffset": 3150,
+      "endOffset": 3982
+    },
+    {
+      "path": "public/modules/panel-history-store.js",
+      "startOffset": 4031,
+      "endOffset": 8333
+    },
+    {
+      "path": "public/modules/panel-chart-engine.js",
+      "startOffset": 8381,
+      "endOffset": 23268
+    },
+    {
+      "path": "public/modules/panel-scheduler.js",
+      "startOffset": 23313,
+      "endOffset": 24446
+    },
+    {
+      "path": "public/modules/panel-network.js",
+      "startOffset": 24489,
+      "endOffset": 27439
+    },
+    {
+      "path": "public/modules/panel-state.js",
+      "startOffset": 27480,
+      "endOffset": 35202
+    },
+    {
+      "path": "public/modules/panel-utils.js",
+      "startOffset": 35243,
+      "endOffset": 35903
+    },
+    {
+      "path": "public/modules/panel-format.js",
+      "startOffset": 35945,
+      "endOffset": 38450
+    },
+    {
+      "path": "public/modules/panel-chart-controller.js",
+      "startOffset": 38502,
+      "endOffset": 60401
+    },
+    {
+      "path": "public/modules/panel-card-view.js",
+      "startOffset": 60446,
+      "endOffset": 82044
+    },
+    {
+      "path": "public/modules/panel-search-controller.js",
+      "startOffset": 82097,
+      "endOffset": 86696
+    },
+    {
+      "path": "public/modules/panel-market-directory.js",
+      "startOffset": 86748,
+      "endOffset": 92707
+    },
+    {
+      "path": "public/modules/panel-news-controller.js",
+      "startOffset": 92758,
+      "endOffset": 97641
+    },
+    {
+      "path": "public/modules/panel-macro-controller.js",
+      "startOffset": 97693,
+      "endOffset": 103202
+    },
+    {
+      "path": "public/modules/panel-market-store.js",
+      "startOffset": 103250,
+      "endOffset": 105962
+    },
+    {
+      "path": "public/modules/panel-live-store.js",
+      "startOffset": 106008,
+      "endOffset": 108964
+    },
+    {
+      "path": "public/app.js",
+      "startOffset": 108989,
+      "endOffset": 133636
+    }
+  ]
+}

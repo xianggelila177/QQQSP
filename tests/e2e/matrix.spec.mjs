@@ -1,0 +1,28 @@
+import { test, expect, openPanel } from './fixtures.mjs';
+test('mobile layout, fractional DPR, keyboard OHLC and currency preservation', async ({ page, panelServer }, testInfo) => {
+  await openPanel(page, panelServer, ['QQQ', 'SPY'], { QQQ: 'CNY', SPY: 'USD' });
+  const card = page.locator('.price-card[data-sym="QQQ"]');
+  await expect(card.locator('.cur')).toHaveText('¥3,529.80');
+  await expect(card.locator('.unit')).toHaveText('CNY');
+  await expect(card.locator('.quote-meta')).toContainText('测试数据');
+  await expect(card.locator('.quote-meta')).not.toContainText('时刻未知');
+  const canvas = card.locator('canvas.chart-main');
+  await expect(canvas).toHaveAttribute('tabindex', '0');
+  await expect(canvas).toHaveAttribute('aria-label', /QQQ/);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const dimensions = await canvas.evaluate(node => ({ width: node.width, height: node.height, cssWidth: node.getBoundingClientRect().width, cssHeight: node.getBoundingClientRect().height, dpr: devicePixelRatio }));
+  expect(dimensions.width).toBe(Math.round(dimensions.cssWidth * dimensions.dpr));
+  expect(dimensions.height).toBe(Math.round(dimensions.cssHeight * dimensions.dpr));
+  await canvas.focus(); await page.keyboard.press('Home');
+  const first = await card.locator('.chart-point').textContent();
+  await page.keyboard.press('ArrowRight');
+  await expect(card.locator('.chart-point')).not.toHaveText(first);
+  await expect(canvas).toBeFocused();
+  await page.keyboard.press('End');
+  await expect(card.locator('.chart-point')).toContainText(/开|高|低|收/);
+  await expect(card.locator('[data-ccy="CNY"]')).toHaveAttribute('aria-pressed', 'true');
+  await page.reload();
+  await expect(card.locator('[data-ccy="CNY"]')).toHaveAttribute('aria-pressed', 'true');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('qqq-watchlist')))).toEqual(['QQQ', 'SPY']);
+  await page.screenshot({ path: testInfo.outputPath('mobile.png'), fullPage: true });
+});

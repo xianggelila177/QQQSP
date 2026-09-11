@@ -1,0 +1,26 @@
+[Unit]
+Description=QQQSP Cloudflare tunnel
+After=network-online.target qqqsp-panel.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=qqqsp-edge
+Group=qqqsp-edge
+WorkingDirectory=/
+Environment=HOME=/nonexistent
+ExecStart=/usr/local/bin/cloudflared tunnel --no-autoupdate run --token-file /etc/qqqsp-edge/tunnel.token --url http://127.0.0.1:8567
+Restart=always
+RestartSec=10
+KillMode=control-group
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+InaccessiblePaths=-/etc/qqqsp -/etc/qqqsp-relay -/var/lib/dsh
+TasksMax=64
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

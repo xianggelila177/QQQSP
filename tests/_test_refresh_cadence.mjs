@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {loadApp} from './_harness.mjs';
+import {quoteStatus} from '../lib/http-diagnostics.js';
+const e=await loadApp({watchlist:['QQQ']});await e.drain();
+const now=Date.now();
+const q={symbol:'^KS11',price:100,marketState:'CLOSED',quoteAt:now-86400000,fetchedAt:now-46000,checkIntervalMs:60000};
+assert.equal(e.hooks().quoteIsStale(q,now),false,'healthy enrichment-only quote follows60s cadence');
+assert.equal(quoteStatus(q,now).usable,true);
+assert.equal(e.hooks().quoteIsStale({...q,stale:true},now),true,'providerfailure immediatelystale');
+assert.equal(quoteStatus({...q,stale:true},now).usable,false);
+assert.equal(e.hooks().quoteIsStale(q,now+40000),true,'cadence is not unlimited freshness');
+assert.equal(quoteStatus(q,now+40000).usable,false);
+assert.equal(e.hooks().quoteIsStale({...q,checkIntervalMs:undefined},now),true,'missing cadence retains conservativefallback');
+console.log('PASS enrichment cadence without false warning, real failure and overdue checks');

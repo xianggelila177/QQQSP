@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {nextMarketTransitionAt} from '../lib/session-policy.js';
+assert.equal(nextMarketTransitionAt('QQQ',Date.parse('2026-09-06T00:00:00Z')),Date.parse('2026-09-08T08:00:00Z'),'weekend plus US Labor Day skipped');
+assert.equal(nextMarketTransitionAt('600519.SS',Date.parse('2026-09-06T00:00:00Z')),Date.parse('2026-09-07T01:15:00Z'));
+assert.equal(nextMarketTransitionAt('600519.SS',Date.parse('2026-09-07T04:00:00Z')),Date.parse('2026-09-07T05:00:00Z'),'lunch resume is a real transition');
+assert.equal(nextMarketTransitionAt('QQQ',Date.parse('2026-11-01T00:00:00Z')),Date.parse('2026-11-02T09:00:00Z'),'DST transition uses next date offset');
+assert.equal(nextMarketTransitionAt('ABC.XX',Date.parse('2026-09-06T00:00:00Z')),null);
+assert.equal(nextMarketTransitionAt('QQQ',Date.parse('2032-01-01T00:00:00Z')),null,'unverified calendars cannot promise reopening');
+console.log('PASS next session: holiday, lunch, DST and unknown coverage');
+const {marketSessionStartedAt}=await import('../lib/session-policy.js');
+assert.equal(marketSessionStartedAt('0700.HK',Date.parse('2026-09-07T04:01:00Z')),Date.parse('2026-09-07T04:00:00Z'));
+assert.equal(marketSessionStartedAt('600519.SS',Date.parse('2026-09-07T04:00:00Z')),Date.parse('2026-09-07T03:30:00Z'));

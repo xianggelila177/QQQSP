@@ -1,0 +1,39 @@
+[Unit]
+Description=QQQSP market panel (versioned release)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=qqqsp
+Group=qqqsp
+WorkingDirectory=/var/lib/qqqsp/current
+Environment=HOME=/var/lib/qqqsp
+Environment=YAHOO_RELAY_TOKEN_FILE=/etc/qqqsp/panel-relay.token
+Environment=PORT=8567
+Environment=SYMBOLS=QQQ,SPY
+Environment=LOG_FILE=/var/log/qqqsp/panel.log
+Environment=LOG_MAX_BYTES=10485760
+Environment=LOG_MAX_FILES=3
+# This deployment binds only loopback behind the validated Cloudflare connector.
+Environment=TRUST_PROXY_LOOPBACK=1
+EnvironmentFile=-/etc/qqqsp/panel.env
+ExecStart=/opt/dsh-node/bin/node /var/lib/qqqsp/current/server.js
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/qqqsp /var/lib/qqqsp/recovery
+ReadOnlyPaths=/var/lib/qqqsp/releases /var/lib/qqqsp/current
+InaccessiblePaths=-/etc/qqqsp-edge -/etc/qqqsp-relay -/var/lib/dsh
+MemoryMax=512M
+TasksMax=128
+LimitNOFILE=4096
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

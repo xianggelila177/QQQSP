@@ -1,0 +1,12 @@
+[Unit]
+Description=Quarter-hour QQQSP host capacity warning check
+
+[Timer]
+OnCalendar=*:0/15
+OnBootSec=5min
+Persistent=true
+RandomizedDelaySec=30s
+Unit=qqqsp-capacity-check.service
+
+[Install]
+WantedBy=timers.target

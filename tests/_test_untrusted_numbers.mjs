@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {loadApp} from './_harness.mjs';
+const e=await loadApp({watchlist:['QQQ']});await e.drain();
+const attack='<img src=x onerror=alert(1)>';
+e.fetch.push('market',{body:[{symbol:'QQQ',price:10,change:1,changePct:1,currency:'USD',instrumentType:'ETF',marketState:'PRE',priceSession:'PRE',quoteAt:Date.now(),charts:{intraday:[{t:1,c:10,v:attack},{t:2,c:11,v:attack}]},ext:{pre:{price:11,change:1,changePct:10,volume:attack}}}]});
+await e.hooks().refresh(false);
+const card=e.hooks().cardCache.get('QQQ');
+assert.doesNotMatch(card.ohlc.innerHTML,/<img|onerror/i,'untrusted chart volume never becomes active HTML');
+assert.doesNotMatch(card.extRow.innerHTML,/<img|onerror/i,'untrusted session volume never becomes active HTML');
+const format=e.sandbox.window.PANEL_FORMAT;
+for(const value of [attack,{},[],true,Infinity,NaN,-1,''])assert.equal(format.fmtVol(value),'—');
+assert.equal(format.fmtVol('1234'),'1K');assert.equal(format.fmtVol(0),'0');
+assert.equal(format.pct('1.2'),'+1.20%');assert.equal(format.fmtNum(attack),'—');
+console.log('PASS provider numeric payloads cannot become HTML or non-finite display values');

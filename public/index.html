@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>全球自选行情 · QQQ / SPY ETF</title>
+<!-- 资源版本源: panel/VERSION · 由 build_version.sh 统一注入 ?v=(P1-Q5) -->
+<link rel="manifest" href="/manifest.webmanifest?v=75">
+<link rel="icon" href="/icon.svg?v=75" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg?v=75">
+<link rel="stylesheet" href="/style.css?v=75">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 48 48" width="30" height="30" aria-hidden="true"><rect x="4" y="16" width="12" height="18" rx="2.5" fill="#2b5aed" opacity=".55"/><rect x="18" y="8" width="12" height="26" rx="2.5" fill="#2b5aed"/><rect x="32" y="22" width="12" height="12" rx="2.5" fill="#2b5aed" opacity=".75"/></svg>
+      <div><div class="title">大盘聚合行情</div><div class="sub">全球市场 · 自选行情</div></div>
+    </div>
+    <div class="chips">
+      <span class="chip" id="session">—</span>
+      <span class="chip" id="clock">--:--:--</span>
+      <span class="chip live" id="updateAt">连接中…</span>
+      <button id="btnRefresh" class="chip action" title="立即刷新(手动)">↻</button>
+      <button id="btnPwa" class="chip action" hidden>安装</button>
+    </div>
+  </header>
+
+  <div class="searchwrap">
+    <input id="q" class="searchbox" aria-label="搜索全球股票、ETF或指数" role="combobox" aria-autocomplete="list" aria-controls="sresults" aria-expanded="false" placeholder="搜索代码 / 名称 · 如富时100、VOD.L" autocomplete="off">
+    <div id="sresults" class="sresults" role="listbox" hidden></div>
+  </div>
+
+  <details id="marketDirectory" class="market-directory">
+    <summary>浏览全球市场 <span>富时100 · 股票 · ETF · 指数</span></summary>
+    <div class="directory-body">
+      <p id="marketDirectoryStatus" class="directory-status" role="status">展开目录，浏览各市场代表标的</p>
+      <button id="marketDirectoryRetry" type="button" hidden>重试加载市场目录</button>
+      <div id="marketDirectoryContent"></div>
+    </div>
+  </details>
+
+  <nav class="striptrack" id="strip" aria-label="行情汇总"></nav>
+
+  <div class="layout-controls"><label for="layoutPreference">&#x6BCF;&#x884C;&#x5361;&#x7247;</label><select id="layoutPreference"><option value="auto">&#x81EA;&#x52A8;</option><option value="2">2&#x5217;</option><option value="3">3&#x5217;</option><option value="4">4&#x5217;</option></select></div>
+
+  <main id="panels"></main>
+
+  <details class="macrobox">
+    <summary class="macrohead"><span class="mtitle">宏观资讯</span><span class="macrohint">市场动态与标题规则参考</span></summary>
+    <div class="macrobody">
+      <div class="macro-status"><span id="macroStatus" role="status">正在获取宏观资讯…</span><button id="macroRetry" type="button" hidden>重试</button></div>
+      <div class="mfilters" id="mfilters"></div>
+      <div class="digest" id="digest"></div>
+      <div class="macrolist" id="macrolist"><div class="newsempty">加载中…</div></div>
+    </div>
+  </details>
+
+  <details id="sourceHealth" class="market-directory">
+    <summary>数据源状态 <span>查看限流冷却与行情流连接</span></summary>
+    <div class="directory-body"><p>连接状态不代表每秒产生新成交；报价年龄只按真实成交时间计算。</p><button id="sourceHealthRefresh" type="button">检查状态</button><pre id="sourceHealthContent" role="status">展开后读取，不在后台轮询。</pre></div>
+  </details>
+  <p class="note">推送优先 · 断流后缓存读取兜底 · 时间均为 UTC+8 · 数据来源 Alpaca / Finnhub（可选）/ Naver / Yahoo / Nasdaq / 腾讯 / 东方财富 / 新浪 / Google News · 规则标签可能误判，仅供展示</p>
+
+  <script src="/panel.bundle.js?v=75" defer></script>
+  <script>document.addEventListener("DOMContentLoaded",function(){var p=document.getElementById("panels"),s=document.getElementById("layoutPreference");if(!p||!s)return;var k="qqqsp:layout:v1",v="auto";try{v=localStorage.getItem(k)||v}catch(e){}if(!["auto","2","3","4"].includes(v))v="auto";s.value=v;p.dataset.layout=v;s.addEventListener("change",function(){var x=["auto","2","3","4"].includes(s.value)?s.value:"auto";p.dataset.layout=x;try{localStorage.setItem(k,x)}catch(e){}})});</script>
+</body>
+</html>
