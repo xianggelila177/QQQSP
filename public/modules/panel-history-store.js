@@ -1,5 +1,6 @@
 (() => {
-  const createHistoryStore = ({fetchImpl = window.fetch.bind(window), symbol}) => {
+  const createHistoryStore = ({fetchImpl = window.fetch.bind(window), symbol, timeoutMs = 22000, network}) => {
+    const transport = network || window.PANEL_NETWORK.createNetwork({fetchImpl, timeoutMs});
     const entries=Object.create(null), controllers=Object.create(null), generations=Object.create(null);
     const entry=tf=>entries[tf] ||= {bars:[],revision:0,status:'unknown',warnings:[],meta:null};
     const validDate=date=>typeof date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(date)&&Number.isFinite(Date.parse(date+'T00:00:00Z'))&&new Date(date+'T00:00:00Z').toISOString().slice(0,10)===date;
@@ -11,6 +12,8 @@
     };
     function merge(tf,response,{before}={}){
       const e=entry(tf),same=e.meta?.seriesId===response.seriesId;
+      if(same&&e.revision===String(response.revision)&&e.bars.length){e.meta=response;e.status=response.status||'ready';e.retryAt=response.retryAt||null;return e;}
+
       const map=same?new Map(e.bars.map(b=>[b.periodStart,b])):new Map();
       const first=response.bars[0]?.periodStart,last=response.bars.at(-1)?.periodStart;
       // A refreshed range replaces its old contents, including records removed
@@ -26,20 +29,30 @@
       e.warnings=response.warnings||[];e.retryAt=response.retryAt||null;e.errorCode=response.errorCode||null;
       return e;
     }
+    function hydrate(tf,response){
+      const spec=window.PANEL_TIMEFRAMES.get(tf);
+      if(!response||response.schemaVersion!==1||response.symbol!==symbol||response.period!==spec.apiPeriod||typeof response.seriesId!=='string'||typeof response.revision!=='string'||!Array.isArray(response.bars)||response.bars.some(b=>!normalize(b))||response.bars.some((b,i,a)=>i&&b.t<=a[i-1].t))return false;
+      const old=entry(tf).meta;
+      if(old?.sourceCheckedAt>response.sourceCheckedAt)return false;
+      // A prewarm arriving during a first load supersedes it, but never abort an older-page request.
+      if(controllers[tf]&&!entry(tf).loadingBefore){generations[tf]=(generations[tf]||0)+1;controllers[tf].abort();delete controllers[tf];}
+      merge(tf,response);return true;
+    }
     async function load(tf,{before,limit}={}){
       const spec=window.PANEL_TIMEFRAMES.get(tf),e=entry(tf);if(!spec||spec.kind!=='history'||e.retryAt>Date.now())return e;
       controllers[tf]?.abort();const ac=new AbortController();controllers[tf]=ac;
-      const gen=(generations[tf]||0)+1;generations[tf]=gen;e.status='loading';
+      const gen=(generations[tf]||0)+1;generations[tf]=gen;e.loadingBefore=before||null;e.status='loading';
       const current=()=>generations[tf]===gen&&!ac.signal.aborted;
+      const deadlineAt=Date.now()+timeoutMs;
       try{
         let identity=e.meta?.seriesId;
         for(let attempt=0;attempt<2;attempt++){
           const qs=new URLSearchParams({symbol,period:spec.apiPeriod,limit:String(limit||spec.visible+spec.prewarm)});
           if(before)qs.set('before',before);if(identity)qs.set('seriesId',identity);
-          const r=await fetchImpl('/api/history?'+qs,{signal:ac.signal}),j=await r.json();
+          const r=await transport.request('history:'+symbol+':'+tf, '/api/history?'+qs, {replace:true, signal:ac.signal, timeoutMs:Math.max(1,deadlineAt-Date.now()), readErrorJson:true}),j=(await r.json())||{};
           if(!current())return e;
           if(r.status===409&&identity&&attempt===0){identity=null;e.status=e.bars.length?'stale':'loading';continue;}
-          if(!r.ok)throw Object.assign(new Error(j.error||'历史来源暂不可用'),{code:j.code||'HISTORY_SOURCE_UNAVAILABLE',retryAt:j.retryAt||null});
+          if(!r.ok)throw Object.assign(new Error(j.error||'历史来源暂不可用'),{code:j.code||'HISTORY_SOURCE_UNAVAILABLE',retryAt:j.retryAt||r.retryAt||null});
           if(j.schemaVersion!==1||j.symbol!==symbol||j.period!==spec.apiPeriod||typeof j.seriesId!=='string'||!j.seriesId||typeof j.revision!=='string'||!Array.isArray(j.bars))throw new Error(j.error||'invalid history response');
           if(j.bars.some(b=>!normalize(b))||j.bars.some((b,i,a)=>i&&b.t<=a[i-1].t))throw new Error('invalid history bars');
           return merge(tf,j,{before});
@@ -48,8 +61,8 @@
       finally{if(controllers[tf]===ac)delete controllers[tf];}
       return e;
     }
-    function abort(){for(const tf of Object.keys(controllers)){generations[tf]=(generations[tf]||0)+1;controllers[tf].abort();delete controllers[tf];}}
-    return Object.freeze({getSeries:tf=>entry(tf).bars,getRevision:tf=>entry(tf).revision,getMeta:entry,load,abort});
+    function abort(){for(const tf of Object.keys(controllers)){generations[tf]=(generations[tf]||0)+1;controllers[tf].abort();delete controllers[tf];const e=entry(tf);e.status=e.bars.length?'stale':'unknown';e.loadingBefore=null;}}
+    return Object.freeze({getSeries:tf=>entry(tf).bars,getRevision:tf=>entry(tf).revision,getMeta:entry,load,hydrate,abort});
   };
   window.PANEL_HISTORY_STORE=Object.freeze({createHistoryStore});
 })();

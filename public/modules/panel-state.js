@@ -1,4 +1,16 @@
 (() => {
+  function createSafeStorage(getStorage, onUnavailable = () => {}) {
+    const memory=new Map();let storage=null,failed=false;
+    const fail=()=>{if(!failed){failed=true;onUnavailable();}storage=null;};
+    try{storage=getStorage();if(!storage)fail();}catch{fail();}
+    return Object.freeze({
+      getItem(key){if(storage)try{const value=storage.getItem(key);if(value!==null)memory.set(key,value);return value;}catch{fail();}return memory.get(key)??null;},
+      setItem(key,value){memory.set(key,String(value));if(storage)try{storage.setItem(key,String(value));}catch{fail();}},
+      removeItem(key){memory.delete(key);if(storage)try{storage.removeItem(key);}catch{fail();}},
+      persistent:()=>!failed
+    });
+  }
+
   const timestampMs = value => { const n=Number(value);return Number.isFinite(n)&&n>0?(n<1e12?n*1000:n):null; };
   const positive = value => Number.isFinite(Number(value))&&Number(value)>0?Number(value):0;
   function calendarStatus(data) {
@@ -103,5 +115,5 @@
       resume() { samples = []; synced = false; },
       status: () => ({ synced, uncertaintyMs: samples.length ? Math.min(...samples.map(s => s.rtt)) / 2 : null }) };
   }
-  window.PANEL_STATE = Object.freeze({ createState, selectFreshness, pollingPolicy, scrollToCard, calendarStatus, formatQuoteAge, createQuoteClock });
+  window.PANEL_STATE = Object.freeze({ createSafeStorage, createState, selectFreshness, pollingPolicy, scrollToCard, calendarStatus, formatQuoteAge, createQuoteClock });
 })();

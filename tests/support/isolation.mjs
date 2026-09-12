@@ -11,6 +11,7 @@ export function createTestSandbox(root, source = process.env) {
     PATH: [path.dirname(process.execPath), source.PATH || '/usr/bin:/bin'].join(path.delimiter),
     TMPDIR: tempDirectory, TMP: tempDirectory, TEMP: tempDirectory,
     LANG: 'C.UTF-8', TZ: 'UTC', NODE_ENV: 'test', NO_COLOR: '1',
+    HISTORY_BACKGROUND_ENABLED:'0', HISTORY_STATE_PATH:path.join(directory,'history.json'), MACRO_BACKGROUND_ENABLED:'0', MACRO_STATE_PATH:path.join(directory,'macro.json'),
     PANEL: root, PANEL_TEST_AUTOSTART: '1', PORT: '0',
     LOG_FILE: path.join(directory, 'panel.log'),
     QQQ_RELAY_LOG: path.join(directory, 'relay.log'),

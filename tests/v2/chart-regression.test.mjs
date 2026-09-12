@@ -18,11 +18,11 @@ export function sourceRows(){
  return rows.reverse();
 }
 function engineSandbox(){const s={window:{},Date};vm.runInNewContext(fs.readFileSync(new URL('../../public/modules/panel-chart-engine.js',import.meta.url),'utf8'),s);return s.window.PANEL_CHART_ENGINE;}
-function historySandbox(){const s={window:{},URLSearchParams,AbortController,AbortSignal,setTimeout,clearTimeout,Date};for(const f of ['panel-timeframes.js','panel-history-store.js'])vm.runInNewContext(fs.readFileSync(new URL('../../public/modules/'+f,import.meta.url),'utf8'),s);return s.window;}
+function historySandbox(){const s={window:{},URLSearchParams,AbortController,AbortSignal,setTimeout,clearTimeout,Date};for(const f of ['panel-timeframes.js','panel-scheduler.js','panel-network.js','panel-history-store.js'])vm.runInNewContext(fs.readFileSync(new URL('../../public/modules/'+f,import.meta.url),'utf8'),s);return s.window;}
 
 test('REGRESSION: Yahoo 429 cannot disable US daily/weekly/monthly/yearly at the real HTTP boundary',async t=>{
  const calls=[];
- const app=createApplication({env:{PORT:0,REALTIME_SNAPSHOTS:'0',PUBLIC_SOURCE_REDUNDANCY:'0'},now:()=>asOf,telemetry:createTelemetry(),upstream:async url=>{
+ const app=createApplication({env:{HISTORY_BACKGROUND_ENABLED:'0',HISTORY_STATE_PATH:'',MACRO_BACKGROUND_ENABLED:'0',MACRO_STATE_PATH:'',PORT:0,REALTIME_SNAPSHOTS:'0',PUBLIC_SOURCE_REDUNDANCY:'0'},now:()=>asOf,telemetry:createTelemetry(),upstream:async url=>{
   calls.push(url);
   if(url.includes('api.nasdaq.com')&&url.includes('/historical'))return {status:200,headers:{},body:JSON.stringify({data:{symbol:'NVDA',totalRecords:sourceRows().length,tradesTable:{rows:sourceRows()}},status:{rCode:200}})};
   return {status:429,headers:{'retry-after':'120'},body:''};

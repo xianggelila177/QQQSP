@@ -1,7 +1,7 @@
 (() => {
   const withDeadline = (promise, ms, onTimeout, message = '请求超时') => {
     let timer = 0;
-    const deadline = new Promise((_, reject) => { timer = setTimeout(() => { try { onTimeout && onTimeout(); } catch {} reject(new Error(message)); }, ms); });
+    const deadline = new Promise((_, reject) => { timer = setTimeout(() => { try { onTimeout && onTimeout(); } catch {} reject(Object.assign(new Error(message), {code:'REQUEST_TIMEOUT'})); }, ms); });
     return Promise.race([promise, deadline]).finally(() => { if (timer) clearTimeout(timer); });
   };
   // Presentation time must never depend on an upstream request or Worker health.

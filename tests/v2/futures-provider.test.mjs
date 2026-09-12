@@ -51,7 +51,7 @@ test('point futures display point values and disable currency conversion, withou
 });
 test('real HTTP: typo discovery works offline and adding the selected symbol reaches futures quote/history paths',async t=>{
  let network=0;const urls=[];
- const app=createApplication({env:{PORT:0,SYMBOLS:'',REALTIME_SNAPSHOTS:'0',PUBLIC_SOURCE_REDUNDANCY:'0'},now:()=>asOf,upstream:async url=>{network++;urls.push(url);
+ const app=createApplication({env:{HISTORY_BACKGROUND_ENABLED:'0',HISTORY_STATE_PATH:'',MACRO_BACKGROUND_ENABLED:'0',MACRO_STATE_PATH:'',PORT:0,SYMBOLS:'',REALTIME_SNAPSHOTS:'0',PUBLIC_SOURCE_REDUNDANCY:'0'},now:()=>asOf,upstream:async url=>{network++;urls.push(url);
   if(url.includes('stock/get'))return response(em());
   if(url.includes('kline/get'))return response({data:{code:'NQ00Y',market:103,klines:['2026-09-09,24000,24100,24200,23900,100','2026-09-10,24100,24200,24300,24000,150']}});
   return {status:429,headers:{'Retry-After':'60'},body:''};
@@ -72,7 +72,7 @@ test('Yahoo display type Futures cannot be mistaken for an equity or filtered ou
 
 
 test('expanded search keeps supported futures and cash results, not orphan futures without a quote/history identity',async t=>{
- const app=createApplication({env:{PORT:0,SYMBOLS:'',REALTIME_SNAPSHOTS:'0',PUBLIC_SOURCE_REDUNDANCY:'0'},now:()=>asOf,upstream:async url=>{
+ const app=createApplication({env:{HISTORY_BACKGROUND_ENABLED:'0',HISTORY_STATE_PATH:'',MACRO_BACKGROUND_ENABLED:'0',MACRO_STATE_PATH:'',PORT:0,SYMBOLS:'',REALTIME_SNAPSHOTS:'0',PUBLIC_SOURCE_REDUNDANCY:'0'},now:()=>asOf,upstream:async url=>{
   if(url.includes('/finance/search'))return response({quotes:[{symbol:'NQ=F',quoteType:'FUTURE',typeDisp:'Futures',shortname:'Nasdaq future'},{symbol:'UNSUPPORTED=F',quoteType:'FUTURE',typeDisp:'Futures',shortname:'Unregistered future'},{symbol:'NVDA',quoteType:'EQUITY',shortname:'NVIDIA'}]});
   return response({total:0,list:[]});
  }});t.after(()=>app.stop());app.start();await once(app.httpServer,'listening');

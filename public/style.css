@@ -108,3 +108,16 @@ button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,summ
 .macro-calendar{font-size:12px;line-height:1.8;margin:12px 0}.calendar-note{color:var(--mut)}.calendar-event{padding:12px;background:var(--line2);border-radius:8px;margin:8px 0;overflow-wrap:anywhere}.calendar-values{display:flex;flex-wrap:wrap;gap:8px 20px;margin:6px 0}.calendar-event summary{cursor:pointer;color:var(--acc)}
 
 #panels + #marketDirectory{margin-top:20px}
+
+/* v2.5: monitor status remains visible while the panel is folded. */
+.macrohead{flex-wrap:wrap;gap:8px 14px}.macro-monitor-status{font-size:12px;color:var(--muted,#66758c);font-weight:400;white-space:normal;overflow-wrap:anywhere}.macro-evidence,.factor-details{overflow-wrap:anywhere}
+@media(max-width:600px){.macro-monitor-status{flex-basis:100%;padding-right:20px}}
+
+.macrohead{position:relative;padding-right:22px}.macrohead:after{position:absolute;right:0;top:15px}
+
+/* v2.9: touch targets, bounded status messages, and actionable empty state. */
+.chart-modes{display:flex;flex-wrap:wrap;gap:4px}.chart-statusbar{flex-wrap:wrap}
+.msg-info{background:var(--ink,#334155)}.msg-action{margin-left:12px;color:inherit;background:transparent;border:1px solid currentColor;border-radius:4px;padding:4px 8px}.msg{padding-right:48px}.msg .msg-close{width:32px;height:32px}
+.watchlist-empty{grid-column:1/-1;text-align:center;padding:36px 16px;color:var(--mut)}.watchlist-empty[hidden]{display:none}.watchlist-empty button{min-height:44px;padding:8px 18px}
+.search-status{font-size:12px;color:var(--mut)}.search-status:empty{display:none}
+@media(max-width:640px),(pointer:coarse){.chart-modes button,.chart-retry{min-height:44px;min-width:44px;padding:8px 10px}.msg .msg-close{min-height:44px;min-width:44px;top:0;right:0}.search-more,.sempty button{min-height:44px}}

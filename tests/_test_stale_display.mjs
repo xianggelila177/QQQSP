@@ -32,7 +32,7 @@ try {
   ok((panels._insertedHTML || []).some(h => h.includes('class="chip stale-warn"')), '卡片模板含 class="chip stale-warn" 徽标');
   ok((panels._insertedHTML || []).some(h => h.includes('stale-warn" hidden>数据延迟')), '徽标文案为"数据延迟"(模板)');
 
-  for (const t of env.timers.intervals(1000)) t.fn();   // 时钟 tick 驱动 updateAt
+  env.hooks().tickClock();   // 时钟 tick 驱动 updateAt
   const ua = env.byId('updateAt');
   ok(ua.textContent.includes('延迟'), 'updateAt 文案含"延迟"(实际: ' + ua.textContent + ')');
   ok(!ua.textContent.includes('连接正常'), '有 stale 时不再显示"连接正常"(实际: ' + ua.textContent + ')');
@@ -50,7 +50,7 @@ try {
   env.fetch.push('market', { body: [mkQuote('000660.KS')] });
   await env.hooks().refresh(false);
   await env.drain();
-  for (const t of env.timers.intervals(1000)) t.fn();
+  env.hooks().tickClock();
   ok(!!q.staleWarn && q.staleWarn.hidden === true, '恢复后徽标隐藏');
   ok(env.byId('updateAt').textContent === '连接正常', '无 stale 且新鲜 → 显示"连接正常"(实际: ' + env.byId('updateAt').textContent + ')');
   ok(!env.byId('updateAt').classList.contains('stale'), '无 stale 新鲜 → 无 stale class');

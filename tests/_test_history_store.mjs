@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 const window={fetch:()=>{},PANEL_TIMEFRAMES:{get:tf=>({kind:'history',apiPeriod:tf,visible:20,prewarm:19})}};
-vm.runInNewContext(fs.readFileSync(new URL('../public/modules/panel-history-store.js',import.meta.url),'utf8'),{window,URLSearchParams,AbortController,Date,Number,Map,Object,Promise,Error});
+for(const module of ['panel-scheduler','panel-network','panel-history-store'])vm.runInNewContext(fs.readFileSync(new URL('../public/modules/'+module+'.js',import.meta.url),'utf8'),{window,URLSearchParams,AbortController,Date,Number,Map,Object,Promise,Error,setTimeout,clearTimeout});
 const bar={t:-31536000,periodStart:'1969-01-01',o:10,h:12,l:9,c:11,v:null};
 const payload=(bars=[bar],extra={})=>({schemaVersion:1,symbol:'QQQ',period:'yearly',seriesId:'one',revision:'r1',bars,status:'ready',...extra});
 let answer=payload(),calls=[];

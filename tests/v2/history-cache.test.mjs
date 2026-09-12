@@ -6,7 +6,7 @@ const raw={meta:{symbol:'600000.SS',exchangeName:'SHH',exchangeTimezoneName:'Asi
 test('historical aggregation reused; optional source identity changes produce 409',async()=>{
  let source='yahoo',calls=0;const service=createHistoryService({now:()=>now,fetchChart:async()=>{calls++;return {...raw,source};}});
  const a=await service.get('600000.SS','weekly',{count:10});const b=await service.get('600000.SS','weekly',{count:10});
- assert.equal(a.revision,b.revision);assert.equal(calls,1);assert.equal(service.diagnostics().aggregateBuilds,1);assert.equal(service.diagnostics().byteAccounting,'estimated');
+ assert.equal(a.revision,b.revision);assert.equal(calls,1);assert.equal(service.diagnostics().aggregateBuilds,1);assert.equal(service.diagnostics().byteAccounting,'raw+four-aggregate-reservation');
  source='sina';await assert.rejects(service.get('600000.SS','weekly',{count:10,force:true,seriesId:a.seriesId}),{code:'HISTORY_SERIES_CHANGED'});service.close();
 });
 test('A-share history can fall back to Sina without pretending full historical coverage',async()=>{

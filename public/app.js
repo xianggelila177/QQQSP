@@ -1,12 +1,14 @@
 (() => {
   const $ = (id) => document.getElementById(id);
+  let activeToastClose=null;
   const panelsEl = $('panels');
   const stripEl = $('strip');
   const PANEL = window.PANEL_UTILS;
   if (!PANEL) throw new Error('panel helper modules missing');
   const panelNetwork = PANEL.createNetwork({ fetchImpl: fetch, timeoutMs: 20000 });
   const quoteClock = window.PANEL_STATE.createQuoteClock();
-  const panelState = PANEL.createState(localStorage, { maxWatchlist: 12 });
+  const storage=window.PANEL_STATE.createSafeStorage(()=>window.localStorage,()=>queueMicrotask(()=>flash('浏览器存储不可用，偏好仅在本次页面会话中保留','warn')));
+  const panelState = PANEL.createState(storage, { maxWatchlist: 12 });
   let refreshMode=panelState.loadRefreshMode();
   let lastData = [];
   let liveStore=null;
@@ -20,7 +22,21 @@
   // ---- 多市场自选列表 ----
   const WL_KEY = 'qqq-watchlist';
   let watchlist = panelState.loadWatchlist(WL_KEY, ['QQQ', 'SPY']);
-  const saveWL = () => panelState.saveWatchlist(WL_KEY, watchlist);
+  const watchlistNetwork=PANEL.createNetwork({fetchImpl:fetch,timeoutMs:10000});
+  let pendingWatchlist=null,savingWatchlist=false;
+  async function persistWatchlist(){
+    if(savingWatchlist)return;savingWatchlist=true;
+    try{while(pendingWatchlist!==null){const symbols=pendingWatchlist;pendingWatchlist=null;
+      const response=await watchlistNetwork.request('watchlist','/api/history/watchlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({symbols})});
+      if(!response.ok)throw new Error('保存失败');
+    }}catch{flash('本地自选已更新，服务器后台自选尚未保存；下次增删时将重试','warn');}
+    finally{savingWatchlist=false;}
+  }
+  const saveWL=()=>{panelState.saveWatchlist(WL_KEY,watchlist);pendingWatchlist=[...watchlist];void persistWatchlist();};
+  const emptyState=document.createElement('section');emptyState.className='watchlist-empty';emptyState.hidden=true;
+  emptyState.innerHTML='<h2>尚未添加自选</h2><p>搜索证券代码或名称，即可添加行情卡片。</p><button type="button">搜索并添加标的</button>';
+  emptyState.querySelector('button').addEventListener('click',()=>$('q').focus());panelsEl.appendChild(emptyState);
+  const updateEmptyState=()=>{emptyState.hidden=watchlist.length!==0;};
   const NAMES_KEY = 'qqq-names';
   const names = panelState.loadNames(NAMES_KEY);
   const saveName = (sym, name) => { if (typeof name!=='string' || !name.trim()) return; names[sym]=name.trim().slice(0,160); panelState.saveNames(NAMES_KEY,names); };
@@ -30,13 +46,15 @@
   const {ensureCard,render,renderStrip,updateQuoteMeta,setFetchStatus,cardCache}=cardView;
   function removeFromWatch(sym) {
     const q=cardCache.get(sym); if(!q)return;
+    const removedIndex=watchlist.indexOf(sym),restoreFocus=q.el.contains(document.activeElement);
       watchlist = watchlist.filter(x => x !== sym); marketGeneration++; newsController.invalidate(); saveWL();
-      cardView.remove(sym); marketStore.remove(sym);
+      cardView.remove(sym); marketStore.remove(sym);updateEmptyState();
+      if(restoreFocus){const next=cardCache.get(watchlist[Math.min(removedIndex,watchlist.length-1)]);(next?.el.querySelector('button')||$('q')).focus();}
       cardCur.delete(sym); saveCardCurrencies(); if (q.strip) q.strip.remove();
       marketDirectory.syncMembership();
       lastData = lastData.filter(d => d.symbol !== sym);
       lastErrorCount = [...cardCache.values()].filter(card => card.el.classList.contains('fetch-error')).length;
-      renderDigest(); updateSession(lastData);liveStore?.setSymbols();
+      renderDigest(); updateSession(lastData);liveStore?.setSymbols();void refreshPreparedHistory(true);
       if (!watchlist.length) {
         lastErrorCount=0;lastPendingCount=0;
         abortActiveRequests();
@@ -62,6 +80,19 @@
     $('session').className='chip'+(trading?' ours-open':'');
   }
 
+  let preparedNextAt=0,preparedReading=false;
+  function applyHistories(payload){
+    if(!payload?.enabled||!Array.isArray(payload.entries))return;
+    preparedNextAt=Date.now()+30000;
+    for(const entry of payload.entries)if(watchlist.includes(entry.symbol))chartController.applyPrewarm(ensureCard(entry.symbol),entry);
+  }
+  async function refreshPreparedHistory(force=false){
+    if(preparedReading||!force&&Date.now()<preparedNextAt)return;
+    preparedReading=true;preparedNextAt=Date.now()+30000;
+    try{const r=await panelNetwork.request('history-bundle','/api/history/bundle?symbols='+encodeURIComponent(watchlist.join(',')));if(r.ok)applyHistories(await r.json());}
+    catch{/* Existing bars remain usable; the normal source status carries failures. */}
+    finally{preparedReading=false;}
+  }
   let lastRefresh=0;
   let lastErrorCount=0;
   let lastPendingCount=0;
@@ -176,12 +207,14 @@
   // P1-U8: flash 支持 success/warn/error 变体; 默认 error 兼容旧调用; role 语义化播报
   // T8: 右上角 × 可手动关闭(点击即 remove 并 clearTimeout, 防止自动关闭定时器重复触发);
   //     × 由 CSS .msg-close::after 渲染 — 消息 textContent 保持纯文本(读屏/测试不受按钮字符污染)
-  function flash(m, type){
-    const t = type === 'success' || type === 'warn' ? type : 'error';
+  function flash(m, type, action){
+    activeToastClose?.();
+    const t = ['success','info','warn','error'].includes(type) ? type : 'error';
     const el = document.createElement('div');
     el.className = 'msg' + (t === 'error' ? '' : ' msg-' + t);
-    el.setAttribute('role', t === 'success' ? 'status' : 'alert');
+    el.setAttribute('role', t==='success'||t==='info' ? 'status' : 'alert');
     el.textContent = m;   // 消息纯文本(须先于按钮: textContent setter 会清空既有子节点)
+    if(action){const button=document.createElement('button');button.type='button';button.className='msg-action';button.textContent=action.label;button.addEventListener('click',action.run);el.appendChild(button);}
     const x = document.createElement('button');
     x.className = 'msg-close';
     x.type = 'button';
@@ -189,10 +222,10 @@
     x.setAttribute('title', '关闭');
     el.appendChild(x);
     let timer = 0;
-    const close = () => { if (timer) { clearTimeout(timer); timer = 0; } el.remove(); };
+    const close = () => { if (timer) { clearTimeout(timer); timer = 0; } el.remove();if(activeToastClose===close)activeToastClose=null; };
     x.addEventListener('click', close);
     document.body.appendChild(el);
-    timer = setTimeout(() => { timer = 0; el.remove(); }, 4000);
+    activeToastClose=close;timer = setTimeout(close,action?15000:4000);
     return el;
   }
 
@@ -201,9 +234,9 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=77').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=82').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
-        nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本'); });
+        nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本','info',{label:'刷新页面',run:()=>location.reload()}); });
       });
     }).catch(()=>{});
   }
@@ -229,6 +262,7 @@
   // 时钟/轮询统一由下方心跳驱动(BG-KEEPALIVE)
   // ---- 全球搜索 ----
   function addToWatch(sym, name) {
+    const changed=!watchlist.includes(sym);
     if (!watchlist.includes(sym)) {
       if (watchlist.length >= 12) { flash('自选最多添加 12 只标的', 'warn'); return false; }
       watchlist.push(sym); marketGeneration++; saveWL();
@@ -236,7 +270,7 @@
     saveName(sym, name || '');
     ensureCard(sym); searchController.hideSearch(true);
     marketDirectory.syncMembership();
-    liveStore?.setSymbols(); refreshNews();
+    updateEmptyState();if(changed){liveStore?.setSymbols();void refreshNews();void refreshPreparedHistory(true);}
     const card = document.getElementById('card-' + sym);window.PANEL_STATE.scrollToCard(card,{block:'start'});
     return true;
   }
@@ -285,6 +319,7 @@
   function tickClock() {
     chartController.tickStatus?.();
     macroController.tick?.();
+    if(!document.hidden&&!liveStore?.healthy())void refreshPreparedHistory();
     const d8=new Date(Date.now()+8*3600e3); const p2=n=>String(n).padStart(2,'0');   // 强制 UTC+8
     $('clock').textContent=p2(d8.getUTCHours())+':'+p2(d8.getUTCMinutes())+':'+p2(d8.getUTCSeconds())+' UTC+8';
     updateRefreshModeLabel();
@@ -302,7 +337,7 @@
   function onBeat() {
     lastBeatAt = Date.now();   // 看门狗判定心跳存活的依据
     beatN++;
-    tickClock();
+    liveStore?.reschedule();
     const policy=currentPollingPolicy();
     // Market traffic is exclusively owned by liveStore (SSE, or one fallback timer).
     if ((beatN-lastNewsBeat)*beat.ms>=policy.newsMs){lastNewsBeat=beatN;refreshNews();}
@@ -355,13 +390,13 @@
   setInterval(watchdogTick, 5000);   // 看门狗: 主线程 5s 一拍(冻结恢复后立即可用)
   // 手动刷新按钮(顶栏 ↻): 立即全量拉取, 与自动心跳共用去重/缓存
   $('btnRefresh').addEventListener('click', () => { manualRefresh(); });
-  watchlist.forEach(ensureCard);
+  watchlist.forEach(ensureCard);updateEmptyState();
   const displayTicker=window.PANEL_SCHEDULER.createDisplayTicker(tickClock);
   displayTicker.start();
   window.addEventListener('pagehide',()=>displayTicker.stop());
   window.addEventListener('pageshow',()=>displayTicker.start());
-  liveStore=window.PANEL_LIVE_STORE.createLiveStore({getSymbols:()=>watchlist,getCv:cvParam,
-    readSnapshot:refresh,onClock:value=>quoteClock.sync(value,quoteClock.monotonic()),
+  liveStore=window.PANEL_LIVE_STORE.createLiveStore({getSymbols:()=>watchlist,getCv:cvParam,onHistory:applyHistories,
+    readSnapshot:refresh,getPolicy:currentPollingPolicy,getRetryAt:()=>panelNetwork.retryAt('market'),onClock:value=>quoteClock.sync(value,quoteClock.monotonic()),
     onQuotes:arr=>{marketGeneration++;applyQuotes(arr);},onState:updateRefreshModeLabel});
   window.addEventListener('pagehide',()=>liveStore.stop());
   syncVisibility();

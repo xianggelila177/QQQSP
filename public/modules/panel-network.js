@@ -25,16 +25,17 @@
       const abort = () => entry.cancel();
       if (external?.aborted) abort();
       else external?.addEventListener('abort', abort, { once: true });
-      const { replace, ...fetchOptions } = options;
+      const { replace, timeoutMs: requestTimeout = timeoutMs, readErrorJson = false, ...fetchOptions } = options;
       const work = async () => {
+        if (controller?.signal.aborted || external?.aborted) throw Object.assign(new Error('请求已取消'), {name:'AbortError'});
         const response = await fetchImpl(url, { ...fetchOptions, signal: controller?.signal || external });
         if(response.status===429 || response.status===503){const header=response.headers?.get?.('Retry-After');if(response.status===429 || header != null)retryAt.set(kind,now()+Math.max(1000,retryDelay(header)));}
-        const payload = response.ok ? await response.json() : null;
+        const payload = response.ok ? await response.json() : readErrorJson ? await response.json().catch(()=>null) : null;
         if (!response.ok) { try { await response.body?.cancel(); } catch {} }
         return { retryAt:retryAt.get(kind)||0, ok: response.ok, status: response.status, headers: response.headers, json: async () => payload };
       };
       const promise = window.PANEL_SCHEDULER.withDeadline(
-        Promise.race([work(), cancelled]), timeoutMs, () => controller?.abort()
+        Promise.race([work(), cancelled]), Math.max(1, requestTimeout), () => controller?.abort()
       ).finally(() => {
         external?.removeEventListener('abort', abort);
         if (active.get(kind) === entry) active.delete(kind);

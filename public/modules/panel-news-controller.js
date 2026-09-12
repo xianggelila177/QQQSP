@@ -48,9 +48,10 @@
         renderNews(q,data[symbol] || [],metadata[symbol] || {pending:true});
       }
     }
-    function invalidate() { generation++;network.abort?.('news'); }
+    function prune(){const keep=new Set(getWatchlist());for(const key of Object.keys(data))if(!keep.has(key))delete data[key];for(const key of Object.keys(metadata))if(!keep.has(key))delete metadata[key];}
+  function invalidate() {prune(); generation++;network.abort?.('news'); }
     async function refreshNews() {
-      const requested=[...getWatchlist()], key=requested.join(',');
+      prune();const requested=[...getWatchlist()], key=requested.join(',');
       if(!key){invalidate();return true;}
       if(inFlight?.key===key && inFlight.generation===generation)return inFlight.promise;
       const current=++generation;
@@ -77,7 +78,7 @@
       })();
       inFlight=entry;return entry.promise;
     }
-    return Object.freeze({renderNews,distribute,refreshNews,invalidate});
+    return Object.freeze({renderNews,distribute,refreshNews,invalidate,cacheSize:()=>Object.keys(data).length});
   };
   window.PANEL_NEWS_CONTROLLER=Object.freeze({createNewsController});
 })();

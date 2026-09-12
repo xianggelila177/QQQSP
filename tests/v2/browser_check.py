@@ -3,7 +3,7 @@ from pathlib import Path
 import re, json, shutil, os
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[2]
-OUT=ROOT/'docs/evidence/v2.4';OUT.mkdir(parents=True,exist_ok=True)
+OUT=ROOT/'docs/evidence/v2.7';OUT.mkdir(parents=True,exist_ok=True)
 html=(ROOT/'public/index.html').read_text();html=re.sub(r'<script\b[^>]*>.*?</script>','',html,flags=re.S);html=re.sub(r'<link[^>]+>','',html);html=html.replace('</head>','<style>'+(ROOT/'public/style.css').read_text()+'</style></head>')
 report={'mode':'offline browser, real bundle; fixed data; native HTTP/SSE tested separately','cases':[]}
 with sync_playwright() as pw:
@@ -13,15 +13,15 @@ with sync_playwright() as pw:
   page.set_content(html);page.add_script_tag(content=(ROOT/'tests/v2/browser-fixture.js').read_text())
   if mode!='normal':page.add_script_tag(content="window.Worker=class { constructor(){"+("setTimeout(()=>this.onerror?.({preventDefault(){}}),50);" if mode=='worker-error' else '')+"} terminate(){} };")
   page.add_script_tag(content=(ROOT/'public/panel.bundle.js').read_text());page.wait_for_timeout(500)
-  assert page.locator('.price-card').count()==3
+  assert page.locator('.price-card').count()==3, {'count':page.locator('.price-card').count(),'errors':errors,'body':page.locator('body').inner_text()[:1600]}
   page.evaluate("""()=>{const el=__app.cardCache.get('QQQ').quoteAge;window.__ageChanges=[];let last=el.textContent;new MutationObserver(()=>{if(el.textContent!==last){__ageChanges.push({at:performance.now(),text:el.textContent});last=el.textContent;}}).observe(el,{childList:true,characterData:true,subtree:true});}""")
   page.wait_for_timeout(4600)
   changes=page.evaluate('__ageChanges');gaps=[changes[i]['at']-changes[i-1]['at'] for i in range(1,len(changes))]
   assert len(changes)>=4,(mode,changes)
   assert max(gaps)<1200,(mode,gaps)
-  assert page.evaluate('__requests.length')==0
+  requests=page.evaluate('__requests');assert not [x for x in requests if '/api/market' in x['url'] or '/api/news' in x['url']],requests
   assert '空间不足时自动减少列数' not in page.locator('body').inner_text()
-  case={'case':mode,'ageUpdates':len(changes),'maxGapMs':round(max(gaps),2),'healthyHttpRequests':0,'javascriptErrors':errors}
+  case={'case':mode,'ageUpdates':len(changes),'maxGapMs':round(max(gaps),2),'healthyQuotePollingRequests':0,'startupCacheReads':[x['url'] for x in requests],'javascriptErrors':errors}
   if mode=='normal':
    page.evaluate("__streams.at(-1).emit([__quote('QQQ',105)])")
    assert page.evaluate("__app.cardCache.get('QQQ').d.price")==105

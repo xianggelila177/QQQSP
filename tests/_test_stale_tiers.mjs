@@ -55,7 +55,7 @@ try {
 
   // E. 与 updateAt 联动: staleInfo 也计入 anyStale(顶栏维持 T2 语义)
   await refreshWith({ staleInfo: { reason: 'cooldown' } });
-  for (const t of env.timers.intervals(1000)) t.fn();
+  env.hooks().tickClock();
   const ua = env.byId('updateAt');
   ok(ua.textContent.includes('延迟'), 'E1 staleInfo 存在时顶栏维持延迟文案(实际: ' + ua.textContent + ')');
   ok(!ua.textContent.includes('实时'), 'E2 顶栏不显示「实时」');

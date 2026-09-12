@@ -11,7 +11,7 @@
     const observer = typeof IntersectionObserver === 'function' ? new IntersectionObserver(entries => {
       for(const entry of entries) { const q=cards.get(entry.target); if(!q)continue; q.visible=entry.isIntersecting; if(q.visible && q._dirty)drawChart(q,true); }
     }, {rootMargin:'100px'}) : null;
-    const cards=new Map();
+    const cards=new Map();let historyRefreshTimer=null;
     const resizeQueue=new Set();let resizeFrame=null;
     function scheduleResize(q){resizeQueue.add(q);if(resizeFrame!=null)return;resizeFrame=requestAnimationFrame(()=>{resizeFrame=null;for(const card of resizeQueue)if(!card._unmounted){card._pointerRect=null;drawChart(card,true);}resizeQueue.clear();});}
     const resize = typeof ResizeObserver === 'function' ? new ResizeObserver(entries => {
@@ -38,6 +38,7 @@
       q.cv.setAttribute('aria-describedby','chart-point-'+sym);
       q.point=el.querySelector('.chart-point'); q.point.id='chart-point-'+sym; q.point.setAttribute('aria-live','off');
       q.refreshHistory=async()=>{
+        if(q.historyPreparedAt&&Date.now()-q.historyPreparedAt<120000)return;
         if(q._unmounted||q.visible===false||document.hidden||q.tf==='intraday'||!q.d||q._loadingBefore)return;
         const tf=q.tf;
         if(q.historyStore.getMeta(tf)?.status==='loading')return;
@@ -49,7 +50,7 @@
         if(anchor&&savedView){const idx=seriesFor(q,tf).findIndex(b=>b.periodStart===anchor);if(idx>=0)savedView.winStart=idx;}
         if(q.tf===tf)drawChart(q,true);
       };
-      q.historyRefreshTimer=setInterval(q.refreshHistory,60000);
+      if(!historyRefreshTimer)historyRefreshTimer=setInterval(()=>{for(const card of cards.values())void card.refreshHistory();},60000);
 
     q.tabs[0].classList.add('on');
     q.tabs.forEach((b, i) => b.setAttribute('aria-pressed', String(i === 0)));
@@ -99,7 +100,7 @@
         dl.download = ((q.d && q.d.symbol) || 'chart') + '_' + q.tf + '.png';
         dl.href = out.toDataURL('image/png');
         document.body.appendChild(dl); dl.click(); dl.remove();
-        flash('图表已导出 PNG');
+        flash('图表已导出 PNG','success');
         return;
       }
       let vis = q.visN[q.tf] || (window.PANEL_TIMEFRAMES?.get(q.tf)?.visible || (q.tf==='yearly'?20:60));
@@ -112,7 +113,7 @@
       cards.set(q.cv,q); observer?.observe(q.cv); resize?.observe(q.cv);
       attachHover(q);
     }
-    function unmount(q) { if(q.historyRefreshTimer)clearInterval(q.historyRefreshTimer); q.historyStore?.abort(); q._unmounted=true; observer?.unobserve(q.cv); resize?.unobserve(q.cv); cards.delete(q.cv); }
+    function unmount(q) { if(q.historyRefreshTimer)clearInterval(q.historyRefreshTimer); q.historyStore?.abort(); q._unmounted=true; observer?.unobserve(q.cv); resize?.unobserve(q.cv); cards.delete(q.cv);if(!cards.size){clearInterval(historyRefreshTimer);historyRefreshTimer=null;} }
   function historyQuality(q,b){
     if(q.tf==='intraday')return '';
     const e=q.historyStore?.getMeta(q.tf),m=e?.meta;if(!m)return '';
@@ -176,9 +177,9 @@
     cv.addEventListener('touchend', clearHover);
     // 滚轮缩放: 锚定光标下的那根蜡烛(交易所式)
     cv.addEventListener('wheel', (e) => {
-      const p = q.plot; if (!p || !p.n || !p.all.length) return; e.preventDefault();
+      const p = q.plot; if (!(e.ctrlKey||e.metaKey)||!p||!p.n||!p.all.length) return;
       const newVis = Math.max(window.PANEL_TIMEFRAMES?.get(q.tf)?.minVisible || 1, Math.min(p.all.length, Math.round(p.vis * (e.deltaY > 0 ? 1.2 : 1 / 1.2))));
-      if (newVis === p.vis) return;
+      if (newVis === p.vis) return; e.preventDefault();
       const rect = cv.getBoundingClientRect();
       const gi = p.a + Math.floor(((e.clientX - rect.left) * (p.W / rect.width) - p.L) / p.slot);
       let ns = Math.round(gi - (gi - p.a) * newVis / p.vis);
@@ -187,7 +188,8 @@
       drawChart(q);
     }, { passive: false });
     // 拖拽平移(桌面+触摸统一): Pointer Events + setPointerCapture — 指针移出画布仍持续跟踪, 触摸端由此获得拖拽能力
-    let drag = null;
+    let drag = null,dragFrame=null;
+    const scheduleDrag=()=>{if(dragFrame!==null)return;dragFrame=requestAnimationFrame(()=>{dragFrame=null;if(cv.isConnected!==false)drawChart(q);});};
     cv.addEventListener('pointerdown', (e) => {
       if (e.pointerType === 'mouse' && e.button !== 0) return;   // 鼠标仅左键拖拽
       drag = { x: e.clientX, s: q.winStart, id: e.pointerId };
@@ -200,7 +202,7 @@
       const dSlots = (e.clientX - drag.x) * (q.plot.W / rect.width) / q.plot.slot;
       const maxStart = Math.max(0, q.plot.all.length - q.plot.vis);
       const ns = Math.max(0, Math.min(maxStart, Math.round(drag.s - dSlots)));
-      if (ns !== q.winStart) { q.winStart = ns; q.followEnd = ns >= maxStart; drawChart(q); }
+      if (ns !== q.winStart) { q.winStart = ns; q.followEnd = ns >= maxStart; scheduleDrag(); }
     });
     const endDrag = (e) => { if (drag && (!e || e.pointerId === drag.id)) { drag = null; try { cv.style.cursor = 'crosshair'; } catch {} } };
     cv.addEventListener('pointerup', endDrag);
@@ -229,6 +231,20 @@
        const detail=q.symbol+' '+periodLabel+' · '+(b._live?'最新报价点 '+money(b.c)+' · '+b.source+' · 无成交量数据':(p.candle ? '开 '+money(b.o)+' 高 '+money(b.h)+' 低 '+money(b.l)+' 收 '+money(b.c) : '价 '+money(b.c))+' · 量 '+fmtVol(b.v))+quality+' · 第 '+(p.a+i+1)+'/'+p.all.length+' 点';
       if(q.point){q.point.setAttribute('aria-live',q.keyboardSelection?'polite':'off');q.point.textContent=detail;}
       if(q.cursor){ const ctx=q.cursor.getContext('2d'); ctx.setTransform(q.cursor.width/p.W,0,0,q.cursor.height/p.H,0,0); engine.drawCursor(q,p,q.hoverIdx,ctx); }
+    }
+    function applyPrewarm(q,prepared){
+      if(q._unmounted||prepared.symbol!==q.symbol)return;
+      q.historyPreparedAt=Date.now();q.historyPrepared=prepared;
+      for(const spec of window.PANEL_TIMEFRAMES.all.filter(x=>x.kind==='history')){
+        const value=prepared.periods?.[spec.apiPeriod];
+        if(value){
+          const failed=prepared.status==='stale'||prepared.status==='error';
+          q.historyStore.hydrate?.(spec.key,{...value,prewarmed:true,refreshing:prepared.status==='refreshing',...(failed?{status:'stale',stale:true,errorCode:prepared.error,retryAt:prepared.retryAt}:{} )});
+        }else if(['error','stale'].includes(prepared.status)){
+          const e=q.historyStore.getMeta(spec.key);e.status=e.bars?.length?'stale':'error';e.errorCode=prepared.error;e.retryAt=prepared.retryAt;
+        }
+      }
+      if(q.d&&q.tf!=='intraday')drawChart(q);
     }
     function drawChart(q, force=false) {
       if(q.d&&q._observe){const view=q._observe(q.d,q._intradayMode);q._displayIntraday=view.bars;q._sampled=view.sampled;q._observationNote=view.note;}
@@ -271,7 +287,9 @@
       const checked=intra?q.d?.slowFields?.intraday?.updatedAt:m?.sourceCheckedAt;
       let text=intra?(q._sampled?'报价采样 · 非完整历史':'来源分时 · '+sourceName(q.d?.slowFields?.intraday?.source||q.d?.src)):
         e?.status==='loading'?label+' · 加载中…':e?.status==='error'?label+' · 历史来源暂不可用':
-        m?label+' · '+sourceName(m.source)+(e.status==='stale'?' · 缓存历史':''):label+' · 尚未加载';
+        m?label+' · '+sourceName(m.source)+(e.status==='stale'?' · 缓存历史':m.prewarmed?' · 后台已预备':'')+(m.refreshing?' · 后台更新中':''):label+(q.historyPrepared?' · 后台正在准备':' · 尚未加载');
+      text+=intra?' · 北京时间 UTC+8':' · 交易所交易日';
+      if(intra&&q.d?.slowFields?.intraday?.timeBasis==='epoch-unverified')text+=' · 来源时间口径待核验';
       if(cooling)text+=' · '+Math.ceil((e.retryAt-Date.now())/1000)+' 秒后可重试';
       if(q.chartState&&q.chartState.textContent!==text){q.chartState.textContent=text;q.chartState.title=checked?'来源检查 '+pointTime(checked/1000):'';}
       if(q.chartRetry){q.chartRetry.hidden=intra||!['error','stale'].includes(e?.status);q.chartRetry.disabled=cooling||e?.status==='loading';}
@@ -284,7 +302,7 @@
     const refreshVisible=()=>{for(const q of cards.values())q.refreshHistory?.();};
     window.addEventListener('focus',refreshVisible);
     document.addEventListener?.('visibilitychange',()=>{if(!document.hidden)refreshVisible();});
-    return Object.freeze({ mount, unmount, drawChart, tickStatus });
+    return Object.freeze({ mount, unmount, applyPrewarm, drawChart, tickStatus });
   };
   window.PANEL_CHART_CONTROLLER=Object.freeze({createChartController});
 })();

@@ -5,12 +5,15 @@
   let searchReqId = 0;   // P1-U2: 搜索请求代际号, 丢弃过期响应
   let searchController = null;
   let searchIndex = -1;
+  const status=document.createElement('div');status.className='search-status';status.setAttribute('role','status');status.setAttribute('aria-live','polite');
+  qEl.parentNode.appendChild(status);
+  const busy=value=>{qEl.setAttribute('aria-busy',String(value));srEl.setAttribute('aria-busy',String(value));};
   const hideSearch = (clear = false) => {
     searchReqId++;
     if (searchController) { try { searchController.abort(); } catch {} searchController = null; }
     clearTimeout(sTimer); searchIndex = -1; srEl.hidden = true; srEl.innerHTML = ''; qEl.setAttribute('aria-expanded', 'false');
     qEl.setAttribute('aria-activedescendant', '');
-    if (clear) qEl.value = '';
+    busy(false);status.textContent='';if (clear) qEl.value = '';
   };
   async function runSearch(more = false) {
     more = more === true;
@@ -18,6 +21,7 @@
     const v = qEl.value.trim(); if (!v) { hideSearch(); return 0; }
     if (searchController) { try { searchController.abort(); } catch {} }
     searchController = typeof AbortController === 'function' ? new AbortController() : null;
+    busy(true);status.textContent='正在查询…';srEl.innerHTML='<div class="sempty">正在查询…</div>';srEl.hidden=false;qEl.setAttribute('aria-expanded','true');
     try {
       const r = await panelNetwork.request('search', '/api/search?q=' + encodeURIComponent(v) + (more ? '&more=1' : ''), { replace: true, signal: searchController?.signal });
       if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -29,8 +33,8 @@
       srEl.innerHTML += more ? '<div class="sempty">已合并可用来源；目录可能不完整或限流，连续合约请核对来源。</div>' : '<div class="search-more" id="search-more-option" role="option" tabindex="0" data-search-more="1" aria-label="查询更多来源与具体合约">查询更多来源与具体合约</div>';
       srEl.hidden = false;
       qEl.setAttribute('aria-expanded', 'true'); searchIndex = -1;
-      return list.length;
-    } catch (e) { if (myId !== searchReqId) return 0; srEl.innerHTML = '<div class="sempty">搜索失败，请稍后重试</div>'; srEl.hidden = false; qEl.setAttribute('aria-expanded', 'true'); return 0; }
+      status.textContent=list.length?'找到 '+list.length+' 个结果，可用上下方向键选择':'没有匹配结果';return list.length;
+    } catch (e) { if (myId !== searchReqId) return 0; srEl.innerHTML = '<div class="sempty">搜索失败，<button type="button" data-search-retry="1">重新查询</button></div>'; srEl.hidden = false; qEl.setAttribute('aria-expanded', 'true');status.textContent='搜索失败，可重新查询';return 0; }finally{if(myId===searchReqId)busy(false);}
   }
   qEl.addEventListener('input', () => {
     if (composing) return;                       // IME 组合中: 不触发中间查询
@@ -44,7 +48,7 @@
   qEl.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       const items = [...srEl.querySelectorAll('.sitem, .search-more')]; if (!items.length || srEl.hidden) return;
-      e.preventDefault(); searchIndex = (searchIndex + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+      e.preventDefault(); searchIndex = searchIndex<0 ? (e.key==='ArrowDown'?0:items.length-1) : (searchIndex + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
       items.forEach((x, i) => x.setAttribute('aria-selected', String(i === searchIndex)));
       const selected = items[searchIndex]; if (selected) { selected.scrollIntoView({ block: 'nearest' }); qEl.setAttribute('aria-activedescendant', selected.id); }
       return;
@@ -57,6 +61,7 @@
     runSearch();
   });
   srEl.addEventListener('click', (e) => {
+    if(e.target.closest('[data-search-retry]')){runSearch();return;}
     if(e.target.closest('[data-search-more]')){runSearch(true);return;}
     const it = e.target.closest('.sitem'); if (!it || !it.dataset.sym) return;
     const sym = it.dataset.sym.toUpperCase();

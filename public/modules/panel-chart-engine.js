@@ -145,9 +145,12 @@
     pTicks(q, p);
     // 底部时间刻度
     cx.fillStyle = CHART_THEME.axisText; cx.font = p.axisFont; cx.textAlign = 'center';
-    const tstep = Math.max(1, Math.ceil(n / Math.max(2,Math.floor((W-L-R)/75))));
+    // Include both visible endpoints; stride-only ticks could omit the live
+    // point and leave an older time as the final label.
+    const tickCount=Math.min(n,Math.max(2,Math.floor((W-L-R)/90)));
     let previousDate=null;
-    for (let i = 0; i < n; i += tstep) {
+    for (let tick=0;tick<tickCount;tick++) {
+      const i=tickCount===1?0:Math.round(tick*(n-1)/(tickCount-1));
       const ds = fmtDate(bars[i].t, true);
       const date=bars[i].periodStart||ds.slice(0,10),label=p.intraday?((previousDate&&date!==previousDate?ds.slice(5,10)+' ':'')+ds.slice(11)):q.tf==='yearly'?date.slice(0,4):q.tf==='monthly'?date.slice(0,7):q.tf==='weekly'?date:ds.slice(5,10);
       const maxWidth=Math.min(100,W-L-R),width=Math.min(maxWidth,cx.measureText?.(label).width??label.length*7);

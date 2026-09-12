@@ -1,49 +1,17 @@
-# 2.4 增补：宏观证据与跨资产观察
+# QQQSP 2.5 实施说明
 
-本节对应2.4.0，以下原版本说明保留为历史。宏观与目录位置互换；新增独立纯规则 `macro-analysis`、有界惰性采样 `macro-context`、可选授权日历 `macro-calendar`。没有新增数据库、模型或常驻后台采集任务。正式宏观新闻链路禁用Yahoo搜索兜底；原价格、图表与期货身份继续复用。
+## 一、概况
 
-最新说明见 [宏观研判与来源](MACRO-METHOD.zh-CN.md)、[测试报告](TEST-REPORT.zh-CN.md)及根目录部署说明。
+本版从2.4完整源码与此前2.5修改合并构建，保留行情、历史、期货搜索、响应式图表和每秒报价年龄。重点为宏观后台生命周期、证据分类、持久化与推送。完整部署和最终验收分别见根目录部署说明.md、docs/TEST-REPORT.zh-CN.md。
 
----
+## 二、模块与改动
 
-# QQQSP 2.3 实现说明
+app.js是唯一组装根。lib/macro-monitor.js拥有采集时钟和检查点；macro-sse.js负责读取快照后的在线广播；macro-notify.js为可选HTTPS通知接收端。lib/macro-semantics.js先识别地区和调查类型，macro-analysis.js再分析及归组，避免英国调查被误套美国CPI规则。
 
-本版在2.2基础上增加明确的期货分支，不重写全站、不改变股票图表契约，不引入数据库、用户系统或运行时包。
+lib/providers/macro-quotes.js负责替代观察来源，macro-context.js区分来源成交时间与服务器观察时间，macro-calendar.js保留确实提前采集的一致预期。前端panel-macro-controller.js独立维护宏观事件流，不再由详情展开启动采集；index.html新增后台状态标识并更新方法说明。
 
-## 一、关键变更
+发布补齐初始快照schema、缓存成功时间语义和通知重试耗尽去重。默认配置集中在config.js，.env.example由scripts/env-example.mjs生成。前端资源版本78，已拼接并预压缩。没有新增运行时依赖、数据库或多用户调度器。
 
-证券身份通过来源命名空间分离，先登记再进入报价和历史链路。
+## 三、结论
 
-| 文件 | 作用 |
-|---|---|
-| `data/futures-products.json` | 八个品种、来源代码、单位、交易所及别名 |
-| `lib/futures-instruments.js` | 16个静态来源入口、已登记根的具体月份解析、相关代码说明 |
-| `lib/catalog-search.js` | 一次构建本地索引，代码精确与相关候选分级 |
-| `lib/symbol-validation.js` | 接受合法 `=F` 代码，保持危险字符过滤 |
-| `lib/market-registry.js` | 保留20现金市场，追加国际期货分区 |
-| `lib/search.js`、`lib/http.js` | 统一FUTURE类型，合并去重；显式more查询；不展示无后端身份的孤立期货 |
-| `lib/providers/futures.js` | 分来源报价、缓存、失败等待、按需月份目录；Chicago时区偏移 |
-| `app.js` | 期货先分流，不进入股票快照/流式股票订阅 |
-| `mkt.mjs`、`lib/instruments.js` | 期货类型和时区，不错套股票开闭市 |
-| `lib/providers/public-history.js`、`lib/history-source.js`、`lib/history-service.js` | 明确期货历史来源、单位、日线聚合，不跨连续序列兜底 |
-| `public/modules/panel-format.js`、`panel-card-view.js` | 股指期货显示点数、基准口径和来源提示 |
-| `public/modules/panel-search-controller.js`、`panel-market-directory.js` | 期货结果、相关提示、更多来源按钮、键盘交互 |
-| `ops/futures-smoke.mjs` | 离线检索检查与可选真实行情验收 |
-
-所有期货依赖在应用组装处实例化；没有新增独立轮询线程。默认5秒源读取由已有引擎安排，本地页面年龄仍每秒变化。同代码并发请求合并，服务端缓存为小型有界Map。
-
-## 二、避免搜索可见但功能缺失
-
-浏览器测试从搜索框选择NQ00Y.FUT、NQ=F和远端返回月份，实际进入报价、日/周/月/年K与保存自选。测试发现新期货最初遗漏 `gmtoff`，导致有成交时间也无法建立采样；补充失败用例后引用已有时区工具修复。没有通过放宽时间校验来掩盖缺失时区。
-
-东财期货分时目前使用真实报价采样，不能称作来源完整分时。没有成交时间时显示未知，不构造价格点。历史量的单位没有核验时，界面保留单位未知，不显示虚假的成交量。
-
-## 三、保留与限制
-
-原股票、韩国搜索、图表故障恢复、每秒年龄、服务推送、恢复文件等既有逻辑保持原链路。新增期货不接入股票恢复快照，也不订阅Alpaca/Finnhub的股票通道。
-
-期货交易日历尚未配置，交易时段显示未知；不会因股票关市而停止查询。具体月份只认已登记品种，远端目录单次读取页有上限，未声称抓取全部交易所合约。
-
-## 四、工程结论
-
-新增功能由小型产品数据表与专用适配器承担；仍是原生Node和浏览器，无运行时新依赖。未来扩展应保持证券身份、来源时间和价格单位契约，而不是继续堆砌无法加载的别名。
+开发与运行路径分离：测试可注入上游，server.js正式入口不加载测试fixture；安装器仅复制运行文件。旧实施笔记和测试证据保存在archive/baseline中，仅用于历史审计，不替代本版说明。当前覆盖的是程序正确性及有边界的事件分析，不是所有来源永远可达或交易信号有效性的证明。

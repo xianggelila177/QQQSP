@@ -21,7 +21,11 @@ window.EventSource=class extends EventTarget{
  constructor(url){super();this.url=url;this.closed=false;__streams.push(this);
   this.initial=setTimeout(()=>{
     if(this.closed)return;if(__streamFail){this.onerror?.(new Event('error'));return;}
-    const symbols=new URL(url,'http://fixture.test').searchParams.get('symbols').split(',').filter(Boolean);
+    if(url==='/api/macro/stream'){
+      const payload={revision:1,news:{analysisVersion:1,items:[],updatedAt:Date.now()},context:{schemaVersion:2,factors:[],observations:[],calendar:{enabled:false}},monitor:{enabled:false,running:false,lanes:{news:{},context:{}},persistence:{},delivery:{}}};
+      this.dispatchEvent(new MessageEvent('macro',{data:JSON.stringify(payload)}));return;
+    }
+    const symbols=(new URL(url,'http://fixture.test').searchParams.get('symbols')||'').split(',').filter(Boolean);
     this.emit(symbols.map(s=>__quote(s)));
   },100);
   this.pulse=setInterval(()=>{if(!this.closed)this.dispatchEvent(new MessageEvent('heartbeat',{data:JSON.stringify({serverNow:Date.now()})}));},15000);

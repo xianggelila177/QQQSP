@@ -9,7 +9,7 @@ for(let t=Date.parse('2020-01-02T12:00:00Z'),i=0;t<now-86400000;t+=86400000,i++)
  const o=21000+i*.5+100*Math.sin(i/13),c=o+50*Math.sin(i);
  rows.push([new Date(t).toISOString().slice(0,10),o,c,Math.max(o,c)+70,Math.min(o,c)-70,12000+i].join(','));
 }
-const app=createApplication({env:{PORT:0,SYMBOLS:'',REALTIME_SNAPSHOTS:'0',PUBLIC_SOURCE_REDUNDANCY:'0'},telemetry:createTelemetry(),upstream:async url=>{
+const app=createApplication({env:{MACRO_BACKGROUND_ENABLED:'0',MACRO_STATE_PATH:'',PORT:0,SYMBOLS:'',REALTIME_SNAPSHOTS:'0',PUBLIC_SOURCE_REDUNDANCY:'0'},telemetry:createTelemetry(),upstream:async url=>{
  const u=new URL(url),secid=u.searchParams.get('secid')||'',code=secid.split('.')[1];
  const ok=data=>({status:200,headers:{},body:JSON.stringify(data)});
  if(u.pathname.endsWith('/stock/get'))return ok({data:{f57:code,f43:25234.75,f44:25300,f45:25000,f46:25100,f47:23456,f60:25100,f86:Math.floor(now/1000)-10,f169:134.75,f170:.53685}});

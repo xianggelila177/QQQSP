@@ -15,7 +15,7 @@ const directory = path.join(root, 'coverage');
 const nativeDirectory = path.join(directory, 'native');
 const browserDirectory = path.join(directory, 'browser');
 export function maintainedFiles(base) {
-  return sourceFiles(base).filter(file => file !== 'public/panel.bundle.js' && /\.[cm]?js$/.test(file) && (['server.js', 'mkt.mjs', 'sent.mjs', 'log.mjs'].includes(file) || file.startsWith('lib/') || file.startsWith('public/')));
+  return sourceFiles(base).filter(file => file !== 'public/panel.bundle.js' && /\.[cm]?js$/.test(file) && (['app.js','config.js','server.js', 'mkt.mjs', 'sent.mjs', 'log.mjs'].includes(file) || file.startsWith('lib/') || file.startsWith('public/')));
 }
 export const CRITICAL_FILES = ['lib/http-admission.js', 'lib/quote-contract.js', 'lib/recovery-store.js', 'public/modules/panel-market-store.js'];
 export function coverageFailures(summary, sections, critical) {
@@ -103,7 +103,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     fs.rmSync(directory, { recursive: true, force: true });
     fs.mkdirSync(nativeDirectory, { recursive: true }); fs.mkdirSync(browserDirectory, { recursive: true });
     fs.writeFileSync(path.join(directory, 'sources.json'), JSON.stringify(snapshotSources(root), null, 2) + '\n');
-    for (const script of ['tests/_run_all.mjs', 'scripts/e2e.mjs']) {
+    for (const script of ['tests/run.mjs', 'scripts/e2e.mjs']) {
       const sandbox = createTestSandbox(root);
       try {
         sandbox.env.QQQSP_COVERAGE_DIR = nativeDirectory;

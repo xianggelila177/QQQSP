@@ -1,0 +1,48 @@
+name: Current quality gate
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  node:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['22.16.0', '24']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run check
+      - run: npm test
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install playwright==1.55.0
+      - run: python -m playwright install --with-deps chromium
+      - name: Locate installed Chromium
+        run: echo "CHROMIUM_BIN=$(python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path); p.stop()')" >> "$GITHUB_ENV"
+      - run: npm run test:history-browser && npm run test:repair-browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evidence-node-${{ matrix.node }}
+          path: docs/evidence/v2.9-release/
+  coverage:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts
+      - run: npx playwright install --with-deps chromium
+      - run: npm run coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-full-scope
+          path: coverage/

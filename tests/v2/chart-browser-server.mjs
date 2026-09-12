@@ -19,7 +19,7 @@ function quote(symbol){
   charts:{intraday:history,daily30:[]},slowFields:{intraday:{source:'nasdaq-intraday',updatedAt:now,stale:false}}});
 }
 const calls=[];
-const app=createApplication({env:{PORT:0,REALTIME_SNAPSHOTS:'0',PUBLIC_SOURCE_REDUNDANCY:'0'},telemetry:createTelemetry(),providerOverrides:{fetchQuote:async symbol=>quote(symbol)},upstream:async url=>{
+const app=createApplication({env:{MACRO_BACKGROUND_ENABLED:'0',MACRO_STATE_PATH:'',PORT:0,REALTIME_SNAPSHOTS:'0',PUBLIC_SOURCE_REDUNDANCY:'0'},telemetry:createTelemetry(),providerOverrides:{fetchQuote:async symbol=>quote(symbol)},upstream:async url=>{
  calls.push(url);const u=new URL(url);
  if(u.hostname==='api.nasdaq.com'&&u.pathname.includes('/historical')){
   const symbol=u.pathname.split('/')[3];

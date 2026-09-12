@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import {createHostGate} from '../lib/host-gate.js';
-const __upstream={impl:null},gate=createHostGate({minGap:()=>0});
+const now=()=>Date.parse('2026-09-10T16:00:00Z');
+const __upstream={impl:null},gate=createHostGate({now,minGap:()=>0});
 import {createBatchProvider} from '../lib/providers/batch-snapshot.js';
-const {fetchSnapshotBatch,parseNaverQuote,parseTencentBatch}=createBatchProvider({httpsGet:(url,h,o)=>gate.run(url,()=>__upstream.impl(url,h,o),o)});
+const {fetchSnapshotBatch,parseNaverQuote,parseTencentBatch}=createBatchProvider({now,httpsGet:(url,h,o)=>gate.run(url,()=>__upstream.impl(url,h,o),o)});
 const row=(symbol='AAPL')=>({symbolCode:symbol,reutersCode:symbol+'.O',stockName:symbol,stockExchangeType:{code:'NSQ',nameEng:'NASDAQ',nationType:'USA',delayTime:0},closePrice:'100',compareToPreviousClosePrice:'-2',compareToPreviousPrice:{name:'FALLING'},openPrice:'102',highPrice:'103',lowPrice:'99',localTradedAt:'2026-09-04T16:00:00-04:00',marketStatus:'CLOSE',currencyType:{code:'USD'},overMarketPriceInfo:{overPrice:'101',localTradedAt:'2026-09-04T20:00:00-04:00',tradingSessionType:'AFTER_MARKET'}});
 const q=parseNaverQuote(row(),'AAPL',70000);
 assert.equal(q.price,101);assert.equal(q.prevClose,102);assert.equal(q.change,-1);assert.equal(q.quoteAt,Date.parse('2026-09-04T20:00:00-04:00'));assert.equal(q.priceSession,'POST');assert.equal(q.ohlcConsistent,false);assert.equal(q.feedDelayMinutes,0);assert.equal(q.pollAfterMs,70000);

@@ -7,7 +7,7 @@ const matrix = [320, 375, 390, 430].flatMap(width => [1, 1.25, 1.5, 2].map(devic
 export default defineConfig({
   // Production is plain Node ESM. Keep its original bytes/coverage offsets;
   // only the test runner's own files need Playwright's source transformation.
-  build: {external:['**/lib/**','**/server.js','**/mkt.mjs','**/sent.mjs','**/log.mjs']},
+  build: {external:['**/lib/**','**/server.js','**/mkt.mjs','**/sent.mjs','**/log.mjs','**/app.js','**/config.js']},
   testDir: './tests/e2e', fullyParallel: true, forbidOnly: true, retries: 0,
   workers: 2, timeout: 45000, expect: { timeout: 10000 },
   outputDir: './test-results',

@@ -6,12 +6,12 @@
 <meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>全球自选行情 · QQQ / SPY ETF</title>
+<title>全球自选行情 · QQQSP</title>
 <!-- 资源版本源: panel/VERSION · 由 build_version.sh 统一注入 ?v=(P1-Q5) -->
-<link rel="manifest" href="/manifest.webmanifest?v=77">
-<link rel="icon" href="/icon.svg?v=77" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/icon.svg?v=77">
-<link rel="stylesheet" href="/style.css?v=77">
+<link rel="manifest" href="/manifest.webmanifest?v=82">
+<link rel="icon" href="/icon.svg?v=82" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg?v=82">
+<link rel="stylesheet" href="/style.css?v=82">
 </head>
 <body>
   <header class="topbar">
@@ -23,7 +23,7 @@
       <span class="chip" id="session">—</span>
       <span class="chip" id="clock">--:--:--</span>
       <span class="chip live" id="updateAt">连接中…</span>
-      <button id="btnRefresh" class="chip action" title="立即刷新(手动)">↻</button>
+      <button id="btnRefresh" aria-label="立即刷新全部自选行情" class="chip action" title="立即刷新(手动)">↻</button>
       <button id="btnPwa" class="chip action" hidden>安装</button>
     </div>
   </header>
@@ -34,13 +34,13 @@
   </div>
 
   <details class="macrobox">
-    <summary class="macrohead"><span class="mtitle">宏观资讯</span><span class="macrohint">原油 · 通胀 · 利率 · 纳指 | 展开核对证据</span></summary>
+    <summary class="macrohead"><span class="mtitle">宏观资讯</span><span class="macrohint">原油 · 通胀 · 利率 · 纳指</span><span id="macroMonitorStatus" class="macro-monitor-status" role="status">后台监控连接中</span></summary>
     <div class="macrobody">
       <p class="macro-intro">先看证据，再看影响。标签针对具体资产，属于本地条件推断，不是交易所评级、胜率或买卖信号。</p>
-      <div id="macroContextStatus" class="context-status" role="status">展开后读取国际油价与跨资产观察</div>
+      <div id="macroContextStatus" class="context-status" role="status">服务器独立采集，展开查看最新缓存</div>
       <div id="macroFactors" class="macro-factors"></div>
-      <p id="macroObservation" class="macro-observation">同窗比较需要约15分钟的有效采样；价格反向变化不证明资金转移。</p>
-      <details class="macro-method"><summary>查看方法边界与原始信息入口</summary><p>使用来源成交时间，区分WTI、布伦特和纳指连续序列；不混用昨收涨幅。美债指标保留来源数值，不猜测倍数或换算基点。读取摘要不等于阅读全文；没有同口径实际值和发布前预期时保留“待验证”。</p><div class="macro-links">
+      <p id="macroObservation" class="macro-observation">后台积累有效采样后，逐步提供1分钟、5分钟、15分钟窗口；来源不可用时会显示原因。</p>
+      <details class="macro-method"><summary>查看方法边界与原始信息入口</summary><p>来源成交时间与服务器观察时间分别标注；不同时间基础不混合比较。替代观察源不冒充原期货合约，美债日度收益率不参与分钟窗口。读取摘要不等于阅读全文；没有同口径实际值和发布前预期时保留“待验证”。</p><div class="macro-links">
         <a href="https://www.bls.gov/cpi/" target="_blank" rel="noopener noreferrer">美国官方CPI</a>
         <a href="https://www.bls.gov/schedule/news_release/cpi.htm" target="_blank" rel="noopener noreferrer">CPI发布时间</a>
         <a href="https://www.eia.gov/petroleum/supply/weekly/" target="_blank" rel="noopener noreferrer">EIA库存与供需</a>
@@ -74,9 +74,9 @@
     <summary>数据源状态 <span>查看限流冷却与行情流连接</span></summary>
     <div class="directory-body"><p>连接状态不代表每秒产生新成交；报价年龄只按真实成交时间计算。</p><button id="sourceHealthRefresh" type="button">检查状态</button><pre id="sourceHealthContent" role="status">展开后读取，不在后台轮询。</pre></div>
   </details>
-  <p class="note">推送优先 · 断流后缓存读取兜底 · 时间均为 UTC+8 · 数据来源 Alpaca / Finnhub（可选）/ Naver / Yahoo / Nasdaq / 腾讯 / 东方财富 / 新浪 / Google News · 宏观影响为证据条件推断，非投资建议；个股新闻保留标题情绪参考</p>
+  <p class="note">推送优先 · 断流后缓存读取兜底 · 报价及检查时间按 UTC+8 展示，历史日期按交易所交易日展示 · 数据来源 Alpaca / Finnhub（可选）/ Naver / Yahoo / Nasdaq / 腾讯 / 东方财富 / 新浪 / Google News · 宏观影响为证据条件推断，非投资建议；个股新闻保留标题情绪参考</p>
 
-  <script src="/panel.bundle.js?v=77" defer></script>
+  <script src="/panel.bundle.js?v=82" defer></script>
   <script>document.addEventListener("DOMContentLoaded",function(){var p=document.getElementById("panels"),s=document.getElementById("layoutPreference");if(!p||!s)return;var k="qqqsp:layout:v1",v="auto";try{v=localStorage.getItem(k)||v}catch(e){}if(!["auto","2","3","4"].includes(v))v="auto";s.value=v;p.dataset.layout=v;s.addEventListener("change",function(){var x=["auto","2","3","4"].includes(s.value)?s.value:"auto";p.dataset.layout=x;try{localStorage.setItem(k,x)}catch(e){}})});</script>
 </body>
 </html>

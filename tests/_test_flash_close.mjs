@@ -47,15 +47,15 @@ try {
   ok(!inBody(el2), 'C2 4s 自动移除兜底仍生效');
   ok(String(el2.className).split(/\s+/).every(c => !c.startsWith('msg-')), 'C3 默认仍为纯 msg(error)类');
 
-  // ---- D. 并存: 两条消息互不影响 ----
+  // ---- D. 2.9 单条替换：前一条移除，关闭新消息不会复活旧消息 ----
   const a = H().flash('第一条', 'warn');
   const b = H().flash('第二条', 'success');
-  ok(inBody(a) && inBody(b), 'D1 两条消息并存');
+  ok(!inBody(a) && inBody(b), 'D1 后一条替换前一条，无重叠');
   const xb = b.children[b.children.length - 1];
   (xb._handlers.click || [])[0]();
-  ok(!inBody(b) && inBody(a), 'D2 只关闭目标消息, 另一条保留');
+  ok(!inBody(b) && !inBody(a), 'D2 关闭后一条，前一条不复活');
   env.timers.runTimeouts(4000);
-  ok(!inBody(a), 'D3 保留条仍按 4s 自动移除');
+  ok(!inBody(a), 'D3 已清理计时器不会复活消息');
 } catch (e) {
   fails.push('exception: ' + e.message);
   console.log('  \u2717 exception:', e.stack || e.message);

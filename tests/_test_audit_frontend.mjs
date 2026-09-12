@@ -58,7 +58,7 @@ try {
   // Partial quote failure is not a full-success refresh.
   env.fetch.push('market', { body: [q('QQQ'), { symbol: 'SPY', error: 'upstream 429' }] });
   const partialBefore = env.doc.body.children.length; await H().manualRefresh(); await env.drain();
-  const partialMsg = env.doc.body.children.slice(partialBefore).map(x => x.textContent || '').join('|');
+  const partialMsg = env.doc.body.children.filter(x=>String(x.className).split(/\s+/).includes('msg')).map(x => x.textContent || '').join('|');
   ok(partialMsg.includes('部分刷新失败') && !partialMsg.includes('已刷新'), 'Q26 partial quote failure avoids full-success toast');
 
   // A first response containing only per-symbol errors still creates visible cards.

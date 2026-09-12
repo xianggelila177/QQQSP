@@ -49,7 +49,7 @@ await check('unknown or different bases still retain the regular-close reference
 });
 await check('footer describes the selected monitoring mode and retains source/time notes',()=>{
   const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
-  assert.match(html,/推送优先.*时间均为 UTC\+8.*Alpaca.*Finnhub.*Naver \/ Yahoo \/ Nasdaq \/ 腾讯 \/ 东方财富 \/ 新浪 \/ Google News/);
+  assert.match(html,/推送优先.*报价及检查时间按 UTC\+8 展示，历史日期按交易所交易日展示.*Alpaca.*Finnhub.*Naver \/ Yahoo \/ Nasdaq \/ 腾讯 \/ 东方财富 \/ 新浪 \/ Google News/);
   assert.doesNotMatch(html,/每\s*2s\s*自动刷新/);
 });
 assert.equal(cases.length,0,cases.length+' v64 frontend regression group(s) failed');

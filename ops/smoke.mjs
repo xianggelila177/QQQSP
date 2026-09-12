@@ -6,7 +6,7 @@ const markets=await read('/api/markets');console.log('市场目录：',Array.isA
 const health=await read('/api/sources');console.log('来源状态：',JSON.stringify(health));
 const abort=new AbortController();
 const timeout=setTimeout(()=>abort.abort(),10000);
-try{const response=await fetch(new URL('/api/stream?symbols=QQQ,SPY',base),{signal:abort.signal});
+try{const response=await fetch(new URL('/api/stream?symbols=QQQ,SPY&history=off',base),{signal:abort.signal});
  if(!response.ok||!response.headers.get('content-type')?.includes('text/event-stream'))throw new Error('SSE 响应无效');
  const reader=response.body.getReader();let text='';const decoder=new TextDecoder();
  while(!text.includes('event: quotes')){const part=await reader.read();if(part.done)throw new Error('尚未收到行情事件，连接已关闭');text+=decoder.decode(part.value,{stream:true});}

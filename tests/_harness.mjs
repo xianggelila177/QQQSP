@@ -57,6 +57,7 @@ export function makeEl(key = 'el') {
       if(sel === '.tfbtn') { const a=el.querySelector(sel), b=el.querySelector(sel+':nth2'); a.dataset.tf='intraday'; b.dataset.tf='daily30'; return [a,b]; }
       return [el.querySelector(sel), el.querySelector(sel + ':nth2')];
     },
+    contains(node) { for(let current=node;current;current=current.parentNode)if(current===el)return true;return false; },
     closest() { return null; },
     focus() { if (el.ownerDocument) el.ownerDocument.activeElement = el; }, select() {}, click() { for (const fn of handlers.click || []) fn({target:el}); }, scrollIntoView() {},
     getContext() { return (el._ctx ||= makeCtxStub()); },
@@ -97,9 +98,8 @@ function makeTimers() {
     runTimeouts(filterMs) {
       let n = 0;
       for (const t of [...all.values()]) {
-        if (t.kind !== 'timeout' || t.cleared || t.ran++) continue;
-        if (filterMs != null && t.ms !== filterMs) continue;
-        t.fn(); n++;
+        if (t.kind !== 'timeout' || t.cleared || t.ran || filterMs != null && t.ms !== filterMs) continue;
+        t.ran++;t.fn(); n++;
       }
       return n;
     },
@@ -215,10 +215,13 @@ export async function loadApp({ hidden = false, fakeWorker = false, watchlist = 
   sandbox.AbortController = AbortController;
   sandbox.atob = atob; sandbox.TextDecoder = TextDecoder;
   sandbox.globalThis = sandbox;
+  sandbox.queueMicrotask=queueMicrotask;win.localStorage=sandbox.localStorage;
+  const searchWrap=makeEl('.searchwrap');searchWrap.ownerDocument=doc;searchWrap.appendChild(byId('q'));searchWrap.appendChild(byId('sr'));
   for (const mod of ['panel-client.js', 'panel-currency.js', 'panel-chart.js', 'panel-chart-engine.js', 'panel-scheduler.js', 'panel-network.js', 'panel-state.js', 'panel-utils.js', 'panel-format.js', 'panel-chart-controller.js', 'panel-card-view.js', 'panel-search-controller.js', 'panel-market-directory.js', 'panel-news-controller.js', 'panel-macro-controller.js', 'panel-market-store.js','panel-live-store.js']) {
     vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'public', 'modules', mod), 'utf8'), sandbox, { filename: path.join(ROOT,'public','modules',mod) });
   }
   vm.runInNewContext(fs.readFileSync(APP_SRC, 'utf8'), sandbox, { filename: APP_SRC });
+  timers.runTimeouts(0); // Browser event loop starts immediate fallback reads before the test drains microtasks.
 
   return {
     sandbox, doc, win, byId, els, timers, fetchLog, fetch: fetchStub, workers, intersections, resizes,

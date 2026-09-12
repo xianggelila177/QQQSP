@@ -229,8 +229,8 @@
     const prev = lastPrice.get(d.symbol);
     if (prev!=null && prev!==d.price) {
       q.cur.classList.remove('flash-up','flash-down');
-      void q.cur.offsetWidth;
-      q.cur.classList.add(d.price>prev?'flash-up':'flash-down');
+      if(q.cur.animate){q.priceAnimation?.cancel();q.priceAnimation=q.cur.animate([{opacity:0.35},{opacity:1}],{duration:420,easing:'ease-out'});}
+      else q.cur.classList.add(d.price>prev?'flash-up':'flash-down');
     }
     if (d.price!=null) lastPrice.set(d.symbol,d.price);
     q.cur.textContent = money(d.price);

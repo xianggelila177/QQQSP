@@ -1,5 +1,5 @@
 // TEST-ONLY synthetic responses. Never imported by server.js or any lib/ module.
-export function createMacroFixture(){
+export function createMacroFixture({survey=false}={}){
  const base=Date.now()-15*60000;let offset=0,failed=false;const calls=[];
  const now=()=>base+offset;
  const xml=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -19,6 +19,7 @@ export function createMacroFixture(){
    return response({chart:{result:[{meta:{symbol,instrumentType:isFuture?'FUTURE':'INDEX',currency:'USD',regularMarketPrice:price,regularMarketTime:Math.floor(now()/1000),exchangeDataDelayedBy:0},timestamp:[Math.floor(now()/1000)],indicators:{quote:[{close:[price]}]}}],error:null}});
   }
   if(u.hostname==='zhibo.sina.com.cn')return response({result:{data:{feed:{list:[
+   ...(survey?['英国央行表示，8月份Savanta民调显示，受访者对五年后的通胀预期为3.2%。','英国央行表示，Savanta在8月开展的调查显示，受访者对未来1-2年的通胀预期为2.9%。','英国央行表示，8月Savanta民调显示，民众对未来一年的通胀预期为3.2%。'].map(rich_text=>({rich_text,create_time:new Date(now()-120000+8*3600e3).toISOString().slice(0,19).replace('T',' ')})):[]),
    {rich_text:'美国8月核心CPI月率实际0.2%，预期0.3%，前值0.3%',docurl:'https://finance.sina.com.cn/test/cpi',create_time:new Date(now()-60000+8*3600e3).toISOString().slice(0,19).replace('T',' ')},
    {rich_text:'原油下跌，纳指期货上涨，资金获利了结后转去赌CPI',docurl:'https://finance.sina.com.cn/test/rotation',create_time:new Date(now()-60000+8*3600e3).toISOString().slice(0,19).replace('T',' ')}
   ]}}}});

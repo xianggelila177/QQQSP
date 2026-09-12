@@ -84,7 +84,8 @@
 
 ;/* public/modules/panel-history-store.js */
 (() => {
-  const createHistoryStore = ({fetchImpl = window.fetch.bind(window), symbol}) => {
+  const createHistoryStore = ({fetchImpl = window.fetch.bind(window), symbol, timeoutMs = 22000, network}) => {
+    const transport = network || window.PANEL_NETWORK.createNetwork({fetchImpl, timeoutMs});
     const entries=Object.create(null), controllers=Object.create(null), generations=Object.create(null);
     const entry=tf=>entries[tf] ||= {bars:[],revision:0,status:'unknown',warnings:[],meta:null};
     const validDate=date=>typeof date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(date)&&Number.isFinite(Date.parse(date+'T00:00:00Z'))&&new Date(date+'T00:00:00Z').toISOString().slice(0,10)===date;
@@ -96,6 +97,8 @@
     };
     function merge(tf,response,{before}={}){
       const e=entry(tf),same=e.meta?.seriesId===response.seriesId;
+      if(same&&e.revision===String(response.revision)&&e.bars.length){e.meta=response;e.status=response.status||'ready';e.retryAt=response.retryAt||null;return e;}
+
       const map=same?new Map(e.bars.map(b=>[b.periodStart,b])):new Map();
       const first=response.bars[0]?.periodStart,last=response.bars.at(-1)?.periodStart;
       // A refreshed range replaces its old contents, including records removed
@@ -111,20 +114,30 @@
       e.warnings=response.warnings||[];e.retryAt=response.retryAt||null;e.errorCode=response.errorCode||null;
       return e;
     }
+    function hydrate(tf,response){
+      const spec=window.PANEL_TIMEFRAMES.get(tf);
+      if(!response||response.schemaVersion!==1||response.symbol!==symbol||response.period!==spec.apiPeriod||typeof response.seriesId!=='string'||typeof response.revision!=='string'||!Array.isArray(response.bars)||response.bars.some(b=>!normalize(b))||response.bars.some((b,i,a)=>i&&b.t<=a[i-1].t))return false;
+      const old=entry(tf).meta;
+      if(old?.sourceCheckedAt>response.sourceCheckedAt)return false;
+      // A prewarm arriving during a first load supersedes it, but never abort an older-page request.
+      if(controllers[tf]&&!entry(tf).loadingBefore){generations[tf]=(generations[tf]||0)+1;controllers[tf].abort();delete controllers[tf];}
+      merge(tf,response);return true;
+    }
     async function load(tf,{before,limit}={}){
       const spec=window.PANEL_TIMEFRAMES.get(tf),e=entry(tf);if(!spec||spec.kind!=='history'||e.retryAt>Date.now())return e;
       controllers[tf]?.abort();const ac=new AbortController();controllers[tf]=ac;
-      const gen=(generations[tf]||0)+1;generations[tf]=gen;e.status='loading';
+      const gen=(generations[tf]||0)+1;generations[tf]=gen;e.loadingBefore=before||null;e.status='loading';
       const current=()=>generations[tf]===gen&&!ac.signal.aborted;
+      const deadlineAt=Date.now()+timeoutMs;
       try{
         let identity=e.meta?.seriesId;
         for(let attempt=0;attempt<2;attempt++){
           const qs=new URLSearchParams({symbol,period:spec.apiPeriod,limit:String(limit||spec.visible+spec.prewarm)});
           if(before)qs.set('before',before);if(identity)qs.set('seriesId',identity);
-          const r=await fetchImpl('/api/history?'+qs,{signal:ac.signal}),j=await r.json();
+          const r=await transport.request('history:'+symbol+':'+tf, '/api/history?'+qs, {replace:true, signal:ac.signal, timeoutMs:Math.max(1,deadlineAt-Date.now()), readErrorJson:true}),j=(await r.json())||{};
           if(!current())return e;
           if(r.status===409&&identity&&attempt===0){identity=null;e.status=e.bars.length?'stale':'loading';continue;}
-          if(!r.ok)throw Object.assign(new Error(j.error||'历史来源暂不可用'),{code:j.code||'HISTORY_SOURCE_UNAVAILABLE',retryAt:j.retryAt||null});
+          if(!r.ok)throw Object.assign(new Error(j.error||'历史来源暂不可用'),{code:j.code||'HISTORY_SOURCE_UNAVAILABLE',retryAt:j.retryAt||r.retryAt||null});
           if(j.schemaVersion!==1||j.symbol!==symbol||j.period!==spec.apiPeriod||typeof j.seriesId!=='string'||!j.seriesId||typeof j.revision!=='string'||!Array.isArray(j.bars))throw new Error(j.error||'invalid history response');
           if(j.bars.some(b=>!normalize(b))||j.bars.some((b,i,a)=>i&&b.t<=a[i-1].t))throw new Error('invalid history bars');
           return merge(tf,j,{before});
@@ -133,8 +146,8 @@
       finally{if(controllers[tf]===ac)delete controllers[tf];}
       return e;
     }
-    function abort(){for(const tf of Object.keys(controllers)){generations[tf]=(generations[tf]||0)+1;controllers[tf].abort();delete controllers[tf];}}
-    return Object.freeze({getSeries:tf=>entry(tf).bars,getRevision:tf=>entry(tf).revision,getMeta:entry,load,abort});
+    function abort(){for(const tf of Object.keys(controllers)){generations[tf]=(generations[tf]||0)+1;controllers[tf].abort();delete controllers[tf];const e=entry(tf);e.status=e.bars.length?'stale':'unknown';e.loadingBefore=null;}}
+    return Object.freeze({getSeries:tf=>entry(tf).bars,getRevision:tf=>entry(tf).revision,getMeta:entry,load,hydrate,abort});
   };
   window.PANEL_HISTORY_STORE=Object.freeze({createHistoryStore});
 })();
@@ -289,9 +302,12 @@
     pTicks(q, p);
     // 底部时间刻度
     cx.fillStyle = CHART_THEME.axisText; cx.font = p.axisFont; cx.textAlign = 'center';
-    const tstep = Math.max(1, Math.ceil(n / Math.max(2,Math.floor((W-L-R)/75))));
+    // Include both visible endpoints; stride-only ticks could omit the live
+    // point and leave an older time as the final label.
+    const tickCount=Math.min(n,Math.max(2,Math.floor((W-L-R)/90)));
     let previousDate=null;
-    for (let i = 0; i < n; i += tstep) {
+    for (let tick=0;tick<tickCount;tick++) {
+      const i=tickCount===1?0:Math.round(tick*(n-1)/(tickCount-1));
       const ds = fmtDate(bars[i].t, true);
       const date=bars[i].periodStart||ds.slice(0,10),label=p.intraday?((previousDate&&date!==previousDate?ds.slice(5,10)+' ':'')+ds.slice(11)):q.tf==='yearly'?date.slice(0,4):q.tf==='monthly'?date.slice(0,7):q.tf==='weekly'?date:ds.slice(5,10);
       const maxWidth=Math.min(100,W-L-R),width=Math.min(maxWidth,cx.measureText?.(label).width??label.length*7);
@@ -376,7 +392,7 @@
 (() => {
   const withDeadline = (promise, ms, onTimeout, message = '请求超时') => {
     let timer = 0;
-    const deadline = new Promise((_, reject) => { timer = setTimeout(() => { try { onTimeout && onTimeout(); } catch {} reject(new Error(message)); }, ms); });
+    const deadline = new Promise((_, reject) => { timer = setTimeout(() => { try { onTimeout && onTimeout(); } catch {} reject(Object.assign(new Error(message), {code:'REQUEST_TIMEOUT'})); }, ms); });
     return Promise.race([promise, deadline]).finally(() => { if (timer) clearTimeout(timer); });
   };
   // Presentation time must never depend on an upstream request or Worker health.
@@ -427,16 +443,17 @@
       const abort = () => entry.cancel();
       if (external?.aborted) abort();
       else external?.addEventListener('abort', abort, { once: true });
-      const { replace, ...fetchOptions } = options;
+      const { replace, timeoutMs: requestTimeout = timeoutMs, readErrorJson = false, ...fetchOptions } = options;
       const work = async () => {
+        if (controller?.signal.aborted || external?.aborted) throw Object.assign(new Error('请求已取消'), {name:'AbortError'});
         const response = await fetchImpl(url, { ...fetchOptions, signal: controller?.signal || external });
         if(response.status===429 || response.status===503){const header=response.headers?.get?.('Retry-After');if(response.status===429 || header != null)retryAt.set(kind,now()+Math.max(1000,retryDelay(header)));}
-        const payload = response.ok ? await response.json() : null;
+        const payload = response.ok ? await response.json() : readErrorJson ? await response.json().catch(()=>null) : null;
         if (!response.ok) { try { await response.body?.cancel(); } catch {} }
         return { retryAt:retryAt.get(kind)||0, ok: response.ok, status: response.status, headers: response.headers, json: async () => payload };
       };
       const promise = window.PANEL_SCHEDULER.withDeadline(
-        Promise.race([work(), cancelled]), timeoutMs, () => controller?.abort()
+        Promise.race([work(), cancelled]), Math.max(1, requestTimeout), () => controller?.abort()
       ).finally(() => {
         external?.removeEventListener('abort', abort);
         if (active.get(kind) === entry) active.delete(kind);
@@ -459,6 +476,18 @@
 
 ;/* public/modules/panel-state.js */
 (() => {
+  function createSafeStorage(getStorage, onUnavailable = () => {}) {
+    const memory=new Map();let storage=null,failed=false;
+    const fail=()=>{if(!failed){failed=true;onUnavailable();}storage=null;};
+    try{storage=getStorage();if(!storage)fail();}catch{fail();}
+    return Object.freeze({
+      getItem(key){if(storage)try{const value=storage.getItem(key);if(value!==null)memory.set(key,value);return value;}catch{fail();}return memory.get(key)??null;},
+      setItem(key,value){memory.set(key,String(value));if(storage)try{storage.setItem(key,String(value));}catch{fail();}},
+      removeItem(key){memory.delete(key);if(storage)try{storage.removeItem(key);}catch{fail();}},
+      persistent:()=>!failed
+    });
+  }
+
   const timestampMs = value => { const n=Number(value);return Number.isFinite(n)&&n>0?(n<1e12?n*1000:n):null; };
   const positive = value => Number.isFinite(Number(value))&&Number(value)>0?Number(value):0;
   function calendarStatus(data) {
@@ -563,7 +592,7 @@
       resume() { samples = []; synced = false; },
       status: () => ({ synced, uncertaintyMs: samples.length ? Math.min(...samples.map(s => s.rtt)) / 2 : null }) };
   }
-  window.PANEL_STATE = Object.freeze({ createState, selectFreshness, pollingPolicy, scrollToCard, calendarStatus, formatQuoteAge, createQuoteClock });
+  window.PANEL_STATE = Object.freeze({ createSafeStorage, createState, selectFreshness, pollingPolicy, scrollToCard, calendarStatus, formatQuoteAge, createQuoteClock });
 })();
 
 ;
@@ -622,7 +651,7 @@
     const observer = typeof IntersectionObserver === 'function' ? new IntersectionObserver(entries => {
       for(const entry of entries) { const q=cards.get(entry.target); if(!q)continue; q.visible=entry.isIntersecting; if(q.visible && q._dirty)drawChart(q,true); }
     }, {rootMargin:'100px'}) : null;
-    const cards=new Map();
+    const cards=new Map();let historyRefreshTimer=null;
     const resizeQueue=new Set();let resizeFrame=null;
     function scheduleResize(q){resizeQueue.add(q);if(resizeFrame!=null)return;resizeFrame=requestAnimationFrame(()=>{resizeFrame=null;for(const card of resizeQueue)if(!card._unmounted){card._pointerRect=null;drawChart(card,true);}resizeQueue.clear();});}
     const resize = typeof ResizeObserver === 'function' ? new ResizeObserver(entries => {
@@ -649,6 +678,7 @@
       q.cv.setAttribute('aria-describedby','chart-point-'+sym);
       q.point=el.querySelector('.chart-point'); q.point.id='chart-point-'+sym; q.point.setAttribute('aria-live','off');
       q.refreshHistory=async()=>{
+        if(q.historyPreparedAt&&Date.now()-q.historyPreparedAt<120000)return;
         if(q._unmounted||q.visible===false||document.hidden||q.tf==='intraday'||!q.d||q._loadingBefore)return;
         const tf=q.tf;
         if(q.historyStore.getMeta(tf)?.status==='loading')return;
@@ -660,7 +690,7 @@
         if(anchor&&savedView){const idx=seriesFor(q,tf).findIndex(b=>b.periodStart===anchor);if(idx>=0)savedView.winStart=idx;}
         if(q.tf===tf)drawChart(q,true);
       };
-      q.historyRefreshTimer=setInterval(q.refreshHistory,60000);
+      if(!historyRefreshTimer)historyRefreshTimer=setInterval(()=>{for(const card of cards.values())void card.refreshHistory();},60000);
 
     q.tabs[0].classList.add('on');
     q.tabs.forEach((b, i) => b.setAttribute('aria-pressed', String(i === 0)));
@@ -710,7 +740,7 @@
         dl.download = ((q.d && q.d.symbol) || 'chart') + '_' + q.tf + '.png';
         dl.href = out.toDataURL('image/png');
         document.body.appendChild(dl); dl.click(); dl.remove();
-        flash('图表已导出 PNG');
+        flash('图表已导出 PNG','success');
         return;
       }
       let vis = q.visN[q.tf] || (window.PANEL_TIMEFRAMES?.get(q.tf)?.visible || (q.tf==='yearly'?20:60));
@@ -723,7 +753,7 @@
       cards.set(q.cv,q); observer?.observe(q.cv); resize?.observe(q.cv);
       attachHover(q);
     }
-    function unmount(q) { if(q.historyRefreshTimer)clearInterval(q.historyRefreshTimer); q.historyStore?.abort(); q._unmounted=true; observer?.unobserve(q.cv); resize?.unobserve(q.cv); cards.delete(q.cv); }
+    function unmount(q) { if(q.historyRefreshTimer)clearInterval(q.historyRefreshTimer); q.historyStore?.abort(); q._unmounted=true; observer?.unobserve(q.cv); resize?.unobserve(q.cv); cards.delete(q.cv);if(!cards.size){clearInterval(historyRefreshTimer);historyRefreshTimer=null;} }
   function historyQuality(q,b){
     if(q.tf==='intraday')return '';
     const e=q.historyStore?.getMeta(q.tf),m=e?.meta;if(!m)return '';
@@ -787,9 +817,9 @@
     cv.addEventListener('touchend', clearHover);
     // 滚轮缩放: 锚定光标下的那根蜡烛(交易所式)
     cv.addEventListener('wheel', (e) => {
-      const p = q.plot; if (!p || !p.n || !p.all.length) return; e.preventDefault();
+      const p = q.plot; if (!(e.ctrlKey||e.metaKey)||!p||!p.n||!p.all.length) return;
       const newVis = Math.max(window.PANEL_TIMEFRAMES?.get(q.tf)?.minVisible || 1, Math.min(p.all.length, Math.round(p.vis * (e.deltaY > 0 ? 1.2 : 1 / 1.2))));
-      if (newVis === p.vis) return;
+      if (newVis === p.vis) return; e.preventDefault();
       const rect = cv.getBoundingClientRect();
       const gi = p.a + Math.floor(((e.clientX - rect.left) * (p.W / rect.width) - p.L) / p.slot);
       let ns = Math.round(gi - (gi - p.a) * newVis / p.vis);
@@ -798,7 +828,8 @@
       drawChart(q);
     }, { passive: false });
     // 拖拽平移(桌面+触摸统一): Pointer Events + setPointerCapture — 指针移出画布仍持续跟踪, 触摸端由此获得拖拽能力
-    let drag = null;
+    let drag = null,dragFrame=null;
+    const scheduleDrag=()=>{if(dragFrame!==null)return;dragFrame=requestAnimationFrame(()=>{dragFrame=null;if(cv.isConnected!==false)drawChart(q);});};
     cv.addEventListener('pointerdown', (e) => {
       if (e.pointerType === 'mouse' && e.button !== 0) return;   // 鼠标仅左键拖拽
       drag = { x: e.clientX, s: q.winStart, id: e.pointerId };
@@ -811,7 +842,7 @@
       const dSlots = (e.clientX - drag.x) * (q.plot.W / rect.width) / q.plot.slot;
       const maxStart = Math.max(0, q.plot.all.length - q.plot.vis);
       const ns = Math.max(0, Math.min(maxStart, Math.round(drag.s - dSlots)));
-      if (ns !== q.winStart) { q.winStart = ns; q.followEnd = ns >= maxStart; drawChart(q); }
+      if (ns !== q.winStart) { q.winStart = ns; q.followEnd = ns >= maxStart; scheduleDrag(); }
     });
     const endDrag = (e) => { if (drag && (!e || e.pointerId === drag.id)) { drag = null; try { cv.style.cursor = 'crosshair'; } catch {} } };
     cv.addEventListener('pointerup', endDrag);
@@ -840,6 +871,20 @@
        const detail=q.symbol+' '+periodLabel+' · '+(b._live?'最新报价点 '+money(b.c)+' · '+b.source+' · 无成交量数据':(p.candle ? '开 '+money(b.o)+' 高 '+money(b.h)+' 低 '+money(b.l)+' 收 '+money(b.c) : '价 '+money(b.c))+' · 量 '+fmtVol(b.v))+quality+' · 第 '+(p.a+i+1)+'/'+p.all.length+' 点';
       if(q.point){q.point.setAttribute('aria-live',q.keyboardSelection?'polite':'off');q.point.textContent=detail;}
       if(q.cursor){ const ctx=q.cursor.getContext('2d'); ctx.setTransform(q.cursor.width/p.W,0,0,q.cursor.height/p.H,0,0); engine.drawCursor(q,p,q.hoverIdx,ctx); }
+    }
+    function applyPrewarm(q,prepared){
+      if(q._unmounted||prepared.symbol!==q.symbol)return;
+      q.historyPreparedAt=Date.now();q.historyPrepared=prepared;
+      for(const spec of window.PANEL_TIMEFRAMES.all.filter(x=>x.kind==='history')){
+        const value=prepared.periods?.[spec.apiPeriod];
+        if(value){
+          const failed=prepared.status==='stale'||prepared.status==='error';
+          q.historyStore.hydrate?.(spec.key,{...value,prewarmed:true,refreshing:prepared.status==='refreshing',...(failed?{status:'stale',stale:true,errorCode:prepared.error,retryAt:prepared.retryAt}:{} )});
+        }else if(['error','stale'].includes(prepared.status)){
+          const e=q.historyStore.getMeta(spec.key);e.status=e.bars?.length?'stale':'error';e.errorCode=prepared.error;e.retryAt=prepared.retryAt;
+        }
+      }
+      if(q.d&&q.tf!=='intraday')drawChart(q);
     }
     function drawChart(q, force=false) {
       if(q.d&&q._observe){const view=q._observe(q.d,q._intradayMode);q._displayIntraday=view.bars;q._sampled=view.sampled;q._observationNote=view.note;}
@@ -882,7 +927,9 @@
       const checked=intra?q.d?.slowFields?.intraday?.updatedAt:m?.sourceCheckedAt;
       let text=intra?(q._sampled?'报价采样 · 非完整历史':'来源分时 · '+sourceName(q.d?.slowFields?.intraday?.source||q.d?.src)):
         e?.status==='loading'?label+' · 加载中…':e?.status==='error'?label+' · 历史来源暂不可用':
-        m?label+' · '+sourceName(m.source)+(e.status==='stale'?' · 缓存历史':''):label+' · 尚未加载';
+        m?label+' · '+sourceName(m.source)+(e.status==='stale'?' · 缓存历史':m.prewarmed?' · 后台已预备':'')+(m.refreshing?' · 后台更新中':''):label+(q.historyPrepared?' · 后台正在准备':' · 尚未加载');
+      text+=intra?' · 北京时间 UTC+8':' · 交易所交易日';
+      if(intra&&q.d?.slowFields?.intraday?.timeBasis==='epoch-unverified')text+=' · 来源时间口径待核验';
       if(cooling)text+=' · '+Math.ceil((e.retryAt-Date.now())/1000)+' 秒后可重试';
       if(q.chartState&&q.chartState.textContent!==text){q.chartState.textContent=text;q.chartState.title=checked?'来源检查 '+pointTime(checked/1000):'';}
       if(q.chartRetry){q.chartRetry.hidden=intra||!['error','stale'].includes(e?.status);q.chartRetry.disabled=cooling||e?.status==='loading';}
@@ -895,7 +942,7 @@
     const refreshVisible=()=>{for(const q of cards.values())q.refreshHistory?.();};
     window.addEventListener('focus',refreshVisible);
     document.addEventListener?.('visibilitychange',()=>{if(!document.hidden)refreshVisible();});
-    return Object.freeze({ mount, unmount, drawChart, tickStatus });
+    return Object.freeze({ mount, unmount, applyPrewarm, drawChart, tickStatus });
   };
   window.PANEL_CHART_CONTROLLER=Object.freeze({createChartController});
 })();
@@ -1134,8 +1181,8 @@
     const prev = lastPrice.get(d.symbol);
     if (prev!=null && prev!==d.price) {
       q.cur.classList.remove('flash-up','flash-down');
-      void q.cur.offsetWidth;
-      q.cur.classList.add(d.price>prev?'flash-up':'flash-down');
+      if(q.cur.animate){q.priceAnimation?.cancel();q.priceAnimation=q.cur.animate([{opacity:0.35},{opacity:1}],{duration:420,easing:'ease-out'});}
+      else q.cur.classList.add(d.price>prev?'flash-up':'flash-down');
     }
     if (d.price!=null) lastPrice.set(d.symbol,d.price);
     q.cur.textContent = money(d.price);
@@ -1225,12 +1272,15 @@
   let searchReqId = 0;   // P1-U2: 搜索请求代际号, 丢弃过期响应
   let searchController = null;
   let searchIndex = -1;
+  const status=document.createElement('div');status.className='search-status';status.setAttribute('role','status');status.setAttribute('aria-live','polite');
+  qEl.parentNode.appendChild(status);
+  const busy=value=>{qEl.setAttribute('aria-busy',String(value));srEl.setAttribute('aria-busy',String(value));};
   const hideSearch = (clear = false) => {
     searchReqId++;
     if (searchController) { try { searchController.abort(); } catch {} searchController = null; }
     clearTimeout(sTimer); searchIndex = -1; srEl.hidden = true; srEl.innerHTML = ''; qEl.setAttribute('aria-expanded', 'false');
     qEl.setAttribute('aria-activedescendant', '');
-    if (clear) qEl.value = '';
+    busy(false);status.textContent='';if (clear) qEl.value = '';
   };
   async function runSearch(more = false) {
     more = more === true;
@@ -1238,6 +1288,7 @@
     const v = qEl.value.trim(); if (!v) { hideSearch(); return 0; }
     if (searchController) { try { searchController.abort(); } catch {} }
     searchController = typeof AbortController === 'function' ? new AbortController() : null;
+    busy(true);status.textContent='正在查询…';srEl.innerHTML='<div class="sempty">正在查询…</div>';srEl.hidden=false;qEl.setAttribute('aria-expanded','true');
     try {
       const r = await panelNetwork.request('search', '/api/search?q=' + encodeURIComponent(v) + (more ? '&more=1' : ''), { replace: true, signal: searchController?.signal });
       if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -1249,8 +1300,8 @@
       srEl.innerHTML += more ? '<div class="sempty">已合并可用来源；目录可能不完整或限流，连续合约请核对来源。</div>' : '<div class="search-more" id="search-more-option" role="option" tabindex="0" data-search-more="1" aria-label="查询更多来源与具体合约">查询更多来源与具体合约</div>';
       srEl.hidden = false;
       qEl.setAttribute('aria-expanded', 'true'); searchIndex = -1;
-      return list.length;
-    } catch (e) { if (myId !== searchReqId) return 0; srEl.innerHTML = '<div class="sempty">搜索失败，请稍后重试</div>'; srEl.hidden = false; qEl.setAttribute('aria-expanded', 'true'); return 0; }
+      status.textContent=list.length?'找到 '+list.length+' 个结果，可用上下方向键选择':'没有匹配结果';return list.length;
+    } catch (e) { if (myId !== searchReqId) return 0; srEl.innerHTML = '<div class="sempty">搜索失败，<button type="button" data-search-retry="1">重新查询</button></div>'; srEl.hidden = false; qEl.setAttribute('aria-expanded', 'true');status.textContent='搜索失败，可重新查询';return 0; }finally{if(myId===searchReqId)busy(false);}
   }
   qEl.addEventListener('input', () => {
     if (composing) return;                       // IME 组合中: 不触发中间查询
@@ -1264,7 +1315,7 @@
   qEl.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       const items = [...srEl.querySelectorAll('.sitem, .search-more')]; if (!items.length || srEl.hidden) return;
-      e.preventDefault(); searchIndex = (searchIndex + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+      e.preventDefault(); searchIndex = searchIndex<0 ? (e.key==='ArrowDown'?0:items.length-1) : (searchIndex + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
       items.forEach((x, i) => x.setAttribute('aria-selected', String(i === searchIndex)));
       const selected = items[searchIndex]; if (selected) { selected.scrollIntoView({ block: 'nearest' }); qEl.setAttribute('aria-activedescendant', selected.id); }
       return;
@@ -1277,6 +1328,7 @@
     runSearch();
   });
   srEl.addEventListener('click', (e) => {
+    if(e.target.closest('[data-search-retry]')){runSearch();return;}
     if(e.target.closest('[data-search-more]')){runSearch(true);return;}
     const it = e.target.closest('.sitem'); if (!it || !it.dataset.sym) return;
     const sym = it.dataset.sym.toUpperCase();
@@ -1447,9 +1499,10 @@
         renderNews(q,data[symbol] || [],metadata[symbol] || {pending:true});
       }
     }
-    function invalidate() { generation++;network.abort?.('news'); }
+    function prune(){const keep=new Set(getWatchlist());for(const key of Object.keys(data))if(!keep.has(key))delete data[key];for(const key of Object.keys(metadata))if(!keep.has(key))delete metadata[key];}
+  function invalidate() {prune(); generation++;network.abort?.('news'); }
     async function refreshNews() {
-      const requested=[...getWatchlist()], key=requested.join(',');
+      prune();const requested=[...getWatchlist()], key=requested.join(',');
       if(!key){invalidate();return true;}
       if(inFlight?.key===key && inFlight.generation===generation)return inFlight.promise;
       const current=++generation;
@@ -1476,7 +1529,7 @@
       })();
       inFlight=entry;return entry.promise;
     }
-    return Object.freeze({renderNews,distribute,refreshNews,invalidate});
+    return Object.freeze({renderNews,distribute,refreshNews,invalidate,cacheSize:()=>Object.keys(data).length});
   };
   window.PANEL_NEWS_CONTROLLER=Object.freeze({createNewsController});
 })();
@@ -1488,19 +1541,53 @@
  const createMacroContext=({document,network,root,status,isOpen=()=>true})=>{
   const {esc,fmtTime8}=window.PANEL_FORMAT;let pending=null,nextAt=0,generation=0,last=null;
   const sourceLink=e=>{try{const u=new URL(e.link);return /^https?:$/.test(u.protocol)?' · <a href="'+esc(u.href)+'" target="_blank" rel="noopener noreferrer">原始发布来源</a>':'';}catch{return '';}};
-  const names={ready:'窗口可比',warming:'采样积累中',stale:'时间陈旧或未知',error:'来源暂不可用',unavailable:'尚无数据'};
+  const names={ready:'窗口可比',warming:'采样积累中',stale:'时间陈旧或未知',error:'来源暂不可用',unavailable:'尚无数据',loading:'正在请求来源',daily:'日度参考'};
+  const nodeKey=node=>node.nodeType===1?(node.getAttribute('data-event-id')||node.getAttribute('data-factor-id')):null;
+  function patchNode(old,fresh){
+   if(old.nodeType!==fresh.nodeType||old.nodeName!==fresh.nodeName){old.replaceWith(fresh);return fresh;}
+   if(old.nodeType!==1){if(old.nodeValue!==fresh.nodeValue)old.nodeValue=fresh.nodeValue;return old;}
+   for(const attr of [...old.attributes])if(!(old.tagName==='DETAILS'&&attr.name==='open')&&!fresh.hasAttribute(attr.name))old.removeAttribute(attr.name);
+   for(const attr of [...fresh.attributes])if(!(old.tagName==='DETAILS'&&attr.name==='open')&&old.getAttribute(attr.name)!==attr.value)old.setAttribute(attr.name,attr.value);
+   patchNodes(old,[...fresh.childNodes]);return old;
+  }
+  function patchNodes(parent,nodes){
+   const previous=[...parent.childNodes],keyed=new Map(previous.filter(nodeKey).map(node=>[nodeKey(node),node]));
+   let cursor=parent.firstChild;const used=new Set();
+   for(const fresh of nodes){const key=nodeKey(fresh),old=key?keyed.get(key):cursor&&!nodeKey(cursor)?cursor:null;
+    const inPlace=old&&old===cursor,current=old?patchNode(old,fresh):fresh;used.add(current);
+    if(!inPlace&&current!==cursor)parent.insertBefore(current,cursor);cursor=current.nextSibling;
+   }
+   for(const old of previous)if(!used.has(old)&&old.parentNode===parent)old.remove();
+  }
+  function reconcile(parent,html){
+   if(parent.__renderedHtml===html)return;parent.__renderedHtml=html;
+   const active=document.activeElement,hadFocus=parent.contains(active),scroll=parent.scrollTop;
+   const row=hadFocus?[...parent.children].findIndex(x=>x.contains(active)):-1;
+   const template=document.createElement('template');template.innerHTML=html;patchNodes(parent,[...template.content.childNodes]);parent.scrollTop=scroll;
+   if(hadFocus&&!parent.contains(active)){const next=parent.children[Math.max(0,Math.min(row,parent.children.length-1))];const target=next?.querySelector('summary,a,button')||parent;target.setAttribute('tabindex',target.getAttribute('tabindex')||'-1');target.focus({preventScroll:true});}
+  }
+  function factorMarkup(f,opened=new Set()){
+    const value=typeof f.price==='number'&&Number.isFinite(f.price)?f.price.toLocaleString('zh-CN',{maximumFractionDigits:4}):'—';
+    const mins=(f.windowMs||60000)/60000;
+    const change=typeof f.change==='number'&&Number.isFinite(f.change)?`${f.change>0?'+':''}${f.change.toFixed(3)}${f.changeUnit==='%'?'%':f.changeUnit==='百分点'?'个百分点':'（来源数值差）'}`:'等待同窗数据';
+    const tone=f.change>0?'positive':f.change<0?'negative':'unknown';
+    const paused=['error','stale','unavailable'].includes(f.status);
+    const windowText=f.daily?(paused?'日度参考已过期，等待来源恢复':'日度参考，不参与分钟比较'):f.status==='loading'?'正在请求候选来源':paused?(f.price===null?'来源请求失败，按计划重试':'保留参考价，暂停分钟比较'):`近${mins}分钟 ${change}`;
+    const diagNames={EAI_AGAIN:'DNS解析失败',ENOTFOUND:'域名未解析',ECONNRESET:'连接中断',ETIMEDOUT:'请求超时',MACRO_SOURCE_TIMEOUT:'候选来源等待超时',MACRO_SYMBOL_EMPTY:'响应缺少品种或有效日期',MACRO_BATCH_EMPTY:'批量响应没有有效行情',SOURCE_COOLDOWN:'限流冷却'};
+    const sourceUrl=f.sourceUrl?sourceLink({link:f.sourceUrl}):'';
+    return `<section class="macro-factor" data-factor-id="${esc(f.id||f.symbol)}"><div class="factor-name">${esc(f.name)}</div><div class="factor-price">${esc(value)} <small>${esc(f.unit)}</small></div><div class="factor-window ${tone}">${esc(windowText)}</div><div class="factor-meta">${esc(f.symbol)} · ${esc(names[f.status]||'等待')}<br>${esc(f.source||'未取得来源')} · ${f.daily?'数据日 '+esc(f.observationDate||'未知'):f.quoteAt?'来源时间 '+fmtTime8(f.quoteAt):'未取得可核验成交时点'}<br>${esc(f.availability||'')}${f.status==='warming'?' · 已积累'+Math.floor((f.sampledMs||0)/1000)+'秒':''}</div><details class="factor-details" data-factor-id="${esc(f.id||f.symbol)}"${opened.has(f.id||f.symbol)?' open':''}><summary>来源口径</summary><div>${esc(f.feedCoverage||'未核验')}${sourceUrl}<br>来源声明延迟：${typeof f.feedDelayMinutes==='number'?esc(String(f.feedDelayMinutes))+'分钟':'未核验'}<br>${esc(f.priceBasis||'')}<br>检查 ${f.sourceCheckedAt?fmtTime8(f.sourceCheckedAt):'尚未成功'}${f.windowStart?'<br>区间 '+fmtTime8(f.windowStart)+' — '+fmtTime8(f.windowEnd):''}${f.sourceTimeText?'<br>来源原文时间 '+esc(f.sourceTimeText)+'（'+esc(f.sourceTimeZone||'来源时区')+'）':''}${f.nextCheckAt?'<br>下次最早检查 '+fmtTime8(f.nextCheckAt):''}${(f.diagnostics||[]).map(d=>'<br>'+esc(d.source+'：'+d.status+(d.code?' · '+(diagNames[d.code]||d.code):''))+(d.retryAt?' · 最早重试 '+fmtTime8(d.retryAt):'')).join('')}${f.error?'<br>'+esc(f.error):''}</div></details></section>`;
+
+  }
   function render(payload){
    const calendar=document.getElementById('macroCalendar'),c=payload.calendar;
-   if(calendar&&c){calendar.innerHTML='<p class="calendar-note">'+esc(c.note||'')+(c.error?' · '+esc(c.error):'')+'</p>'+(c.items||[]).map(e=>'<article class="calendar-event"><div><strong>'+esc(e.event)+'</strong> · '+esc(e.reference)+' · '+fmtTime8(e.releaseAt)+' · 重要性 '+esc(({1:'低',2:'中',3:'高'})[e.importance]||'未知')+(e.status==='scheduled'?' · 待发布':'')+'</div><div class="calendar-values"><span>实际 '+esc(e.actual??'未发布')+'</span><span>一致预期 '+esc(e.consensus??'缺失')+'</span><span>前值 '+esc(e.previous??'缺失')+'</span><span>实际−预期 '+(typeof e.surprise==='number'?esc(String(e.surprise))+' 个百分点':'待验证')+'</span></div><div>'+esc(e.label)+' · '+(e.consensusCapturedAt?'本机发布前记录 '+fmtTime8(e.consensusCapturedAt):'未在本机记录发布前预期')+'</div><details><summary>口径与修订</summary><p>'+esc(e.caveat)+'<br>当前共识 '+esc(e.currentConsensus??'缺失')+' · 模型预测（非共识） '+esc(e.modelForecast??'缺失')+'<br>前次公布值（修订前） '+esc(e.previousBeforeRevision??'未提供')+' · 来源 '+esc(e.source)+sourceLink(e)+'<br>计划时点精度 '+(e.timePrecision==='exact'?'明确':'估计')+'</p></details></article>').join('');}
+   if(calendar&&c){reconcile(calendar,'<p class="calendar-note">'+esc(c.note||'')+(c.error?' · '+esc(c.error):'')+'</p>'+(c.items||[]).map(e=>'<article class="calendar-event" data-event-id="'+esc(e.id||[e.event,e.reference,e.releaseAt].join('|'))+'"><div><strong>'+esc(e.event)+'</strong> · '+esc(e.reference)+' · '+fmtTime8(e.releaseAt)+' · 重要性 '+esc(({1:'低',2:'中',3:'高'})[e.importance]||'未知')+(e.status==='scheduled'?' · 待发布':'')+'</div><div class="calendar-values"><span>实际 '+esc(e.actual??'未发布')+'</span><span>一致预期 '+esc(e.consensus??'缺失')+'</span><span>前值 '+esc(e.previous??'缺失')+'</span><span>实际−预期 '+(typeof e.surprise==='number'?esc(String(e.surprise))+' 个百分点':'待验证')+'</span></div><div>'+esc(e.label)+' · '+(e.consensusCapturedAt?'本机发布前记录 '+fmtTime8(e.consensusCapturedAt):'未在本机记录发布前预期')+'</div><details><summary>口径与修订</summary><p>'+esc(e.caveat)+'<br>当前共识 '+esc(e.currentConsensus??'缺失')+' · 模型预测（非共识） '+esc(e.modelForecast??'缺失')+'<br>前次公布值（修订前） '+esc(e.previousBeforeRevision??'未提供')+' · 来源 '+esc(e.source)+sourceLink(e)+'<br>计划时点精度 '+(e.timePrecision==='exact'?'明确':'估计')+'</p></details></article>').join(''));}
    last=payload;const ready=payload.factors.filter(f=>f.fresh).length;
-   status.textContent=`跨资产观察 · ${ready}/${payload.factors.length} 个来源时间在两分钟内 · 约30秒检查`+(payload.refreshing?' · 正在补充来源':'');
+   status.textContent=`跨资产观察 · ${payload.factors.filter(f=>f.price!==null).length}/${payload.factors.length} 项有报价 · ${ready}项有近期来源时间 · ${payload.factors.filter(f=>f.comparisonBasis==='observation').length}项服务器观察 · ${payload.factors.filter(f=>f.daily).length}项日度参考 · 后台独立采集`+(payload.refreshing?' · 正在补充来源':'');
    status.title='时间新近不代表交易所全市场实时权限；延迟未知的来源仍需核验。';
-   root.innerHTML=payload.factors.map(f=>{
-    const value=typeof f.price==='number'&&Number.isFinite(f.price)?f.price.toLocaleString('zh-CN',{maximumFractionDigits:4}):'—';
-    const change=typeof f.change==='number'&&Number.isFinite(f.change)?`${f.change>0?'+':''}${f.change.toFixed(3)}${f.changeUnit==='%'?'%':'（来源数值差）'}`:'等待同窗数据';
-    const tone=f.change>0?'positive':f.change<0?'negative':'unknown';
-    return `<section class="macro-factor"><div class="factor-name">${esc(f.name)}</div><div class="factor-price">${esc(value)} <small>${esc(f.unit)}</small></div><div class="factor-window ${tone}">近15分钟 ${esc(change)}</div><div class="factor-meta">${esc(f.symbol)} · ${esc(names[f.status]||'等待')}<br>${esc(f.source||'未取得来源')} · 成交 ${f.quoteAt?fmtTime8(f.quoteAt):'时间未知'}</div><details class="factor-details"><summary>来源口径</summary><div>${esc(f.feedCoverage||'未核验')}<br>来源声明延迟：${typeof f.feedDelayMinutes==='number'?esc(String(f.feedDelayMinutes))+'分钟':'未核验'}<br>${esc(f.priceBasis||'')}<br>检查 ${f.sourceCheckedAt?fmtTime8(f.sourceCheckedAt):'尚未成功'}${f.windowStart?'<br>区间 '+fmtTime8(f.windowStart)+' — '+fmtTime8(f.windowEnd):''}${f.error?'<br>'+esc(f.error):''}</div></details></section>`;
-   }).join('');
+   const opened=new Set([...(root.querySelectorAll?.('details[open]')||[])].map(n=>n.dataset.factorId));
+   reconcile(root,payload.factors.map(f=>{
+    return factorMarkup(f,opened);
+   }).join(''));
    const observation=document.getElementById('macroObservation');if(observation)observation.textContent=payload.observations?.join(' ')||'尚无可比窗口，不能据此判断资金轮动。';
   }
   async function refresh(){
@@ -1514,7 +1601,7 @@
     const observation=document.getElementById('macroObservation');if(observation)observation.textContent='无法取得当前观察，暂停更新判断；请核对来源时间。';
    }finally{pending=null;}})();return pending;
   }
-  return {refresh,tick(){if(isOpen()&&!document.hidden&&Date.now()>=nextAt)void refresh();},cancel(){generation++;network.abort?.('macro-context');},snapshot:()=>last};
+  return {renderFactor:factorMarkup,apply(payload){last=payload;if(isOpen()&&!document.hidden)render(payload);},redraw(){if(last&&isOpen()&&!document.hidden)render(last);},refresh,tick(){if(isOpen()&&!document.hidden&&Date.now()>=nextAt)void refresh();},cancel(){generation++;network.abort?.('macro-context');},snapshot:()=>last};
  };
  window.PANEL_MACRO_CONTEXT=Object.freeze({createMacroContext});
 })();
@@ -1526,7 +1613,9 @@
  const createMacroController=({document,network,client,box,filters,status,retry,isOpen=()=>true,onChange=()=>{}})=>{
   const {esc,fmtTime8}=window.PANEL_FORMAT;
   let all=[],filter='重点',inFlight=null,updatedAt=0,stale=false,error=null,sources={},refreshing=false,generation=0;
-  let followupTimer=null,followups=0;const filterNodes=new Map(),rows=new Map();
+  let stream=null,streamState='connecting',lastPayload=null,lastEventAt=0,nextFallback=0,suspended=false;
+  const monitorStatus=document.getElementById('macroMonitorStatus');
+  let followupTimer=null,followups=0;const filterNodes=new Map(),rows=new Map();let renderedNews='';
   const contextRoot=document.getElementById('macroFactors'),contextStatus=document.getElementById('macroContextStatus');
   const context=contextRoot&&contextStatus&&window.PANEL_MACRO_CONTEXT?window.PANEL_MACRO_CONTEXT.createMacroContext({document,network,root:contextRoot,status:contextStatus,isOpen}):null;
   function renderStatus(loading=false){
@@ -1535,11 +1624,11 @@
    if(updatedAt)status.textContent+=' · 最近成功 '+fmtTime8(updatedAt);
    status.title=Object.entries(sources).map(([name,info])=>name+'：'+(info.error||info.stale?'缓存/不可用':'正常')).join('；');retry.hidden=!(error||stale);retry.disabled=loading;
   }
-  const chosen=item=>filter==='全部'||filter==='重点'&&['focus','watch'].includes(item.assessment?.importance)&&item.assessment?.status!=='background'||filter===item.topic;
+  const chosen=item=>filter==='全部'||filter==='观察'&&item.assessment?.importance==='watch'||filter==='重点'&&item.assessment?.importance==='focus'&&item.assessment?.status!=='background'||filter===item.topic;
   function renderFilters(){
-   const topics=['重点','全部',...new Set(all.map(x=>x.topic).filter(Boolean))];if(!topics.includes(filter))filter='重点';
+   const topics=['重点','观察','全部',...new Set(all.map(x=>x.topic).filter(Boolean))];if(!topics.includes(filter))filter='重点';
    for(const [topic,b]of filterNodes)if(!topics.includes(topic)){b.remove();filterNodes.delete(topic);}
-   for(const topic of topics){let b=filterNodes.get(topic);if(!b){b=document.createElement('button');b.type='button';b.className='mfbtn';b.dataset.f=topic;b.addEventListener('click',()=>{filter=topic;renderFilters();renderList();});filters.appendChild(b);filterNodes.set(topic,b);}b.textContent=topic;b.classList.toggle('on',topic===filter);b.setAttribute('aria-pressed',String(topic===filter));}
+   for(const topic of topics){let b=filterNodes.get(topic);if(!b){b=document.createElement('button');b.type='button';b.className='mfbtn';b.dataset.f=topic;b.addEventListener('click',()=>{filter=topic;box.scrollTop=0;renderFilters();renderList();});filters.appendChild(b);filterNodes.set(topic,b);}b.textContent=topic;b.classList.toggle('on',topic===filter);b.setAttribute('aria-pressed',String(topic===filter));}
   }
   const section=(label,values)=>values?.length?`<div class="evidence-section"><strong>${esc(label)}</strong><p>${values.map(v=>esc(v)).join('<br>')}</p></div>`:'';
   function markup(item){
@@ -1547,12 +1636,12 @@
    const scope=a.scope==='feed-excerpt'?'标题＋订阅摘要':'仅标题';const tier=a.evidenceTier==='official'?'官方原始源':'媒体报道';
    const facts=(a.facts||[]).map(f=>`${f.label}：${f.value}`);
    const additional=(item.reports||[]).filter(r=>r.link&&r.link!==item.link).slice(0,4).map(r=>{const u=client.safeURL(r.link);return u?`<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(r.src||'转载来源')}</a>`:'';}).join(' · ');
-   return `<div class="event-head"><span class="ntime">${fmtTime8(item.t)}</span><span class="mtopic">${esc(item.topic||a.topic||'宏观')}</span><span class="evidence-tier">${esc(tier)} · ${scope}</span><span class="nsrc">${esc(item.src||'未知来源')}</span></div>
+   return `<div class="event-head"><span class="ntime">${fmtTime8(item.t)}</span><span class="mtopic">${esc(item.topic||a.topic||'宏观')}</span><span class="evidence-tier">${esc(tier)} · ${scope}</span><span class="nsrc">${esc(item.src||'未知来源')}</span>${item.groupedCount>1?`<span class="evidence-tier">同一调查 · ${item.groupedCount}条期限信息已归组</span>`:''}</div>
     ${url?`<a class="event-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(item.title)}</a>`:`<div class="event-link">${esc(item.title)}</div>`}
-    <div class="impact-row">${impacts.map(x=>`<span class="impact-chip ${['positive','negative','mixed','unknown'].includes(x.direction)?x.direction:'unknown'}">${esc(x.target)} · ${esc(x.label||'待验证')}</span>`).join('')}<span class="impact-origin">本地条件规则${a.status==='background'?' · 历史背景':''}</span></div>
+    <div class="impact-row">${impacts.map(x=>`<span class="impact-chip ${['positive','negative','mixed','unknown'].includes(x.direction)?x.direction:'unknown'}">${esc(x.target)} · ${esc(x.label||'待验证')}</span>`).join('')}<span class="impact-origin">事件条件分析${a.region&&a.region!=='UNKNOWN'?' · '+esc(({UK:'英国',US:'美国',EU:'欧元区',CN:'中国',JP:'日本',KR:'韩国',MULTI:'多地区'})[a.region]||a.region):''}${a.status==='background'?' · 历史背景':''}</span></div>
     <p class="event-summary">${esc(a.summary||'缺少事件证据，不沿用旧版情绪标签。')}</p>
     <details class="macro-evidence"><summary>查看依据、传导条件与反证</summary>
-    ${section('已取得的来源信息',facts)}${section('为什么可能产生影响',impacts.map(x=>x.target+'：'+x.rationale))}${section('成立条件',a.conditions)}${section('反证与其他解释',a.counterEvidence)}${section('仍需核验',a.missing)}
+    ${section('已取得的来源信息',facts)}${section('识别的传导证据',(a.signals||[]).map(s=>(({reported:'报道描述','reported-expectations':'报道中的预期',scenario:'未落地情景',opinion:'作者观点'})[s.basis]||'条件')+'：'+s.evidence))}${section('为什么可能产生影响',impacts.map(x=>x.target+'：'+x.rationale))}${section('成立条件',a.conditions)}${section('反证与其他解释',a.counterEvidence)}${section('仍需核验',a.missing)}
     <p class="evidence-note">${esc(a.horizon||'不作为交易指令')}。这里只读取标题或订阅摘要，并未阅读全文；报道中的“预期”未核验是否为发布前冻结共识。转载数量不等于独立确认。</p>${additional?'<p class="related-reports">相同报道入口：'+additional+'</p>':''}</details>`;
   }
   function renderList(){
@@ -1568,7 +1657,7 @@
    for(const n of [...box.children])if(n.classList.contains('newsempty'))n.remove();
    if(!list.length){const el=document.createElement('p');el.className='newsempty';el.textContent=error||stale?'资讯来源暂不可用，已有内容可在“全部”查看':filter==='重点'?'暂无满足宏观证据筛选的内容，可切换“全部”查看背景资讯':'该分类暂无资讯';box.appendChild(el);}box.scrollTop=scroll;
   }
-  async function refreshMacro({followup=false}={}){
+  async function refreshLegacy({followup=false}={}){
    if(!isOpen()||document.hidden)return true;void context?.refresh();if(inFlight)return inFlight;
    if(!followup){followups=0;clearTimeout(followupTimer);followupTimer=null;}
    const epoch=generation;renderStatus(true);
@@ -1578,11 +1667,48 @@
     sources=payload.sources||{};stale=payload.stale===true;error=payload.error||null;refreshing=payload.refreshing===true;
     if(payload.items.length||!(stale||error))all=payload.items;if(Number(payload.updatedAt)>0)updatedAt=Number(payload.updatedAt);
     renderFilters();renderList();renderStatus();onChange();
-    if(isOpen()&&refreshing&&followups<6){followups++;followupTimer=setTimeout(()=>{followupTimer=null;void refreshMacro({followup:true});},2000);}return !(stale||error);
+    if(isOpen()&&refreshing&&followups<6){followups++;followupTimer=setTimeout(()=>{followupTimer=null;void refreshLegacy({followup:true});},2000);}return !(stale||error);
    }catch(e){if(epoch!==generation)return false;refreshing=false;stale=all.length>0;error=e.message;renderFilters();renderList();renderStatus();return false;}finally{inFlight=null;}})();return inFlight;
   }
-  retry.addEventListener('click',()=>refreshMacro());
-  return Object.freeze({refreshMacro,tick(){context?.tick();},cancel(){generation++;clearTimeout(followupTimer);followupTimer=null;network.abort?.('macro');context?.cancel();},items:()=>all,filterNodes});
+  function renderMonitor(){
+   if(!monitorStatus)return;const m=lastPayload?.monitor;
+   monitorStatus.textContent=!m?'后台监控连接中':!m.enabled?'后台监控已关闭':(m.running?'后台持续监控':'后台未运行')+' · '+({live:'推送已连接',connecting:'连接中',retry:'推送重连中，缓存读取兜底',paused:'页面已离开'}[streamState]||'缓存读取')+' · '+all.length+'条资讯';
+   monitorStatus.title=m?[(m.lanes.news?.error?'资讯：'+m.lanes.news.error:''),(m.lanes.context?.error?'因子：'+m.lanes.context.error:''),m.persistence?.loadError,m.persistence?.saveError,m.delivery?.note].filter(Boolean).join('；'):'';
+  }
+  function applySnapshot(payload){
+   if(!payload?.news||!Array.isArray(payload.news.items)||!Array.isArray(payload.context?.factors))throw new Error('宏观快照格式错误');
+   lastPayload=payload;const n=payload.news;all=n.items;sources=n.sources||{};stale=!!n.stale;error=n.error||null;refreshing=!!n.refreshing;updatedAt=Number(n.updatedAt)||0;
+   context?.apply(payload.context);renderMonitor();
+   if(isOpen()&&!document.hidden){const signature=JSON.stringify(all.map(x=>[x.title,x.t,x.src,x.topic,{...x.assessment,assessedAt:0},x.reports]));if(signature!==renderedNews){renderedNews=signature;renderFilters();renderList();}renderStatus();}onChange();
+  }
+  function connect(){
+   if(stream||suspended)return;streamState='connecting';renderMonitor();
+   if(typeof window.EventSource!=='function'){streamState='retry';return;}
+   try{
+    const own=stream=new window.EventSource('/api/macro/stream');
+    own.addEventListener('macro',event=>{if(stream!==own)return;try{streamState='live';lastEventAt=Date.now();applySnapshot(JSON.parse(event.data));}catch{streamState='retry';nextFallback=0;renderMonitor();}});
+    own.onerror=()=>{if(stream!==own)return;streamState='retry';nextFallback=0;renderMonitor();};
+   }catch{stream=null;streamState='retry';}
+  }
+  async function readSnapshot(){
+   if(inFlight)return inFlight;nextFallback=Date.now()+60000;
+   inFlight=(async()=>{try{const response=await network.request('macro-snapshot','/api/macro/snapshot');if(!response.ok)throw new Error('HTTP '+response.status);applySnapshot(await response.json());return true;}catch(e){error=e.message;renderMonitor();if(isOpen())renderStatus();return false;}finally{inFlight=null;}})();return inFlight;
+  }
+  async function refreshMacro({force=false}={}){
+   if(lastPayload?.monitor?.enabled===false)return refreshLegacy();
+   if(lastPayload){context?.redraw();if(isOpen()&&!document.hidden){renderFilters();renderList();renderStatus();}if(!force&&streamState==='live')return true;}
+   return readSnapshot();
+  }
+  retry.addEventListener('click',()=>refreshMacro({force:true}));
+  window.addEventListener?.('pagehide',()=>{suspended=true;stream?.close();stream=null;streamState='paused';});
+  window.addEventListener?.('pageshow',()=>{suspended=false;connect();nextFallback=0;});
+  connect();
+  return Object.freeze({refreshMacro,tick(){
+   if(suspended)return;
+   if(lastPayload?.monitor?.enabled===false){context?.tick();return;}
+   if(streamState==='live'&&Date.now()-lastEventAt>95000){streamState='retry';renderMonitor();}
+   if(streamState!=='live'&&Date.now()>=nextFallback)void readSnapshot();
+  },cancel(){generation++;clearTimeout(followupTimer);followupTimer=null;network.abort?.('macro');context?.cancel();},items:()=>all,filterNodes});
  };
  window.PANEL_MACRO_CONTROLLER=Object.freeze({createMacroController});
 })();
@@ -1647,50 +1773,61 @@
 
 ;/* public/modules/panel-live-store.js */
 (() => {
-  // Owns the page's only market connection. Views do not manage reconnect timers.
-  function createLiveStore({getSymbols,getCv,readSnapshot,onQuotes,onClock=()=>{},onState=()=>{},
-    EventSourceImpl=window.EventSource,now=Date.now}){
+  function createLiveStore({getSymbols,getCv,readSnapshot,onQuotes,onHistory=()=>{},onClock=()=>{},onState=()=>{},
+    getPolicy=()=>({marketMs:2000}),getRetryAt=()=>0,EventSourceImpl=window.EventSource,now=Date.now}){
     let stream=null,reconnect=null,pollTimer=null,watchdog=null,paused=true,epoch=0,attempts=0,lastMessage=0,state='idle',polling=false;
+    let lastPollAt=null,nextPollAt=null,membership=getSymbols().slice().sort().join(',');
     const quotes=new Map();
     function setState(value){if(state!==value){state=value;onState(value);}}
-    function stopPolling(){clearInterval(pollTimer);pollTimer=null;}
-    async function poll(){if(paused||polling)return;polling=true;try{await readSnapshot(false);}finally{polling=false;}}
-    function fallback(){if(!pollTimer){void poll();pollTimer=setInterval(poll,2000);}setState('fallback');}
+    function stopPolling(){clearTimeout(pollTimer);pollTimer=null;nextPollAt=null;}
+    function reschedule(){
+      if(paused||state!=='fallback'||polling||!getSymbols().length)return;
+      const interval=Math.max(1000,Number(getPolicy().marketMs)||2000);
+      const next=Math.max(lastPollAt===null?now():lastPollAt+interval,Number(getRetryAt())||0);
+      if(pollTimer!==null&&nextPollAt===next)return;
+      stopPolling();nextPollAt=next;pollTimer=setTimeout(poll,Math.max(0,next-now()));
+    }
+    async function poll(){
+      stopPolling();if(paused||polling||state!=='fallback')return;
+      polling=true;lastPollAt=now();
+      try{await readSnapshot(false);}catch{/* Snapshot errors are rendered by the snapshot adapter. */}
+      finally{polling=false;reschedule();}
+    }
+    function fallback(){setState('fallback');reschedule();}
     function clearConnection(){stream?.close();stream=null;clearTimeout(reconnect);reconnect=null;clearInterval(watchdog);watchdog=null;}
     function fail(owner){
       if(paused||owner!==epoch)return;epoch++;clearConnection();fallback();
-      reconnect=setTimeout(connect,Math.min(30000,3000*2**Math.min(attempts++,4)));
+      if(EventSourceImpl)reconnect=setTimeout(connect,Math.min(30000,3000*2**Math.min(attempts++,4)));
     }
     function connect(){
       if(paused||!getSymbols().length)return;
       clearConnection();const owner=++epoch;
       if(!EventSourceImpl){fallback();return;}
-      setState(pollTimer?'fallback':'connecting');lastMessage=now();
+      if(state!=='fallback')setState('connecting');lastMessage=now();
       try{stream=new EventSourceImpl('/api/stream?symbols='+encodeURIComponent(getSymbols().join(','))+'&cv='+encodeURIComponent(getCv()));}
       catch{fail(owner);return;}
       const receive=event=>{
         if(owner!==epoch||paused)return;
         let payload;try{payload=JSON.parse(event.data);}catch{fail(owner);return;}
-        lastMessage=now();onClock(payload.serverNow);
-        stopPolling();attempts=0;setState('streaming');
+        lastMessage=now();onClock(payload.serverNow);stopPolling();attempts=0;setState('streaming');
+        if(Array.isArray(payload.entries))onHistory(payload);
         if(Array.isArray(payload.quotes)){
           const wanted=new Set(getSymbols());for(const q of payload.quotes)if(wanted.has(q?.symbol))quotes.set(q.symbol,q);
           onQuotes(payload.quotes.filter(q=>wanted.has(q?.symbol)));
         }
       };
-      stream.addEventListener('quotes',receive);stream.addEventListener('heartbeat',receive);
+      for(const kind of ['quotes','heartbeat','history'])stream.addEventListener(kind,receive);
       stream.onerror=()=>fail(owner);
-      // Measures transport heartbeats, never time since last trade. Quiet markets
-      // must not cause reconnect storms or fabricated quote timestamps.
       watchdog=setInterval(()=>{if(now()-lastMessage>35000)fail(owner);},5000);
     }
     function setSymbols(){
+      const next=getSymbols().slice().sort().join(',');if(next===membership)return false;membership=next;
       const keep=new Set(getSymbols());for(const s of quotes.keys())if(!keep.has(s))quotes.delete(s);
-      epoch++;clearConnection();stopPolling();if(!paused)connect();
+      epoch++;clearConnection();stopPolling();lastPollAt=null;if(!paused)connect();return true;
     }
     function pause(){paused=true;epoch++;clearConnection();stopPolling();setState('paused');}
-    function resume(){if(!paused&&stream)return;paused=false;connect();}
-    return {pause,resume,setSymbols,stop:pause,healthy:()=>state==='streaming',state:()=>state,quotes};
+    function resume(){if(!paused){reschedule();return;}paused=false;connect();}
+    return {pause,resume,setSymbols,reschedule,stop:pause,healthy:()=>state==='streaming',state:()=>state,quotes};
   }
   window.PANEL_LIVE_STORE=Object.freeze({createLiveStore});
 })();
@@ -1700,13 +1837,15 @@
 ;/* public/app.js */
 (() => {
   const $ = (id) => document.getElementById(id);
+  let activeToastClose=null;
   const panelsEl = $('panels');
   const stripEl = $('strip');
   const PANEL = window.PANEL_UTILS;
   if (!PANEL) throw new Error('panel helper modules missing');
   const panelNetwork = PANEL.createNetwork({ fetchImpl: fetch, timeoutMs: 20000 });
   const quoteClock = window.PANEL_STATE.createQuoteClock();
-  const panelState = PANEL.createState(localStorage, { maxWatchlist: 12 });
+  const storage=window.PANEL_STATE.createSafeStorage(()=>window.localStorage,()=>queueMicrotask(()=>flash('浏览器存储不可用，偏好仅在本次页面会话中保留','warn')));
+  const panelState = PANEL.createState(storage, { maxWatchlist: 12 });
   let refreshMode=panelState.loadRefreshMode();
   let lastData = [];
   let liveStore=null;
@@ -1720,7 +1859,21 @@
   // ---- 多市场自选列表 ----
   const WL_KEY = 'qqq-watchlist';
   let watchlist = panelState.loadWatchlist(WL_KEY, ['QQQ', 'SPY']);
-  const saveWL = () => panelState.saveWatchlist(WL_KEY, watchlist);
+  const watchlistNetwork=PANEL.createNetwork({fetchImpl:fetch,timeoutMs:10000});
+  let pendingWatchlist=null,savingWatchlist=false;
+  async function persistWatchlist(){
+    if(savingWatchlist)return;savingWatchlist=true;
+    try{while(pendingWatchlist!==null){const symbols=pendingWatchlist;pendingWatchlist=null;
+      const response=await watchlistNetwork.request('watchlist','/api/history/watchlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({symbols})});
+      if(!response.ok)throw new Error('保存失败');
+    }}catch{flash('本地自选已更新，服务器后台自选尚未保存；下次增删时将重试','warn');}
+    finally{savingWatchlist=false;}
+  }
+  const saveWL=()=>{panelState.saveWatchlist(WL_KEY,watchlist);pendingWatchlist=[...watchlist];void persistWatchlist();};
+  const emptyState=document.createElement('section');emptyState.className='watchlist-empty';emptyState.hidden=true;
+  emptyState.innerHTML='<h2>尚未添加自选</h2><p>搜索证券代码或名称，即可添加行情卡片。</p><button type="button">搜索并添加标的</button>';
+  emptyState.querySelector('button').addEventListener('click',()=>$('q').focus());panelsEl.appendChild(emptyState);
+  const updateEmptyState=()=>{emptyState.hidden=watchlist.length!==0;};
   const NAMES_KEY = 'qqq-names';
   const names = panelState.loadNames(NAMES_KEY);
   const saveName = (sym, name) => { if (typeof name!=='string' || !name.trim()) return; names[sym]=name.trim().slice(0,160); panelState.saveNames(NAMES_KEY,names); };
@@ -1730,13 +1883,15 @@
   const {ensureCard,render,renderStrip,updateQuoteMeta,setFetchStatus,cardCache}=cardView;
   function removeFromWatch(sym) {
     const q=cardCache.get(sym); if(!q)return;
+    const removedIndex=watchlist.indexOf(sym),restoreFocus=q.el.contains(document.activeElement);
       watchlist = watchlist.filter(x => x !== sym); marketGeneration++; newsController.invalidate(); saveWL();
-      cardView.remove(sym); marketStore.remove(sym);
+      cardView.remove(sym); marketStore.remove(sym);updateEmptyState();
+      if(restoreFocus){const next=cardCache.get(watchlist[Math.min(removedIndex,watchlist.length-1)]);(next?.el.querySelector('button')||$('q')).focus();}
       cardCur.delete(sym); saveCardCurrencies(); if (q.strip) q.strip.remove();
       marketDirectory.syncMembership();
       lastData = lastData.filter(d => d.symbol !== sym);
       lastErrorCount = [...cardCache.values()].filter(card => card.el.classList.contains('fetch-error')).length;
-      renderDigest(); updateSession(lastData);liveStore?.setSymbols();
+      renderDigest(); updateSession(lastData);liveStore?.setSymbols();void refreshPreparedHistory(true);
       if (!watchlist.length) {
         lastErrorCount=0;lastPendingCount=0;
         abortActiveRequests();
@@ -1762,6 +1917,19 @@
     $('session').className='chip'+(trading?' ours-open':'');
   }
 
+  let preparedNextAt=0,preparedReading=false;
+  function applyHistories(payload){
+    if(!payload?.enabled||!Array.isArray(payload.entries))return;
+    preparedNextAt=Date.now()+30000;
+    for(const entry of payload.entries)if(watchlist.includes(entry.symbol))chartController.applyPrewarm(ensureCard(entry.symbol),entry);
+  }
+  async function refreshPreparedHistory(force=false){
+    if(preparedReading||!force&&Date.now()<preparedNextAt)return;
+    preparedReading=true;preparedNextAt=Date.now()+30000;
+    try{const r=await panelNetwork.request('history-bundle','/api/history/bundle?symbols='+encodeURIComponent(watchlist.join(',')));if(r.ok)applyHistories(await r.json());}
+    catch{/* Existing bars remain usable; the normal source status carries failures. */}
+    finally{preparedReading=false;}
+  }
   let lastRefresh=0;
   let lastErrorCount=0;
   let lastPendingCount=0;
@@ -1876,12 +2044,14 @@
   // P1-U8: flash 支持 success/warn/error 变体; 默认 error 兼容旧调用; role 语义化播报
   // T8: 右上角 × 可手动关闭(点击即 remove 并 clearTimeout, 防止自动关闭定时器重复触发);
   //     × 由 CSS .msg-close::after 渲染 — 消息 textContent 保持纯文本(读屏/测试不受按钮字符污染)
-  function flash(m, type){
-    const t = type === 'success' || type === 'warn' ? type : 'error';
+  function flash(m, type, action){
+    activeToastClose?.();
+    const t = ['success','info','warn','error'].includes(type) ? type : 'error';
     const el = document.createElement('div');
     el.className = 'msg' + (t === 'error' ? '' : ' msg-' + t);
-    el.setAttribute('role', t === 'success' ? 'status' : 'alert');
+    el.setAttribute('role', t==='success'||t==='info' ? 'status' : 'alert');
     el.textContent = m;   // 消息纯文本(须先于按钮: textContent setter 会清空既有子节点)
+    if(action){const button=document.createElement('button');button.type='button';button.className='msg-action';button.textContent=action.label;button.addEventListener('click',action.run);el.appendChild(button);}
     const x = document.createElement('button');
     x.className = 'msg-close';
     x.type = 'button';
@@ -1889,10 +2059,10 @@
     x.setAttribute('title', '关闭');
     el.appendChild(x);
     let timer = 0;
-    const close = () => { if (timer) { clearTimeout(timer); timer = 0; } el.remove(); };
+    const close = () => { if (timer) { clearTimeout(timer); timer = 0; } el.remove();if(activeToastClose===close)activeToastClose=null; };
     x.addEventListener('click', close);
     document.body.appendChild(el);
-    timer = setTimeout(() => { timer = 0; el.remove(); }, 4000);
+    activeToastClose=close;timer = setTimeout(close,action?15000:4000);
     return el;
   }
 
@@ -1901,9 +2071,9 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=77').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=82').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
-        nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本'); });
+        nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本','info',{label:'刷新页面',run:()=>location.reload()}); });
       });
     }).catch(()=>{});
   }
@@ -1929,6 +2099,7 @@
   // 时钟/轮询统一由下方心跳驱动(BG-KEEPALIVE)
   // ---- 全球搜索 ----
   function addToWatch(sym, name) {
+    const changed=!watchlist.includes(sym);
     if (!watchlist.includes(sym)) {
       if (watchlist.length >= 12) { flash('自选最多添加 12 只标的', 'warn'); return false; }
       watchlist.push(sym); marketGeneration++; saveWL();
@@ -1936,7 +2107,7 @@
     saveName(sym, name || '');
     ensureCard(sym); searchController.hideSearch(true);
     marketDirectory.syncMembership();
-    liveStore?.setSymbols(); refreshNews();
+    updateEmptyState();if(changed){liveStore?.setSymbols();void refreshNews();void refreshPreparedHistory(true);}
     const card = document.getElementById('card-' + sym);window.PANEL_STATE.scrollToCard(card,{block:'start'});
     return true;
   }
@@ -1985,6 +2156,7 @@
   function tickClock() {
     chartController.tickStatus?.();
     macroController.tick?.();
+    if(!document.hidden&&!liveStore?.healthy())void refreshPreparedHistory();
     const d8=new Date(Date.now()+8*3600e3); const p2=n=>String(n).padStart(2,'0');   // 强制 UTC+8
     $('clock').textContent=p2(d8.getUTCHours())+':'+p2(d8.getUTCMinutes())+':'+p2(d8.getUTCSeconds())+' UTC+8';
     updateRefreshModeLabel();
@@ -2002,7 +2174,7 @@
   function onBeat() {
     lastBeatAt = Date.now();   // 看门狗判定心跳存活的依据
     beatN++;
-    tickClock();
+    liveStore?.reschedule();
     const policy=currentPollingPolicy();
     // Market traffic is exclusively owned by liveStore (SSE, or one fallback timer).
     if ((beatN-lastNewsBeat)*beat.ms>=policy.newsMs){lastNewsBeat=beatN;refreshNews();}
@@ -2055,13 +2227,13 @@
   setInterval(watchdogTick, 5000);   // 看门狗: 主线程 5s 一拍(冻结恢复后立即可用)
   // 手动刷新按钮(顶栏 ↻): 立即全量拉取, 与自动心跳共用去重/缓存
   $('btnRefresh').addEventListener('click', () => { manualRefresh(); });
-  watchlist.forEach(ensureCard);
+  watchlist.forEach(ensureCard);updateEmptyState();
   const displayTicker=window.PANEL_SCHEDULER.createDisplayTicker(tickClock);
   displayTicker.start();
   window.addEventListener('pagehide',()=>displayTicker.stop());
   window.addEventListener('pageshow',()=>displayTicker.start());
-  liveStore=window.PANEL_LIVE_STORE.createLiveStore({getSymbols:()=>watchlist,getCv:cvParam,
-    readSnapshot:refresh,onClock:value=>quoteClock.sync(value,quoteClock.monotonic()),
+  liveStore=window.PANEL_LIVE_STORE.createLiveStore({getSymbols:()=>watchlist,getCv:cvParam,onHistory:applyHistories,
+    readSnapshot:refresh,getPolicy:currentPollingPolicy,getRetryAt:()=>panelNetwork.retryAt('market'),onClock:value=>quoteClock.sync(value,quoteClock.monotonic()),
     onQuotes:arr=>{marketGeneration++;applyQuotes(arr);},onState:updateRefreshModeLabel});
   window.addEventListener('pagehide',()=>liveStore.stop());
   syncVisibility();

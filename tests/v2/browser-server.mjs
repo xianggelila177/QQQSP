@@ -8,7 +8,7 @@ const quote=symbol=>publishQuote({symbol,displayName:symbol==='QQQ'?'纳指100 E
  currency:'USD',gmtoff:-14400,instrumentType:symbol==='NVDA'?'EQUITY':'ETF',prevClose:99,change:1+change,changePct:(1+change)/99*100,volume:100000,open:99,dayHigh:102,dayLow:98,pollAfterMs:2000,
  charts:{intraday:bars,daily30:bars},fxMap:{USD:7.1,CNY:1},currency2cny:7.1});
 let requests=[];
-const app=createApplication({env:{PORT:'0',REALTIME_SNAPSHOTS:'0',PUBLIC_SOURCE_REDUNDANCY:'0'},providerOverrides:{fetchQuote:async symbol=>quote(symbol),fetchChart:async(symbol)=>({
+const app=createApplication({env:{MACRO_BACKGROUND_ENABLED:'0',MACRO_STATE_PATH:'',PORT:'0',REALTIME_SNAPSHOTS:'0',PUBLIC_SOURCE_REDUNDANCY:'0'},providerOverrides:{fetchQuote:async symbol=>quote(symbol),fetchChart:async(symbol)=>({
  meta:{symbol,currency:'USD',instrumentType:'ETF',exchangeName:'NASDAQ',exchangeTimezoneName:'America/New_York',dataGranularity:'1d'},
  timestamp:Array.from({length:360},(_,i)=>Math.floor(baseAt/1000)-(360-i)*86400),indicators:{quote:[{open:Array(360).fill(100),close:Array(360).fill(101),high:Array(360).fill(102),low:Array(360).fill(99),volume:Array(360).fill(100)}]}})},
  upstream:async url=>{requests.push(url);if(url.includes('news.google.com'))return {status:200,body:'<rss><channel><item><title>测试资讯</title><link>https://example.com/story</link><pubDate>'+new Date().toUTCString()+'</pubDate></item></channel></rss>',headers:{}};return {status:200,body:'{"quotes":[],"news":[]}',headers:{}};}});
