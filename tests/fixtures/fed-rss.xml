@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<rss version="2.0"><channel>
+  <title>FRB: Press Release - Monetary Policy</title>
+  <description>Press releases about monetary policy from the Federal Reserve Board</description>
+  <item>
+    <title><![CDATA[Fed &amp; ECB statement]]></title>
+    <link><![CDATA[https://www.federalreserve.gov/newsevents/pressreleases/monetary20260904a.htm]]></link>
+    <guid><![CDATA[https://www.federalreserve.gov/newsevents/pressreleases/monetary20260904a.htm]]></guid>
+    <description><![CDATA[Fed &amp; ECB statement]]></description>
+    <category>Monetary Policy</category>
+    <pubDate><![CDATA[Fri, 04 Sep 2026 18:00:00 GMT]]></pubDate>
+  </item>
+  <item>
+    <title>FOMC minutes &amp; outlook</title>
+    <link>https://www.federalreserve.gov/newsevents/pressreleases/monetary20260903a.htm</link>
+    <guid>https://www.federalreserve.gov/newsevents/pressreleases/monetary20260903a.htm</guid>
+    <pubDate>Thu, 03 Sep 2026 18:00:00 GMT</pubDate>
+  </item>
+</channel></rss>

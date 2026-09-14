@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import { calendarRegistry,SESSIONS,marketStateFor,marketCalendarCoverage,calendarCoverageStatus,sessionFor,timezoneOffsetFor } from '../mkt.mjs';
+import { nextMarketTransitionAt } from '../lib/session-policy.js';
+const year={validFrom:'2026-01-01',validThrough:'2026-12-31',closed:[],halfDays:[],sources:['https://fixture.invalid/calendar']};
+const old={markets:{...calendarRegistry.markets},profiles:calendarRegistry.profiles,sessions:{...SESSIONS}};
+try{
+ calendarRegistry.profiles={...calendarRegistry.profiles,uk:{sessions:{reg:[[480,990]]}},ca:{sessions:{reg:[[570,960]]}},in:{sessions:{reg:[[555,930]]}},ch:{sessions:{reg:[[540,1040]],auc:[[1040,1050]]},sessionsByType:{ETF:{reg:[[540,1050]],auc:[[1050,1055]]}}}};
+ Object.assign(SESSIONS,{uk:{reg:[[480,990]]},ca:{reg:[[570,960]]},in:{reg:[[555,930]]},ch:{reg:[[540,1040]],auc:[[1040,1050]]}});
+ calendarRegistry.markets.uk={'2026':{...year}};
+ calendarRegistry.markets.ca={'2026':{...year,halfDays:['12-24'],overrides:{'12-24':{reg:[[570,780]],post:[]}}}};
+ calendarRegistry.markets.in={'2026':{...year,unknownSessions:{'11-08':'Sunday Muhurat time pending'},overrides:{'11-15':{reg:[[1080,1140]]}}}};
+ calendarRegistry.markets.ch={'2026':{...year}};
+ assert.equal(marketStateFor('VOD.L',null,Date.parse('2026-03-16T08:30:00Z')),'REGULAR');
+ assert.equal(timezoneOffsetFor('VOD.L',Date.parse('2026-03-16T08:30:00Z')),0);assert.equal(timezoneOffsetFor('QQQ',Date.parse('2026-03-16T08:30:00Z')),-14400);
+ assert.equal(marketStateFor('RY.TO',null,Date.parse('2026-12-24T18:01:00Z')),'CLOSED');
+ assert.equal(marketStateFor('RELIANCE.NS',null,Date.parse('2026-11-08T12:45:00Z')),'UNKNOWN','announced Sunday cannot be called weekend closed');
+ assert.equal(marketCalendarCoverage('RELIANCE.NS',Date.parse('2026-11-08T12:45:00Z')).pending,true);
+ assert.equal(marketStateFor('RELIANCE.NS',null,Date.parse('2026-11-15T12:45:00Z')),'REGULAR','explicit Sunday session overrides weekend');
+ assert.equal(marketStateFor('NESN.SW',null,Date.parse('2026-09-08T15:25:00Z'),{instrumentType:'EQUITY'}),'AUCTION');
+ assert.equal(marketStateFor('CSSMI.SW',null,Date.parse('2026-09-08T15:25:00Z'),{instrumentType:'ETF'}),'REGULAR');
+ assert.equal(nextMarketTransitionAt('CSSMI.SW',Date.parse('2026-09-08T15:25:00Z'),{instrumentType:'ETF'}),Date.parse('2026-09-08T15:30:00Z'));
+ calendarRegistry.profiles.ch.sessionsByType.EQUITY={reg:[[540,720],[735,1040]],unknown:[[720,735]]};
+ assert.equal(marketStateFor('NESN.SW',null,Date.parse('2026-09-08T10:05:00Z'),{instrumentType:'EQUITY'}),'UNKNOWN','unverified segment window cannot become a closure');
+ calendarRegistry.profiles.uk.sessionPeriods=[{validFrom:'2026-11-01',validThrough:'2026-12-31',sessions:{reg:[[540,990]]}}];
+ assert.equal(marketStateFor('VOD.L',null,Date.parse('2026-11-02T08:30:00Z')),'CLOSED','effective dated sessions apply independently of local DST');
+ assert.equal(sessionFor('VOD.L',null,Date.parse('2032-01-05T10:00:00Z')).calendar.known,false);
+ calendarRegistry.markets.uk['2026'].validThrough='2026-09-15';
+ assert.equal(marketCalendarCoverage('VOD.L',Date.parse('2026-09-20T10:00:00Z')).known,false);
+ assert.equal(calendarCoverageStatus(Date.parse('2026-09-06T00:00:00Z'),90).ok,false,'a sources list alone cannot prove full horizon');
+}finally{calendarRegistry.markets=old.markets;calendarRegistry.profiles=old.profiles;for(const key of Object.keys(SESSIONS))delete SESSIONS[key];Object.assign(SESSIONS,old.sessions);}
+console.log('PASS global DST, type sessions, half-days, special Sundays and explicit calendar coverage');

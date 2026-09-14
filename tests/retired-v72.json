@@ -1,0 +1,352 @@
+{
+  "note": "这些旧套件不计为通过。新测试覆盖关键替代链路，不声称对全部混合旧断言逐条等价。原文件仍可通过 npm run test:legacy 诊断。",
+  "files": {
+    "_test_audit_domain.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_backend_lifecycle.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_chart_cv.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_chart_sources.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_cors_allowlist.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_crumb_race.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_daily_version.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_failat_cap.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_fallback_daily_full.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_fetchquote_concurrent.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_fx_batch.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_market_field.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_news_ttl.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_parent_readiness.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_parent_transport.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_redundancy_application.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_review_http.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_rss_merge.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_sina_sent.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_tx_parse_unified.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_us_fallback.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_v62_backend_regressions.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_v72_application_wiring.mjs": {
+      "reason": "依赖已删除的模块级实例、init 注入入口或同步读接口；改为显式应用实例与后台引擎。",
+      "replacement": [
+        "tests/v2/http-integration.test.mjs",
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/lifecycle.test.mjs",
+        "tests/v2/history-cache.test.mjs"
+      ]
+    },
+    "_test_429_smooth.mjs": {
+      "reason": "断路器已从 Yahoo 全局对象迁移为每应用、跨业务共享的来源入口。",
+      "replacement": [
+        "tests/v2/host-gate.test.mjs",
+        "tests/v2/resource.test.mjs"
+      ]
+    },
+    "_test_ua_ygap.mjs": {
+      "reason": "断路器已从 Yahoo 全局对象迁移为每应用、跨业务共享的来源入口。",
+      "replacement": [
+        "tests/v2/host-gate.test.mjs",
+        "tests/v2/resource.test.mjs"
+      ]
+    },
+    "_test_yahoo_429_backoff.mjs": {
+      "reason": "断路器已从 Yahoo 全局对象迁移为每应用、跨业务共享的来源入口。",
+      "replacement": [
+        "tests/v2/host-gate.test.mjs",
+        "tests/v2/resource.test.mjs"
+      ]
+    },
+    "_test_bg_keepalive.mjs": {
+      "reason": "旧浏览器轮询/多数决/折叠请求时序已经由 SSE、汇总状态与懒加载替代。",
+      "replacement": [
+        "tests/v2/browser_check.py",
+        "tests/v2/quote-engine.test.mjs"
+      ]
+    },
+    "_test_hidden_guard.mjs": {
+      "reason": "旧浏览器轮询/多数决/折叠请求时序已经由 SSE、汇总状态与懒加载替代。",
+      "replacement": [
+        "tests/v2/browser_check.py",
+        "tests/v2/quote-engine.test.mjs"
+      ]
+    },
+    "_test_manual_refresh.mjs": {
+      "reason": "旧浏览器轮询/多数决/折叠请求时序已经由 SSE、汇总状态与懒加载替代。",
+      "replacement": [
+        "tests/v2/browser_check.py",
+        "tests/v2/quote-engine.test.mjs"
+      ]
+    },
+    "_test_realtime_ui.mjs": {
+      "reason": "旧浏览器轮询/多数决/折叠请求时序已经由 SSE、汇总状态与懒加载替代。",
+      "replacement": [
+        "tests/v2/browser_check.py",
+        "tests/v2/quote-engine.test.mjs"
+      ]
+    },
+    "_test_remediation_frontend.mjs": {
+      "reason": "旧浏览器轮询/多数决/折叠请求时序已经由 SSE、汇总状态与懒加载替代。",
+      "replacement": [
+        "tests/v2/browser_check.py",
+        "tests/v2/quote-engine.test.mjs"
+      ]
+    },
+    "_test_review_frontend.mjs": {
+      "reason": "旧浏览器轮询/多数决/折叠请求时序已经由 SSE、汇总状态与懒加载替代。",
+      "replacement": [
+        "tests/v2/browser_check.py",
+        "tests/v2/quote-engine.test.mjs"
+      ]
+    },
+    "_test_session_majority.mjs": {
+      "reason": "旧浏览器轮询/多数决/折叠请求时序已经由 SSE、汇总状态与懒加载替代。",
+      "replacement": [
+        "tests/v2/browser_check.py",
+        "tests/v2/quote-engine.test.mjs"
+      ]
+    },
+    "_test_stale_grades.mjs": {
+      "reason": "旧浏览器轮询/多数决/折叠请求时序已经由 SSE、汇总状态与懒加载替代。",
+      "replacement": [
+        "tests/v2/browser_check.py",
+        "tests/v2/quote-engine.test.mjs"
+      ]
+    },
+    "_test_v62_frontend_polling.mjs": {
+      "reason": "旧浏览器轮询/多数决/折叠请求时序已经由 SSE、汇总状态与懒加载替代。",
+      "replacement": [
+        "tests/v2/browser_check.py",
+        "tests/v2/quote-engine.test.mjs"
+      ]
+    },
+    "_test_v62_polling_lifecycle.mjs": {
+      "reason": "旧浏览器轮询/多数决/折叠请求时序已经由 SSE、汇总状态与懒加载替代。",
+      "replacement": [
+        "tests/v2/browser_check.py",
+        "tests/v2/quote-engine.test.mjs"
+      ]
+    },
+    "_test_http_ops.mjs": {
+      "reason": "多用户请求配额、核心标的后台探测不再属于单用户部署；保留边界校验与诊断权限。",
+      "replacement": [
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/http-integration.test.mjs"
+      ]
+    },
+    "_test_remediation_http.mjs": {
+      "reason": "多用户请求配额、核心标的后台探测不再属于单用户部署；保留边界校验与诊断权限。",
+      "replacement": [
+        "tests/v2/router-contract.test.mjs",
+        "tests/v2/http-integration.test.mjs"
+      ]
+    },
+    "_test_audit_tooling.mjs": {
+      "reason": "旧依赖 tar/覆盖率/发布证明链的工具链不再是本版门禁；使用标准库构建和校验。",
+      "replacement": [
+        "scripts/verify.mjs",
+        "scripts/build.mjs"
+      ]
+    },
+    "_test_v62_tooling_gate.mjs": {
+      "reason": "旧依赖 tar/覆盖率/发布证明链的工具链不再是本版门禁；使用标准库构建和校验。",
+      "replacement": [
+        "scripts/verify.mjs",
+        "scripts/build.mjs"
+      ]
+    },
+    "_test_v62_tooling_hermetic.mjs": {
+      "reason": "旧依赖 tar/覆盖率/发布证明链的工具链不再是本版门禁；使用标准库构建和校验。",
+      "replacement": [
+        "scripts/verify.mjs",
+        "scripts/build.mjs"
+      ]
+    },
+    "_test_v62_credential_fifo.mjs": {
+      "reason": "已删除运行时中继/IP切换与旧凭据队列，不把换出口当作绕开 429 的方案。",
+      "replacement": [
+        "tests/v2/host-gate.test.mjs",
+        "tests/v2/alpaca-ack.test.mjs"
+      ]
+    },
+    "_test_yahoo_relay.mjs": {
+      "reason": "已删除运行时中继/IP切换与旧凭据队列，不把换出口当作绕开 429 的方案。",
+      "replacement": [
+        "tests/v2/host-gate.test.mjs",
+        "tests/v2/alpaca-ack.test.mjs"
+      ]
+    }
+  }
+}
