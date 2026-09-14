@@ -1,8 +1,10 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {once} from 'node:events';import {createApplication} from '../../app.js';import {createTelemetry} from '../../log.mjs';import {sinaRow} from './source-fixtures.mjs';
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
+// This test isolates quote-source scheduling. Financial adapters have their own
+// HTTP/SSE integration tests and may legitimately request a different provider.
 test('real HTTP with production source composition: US batch every second, Korean identity/history, no per-card polling',async t=>{
  const born=Date.now(),base=Date.parse('2026-09-10T13:59:00Z'),now=()=>base+Date.now()-born,calls=[],sina=[];
- const app=createApplication({env:{HISTORY_BACKGROUND_ENABLED:'0',HISTORY_STATE_PATH:'',MACRO_BACKGROUND_ENABLED:'0',MACRO_STATE_PATH:'',PORT:0,POLL_MS:1000,PUBLIC_SOURCE_REDUNDANCY:'0'},now,telemetry:createTelemetry(),upstream:async url=>{
+ const app=createApplication({env:{FUNDAMENTALS_ENABLED:'0',HISTORY_BACKGROUND_ENABLED:'0',HISTORY_STATE_PATH:'',MACRO_BACKGROUND_ENABLED:'0',MACRO_STATE_PATH:'',PORT:0,POLL_MS:1000,PUBLIC_SOURCE_REDUNDANCY:'0'},now,telemetry:createTelemetry(),upstream:async url=>{
   calls.push(url);
   if(url.includes('hq.sinajs.cn')){sina.push(Date.now());return {status:200,body:sinaRow('NVDA',{price:100+sina.length,date:'2026-09-10 21:59:00'})+sinaRow('LITE',{price:900+sina.length,date:'2026-09-10 21:59:00'})};}
   if(url.includes('/domestic/stock/'))return {status:200,body:JSON.stringify({pollingInterval:7000,datas:[{itemCode:'000660',stockName:'SK hynix',closePrice:'200000',compareToPreviousClosePrice:'1000',localTradedAt:'2026-09-10T15:30:00+09:00',stockExchangeType:{code:'KS',nameEng:'KOSPI',nationType:'KOR',delayTime:0},currencyType:{code:'KRW'}}]})};

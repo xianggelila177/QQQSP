@@ -1,0 +1,26 @@
+[Unit]
+Description=QQQSP Yahoo relay SSH tunnel
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=qqqsp-relay
+Group=qqqsp-relay
+WorkingDirectory=/
+Environment=HOME=/nonexistent
+ExecStart=/usr/bin/ssh -F /dev/null -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/etc/qqqsp-relay/known_hosts -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -o ConnectTimeout=10 -i /etc/qqqsp-relay/relay_key -N -L 127.0.0.1:8801:127.0.0.1:8801 root@107.172.90.49
+Restart=always
+RestartSec=10
+KillMode=control-group
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+InaccessiblePaths=-/etc/qqqsp -/etc/qqqsp-edge -/var/lib/dsh
+TasksMax=32
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

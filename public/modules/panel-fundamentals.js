@@ -28,7 +28,7 @@
     ['lotSize','每手股数','shares','须由可靠来源明确给出。交易所整手、券商最小下单数量和碎股规则不混用，不统一硬编码为一股。'],
     ['exch','交易所','text','以行情来源的交易所字段为准；缺失时不使用公司名称替代。']
   ].map(([key,label,type,description],index)=>Object.freeze({key,label,type,description,extra:index>=16})));
-  const sourceNames={'yahoo-summary':'Yahoo 财务摘要','finnhub-metric':'Finnhub 基础财务','yahoo-summary+finnhub-metric':'Yahoo / Finnhub','sina-batch':'新浪行情','tx-batch':'腾讯行情','tx-cn':'腾讯行情','tx-us':'腾讯行情',fixture:'离线测试数据'};
+  const sourceNames={'naver-financial':'Naver 财务指标','naver-company':'Naver 公司资料','naver-financial+naver-company':'Naver 财务指标 / 公司资料','tencent-financial':'腾讯基础指标','naver-us':'Naver 美股','naver-kr':'Naver 韩股','yahoo-summary':'Yahoo 财务摘要','finnhub-metric':'Finnhub 基础财务','yahoo-summary+finnhub-metric':'Yahoo / Finnhub','sina-batch':'新浪行情','tx-batch':'腾讯行情','tx-cn':'腾讯行情','tx-us':'腾讯行情',fixture:'离线测试数据'};
   const reasonNames={disabled:'财务资料功能已关闭',expired:'资料已超过最长保留期',loading:'财务资料后台读取中','source-missing':'来源未提供该字段','instrument-type':'当前品种不适用该公司指标','no-trade-amount':'来源未提供累计成交金额','no-regular-volume':'缺少已核验的常规时段成交量','no-shares':'缺少同一证券的可靠股本分母','no-regular-range':'缺少常规时段高低价或有效昨收','float-exceeds-total':'流通股大于总股本，停止相关计算','no-five-day-minute-baseline':'尚无前五个交易日的每分钟均量基准','no-order-book':'尚无明确范围的委托买卖盘','negative-earnings':'来源确认盈利为负','zero-earnings':'盈利口径无有效正值','nonpositive-book':'净资产口径不是有效正值','nonpositive-denominator':'分母不是有效正值','nonpositive-revenue':'营业收入口径不是有效正值'};
   const states={'ready':'财务资料已取得','stale':'财务缓存待更新','expired':'财务资料已过期','disabled':'财务资料已关闭','loading':'财务资料后台读取中','unavailable':'财务资料暂缺','not-applicable':'按品种显示适用指标'};
   const numeric=v=>typeof v==='number'&&Number.isFinite(v)?v:null;
@@ -117,7 +117,7 @@
       dialogOwner=q.symbol;opener=q.statisticsHelp;
       setText(dialog.querySelector('h2'),q.symbol+' · 基础信息');
       const f=q.d?.fundamentals;
-      setText(dialog.querySelector('.metrics-dialog-intro'),'以下是打开说明时的快照。'+(f?.fetchedAt?'资料取得时间（北京时间）：'+new Date(f.fetchedAt+8*3600000).toISOString().replace('T',' ').slice(0,19)+'。':'资料取得时间：尚无成功记录。')+(f?.source?'资料来源：'+(sourceNames[f.source]||f.source)+'。':'')+'价格及来源检查独立更新；财务资料默认缓存六小时，失败后保留未过期旧值并退避重试。取得时间不等于财报或股本日期。'+(f?.financialPeriod?'来源最近财报季度：'+f.financialPeriod+'。':'来源未提供最近财报季度。'));
+      setText(dialog.querySelector('.metrics-dialog-intro'),'以下是打开说明时的快照。'+(f?.fetchedAt?'资料取得时间（北京时间）：'+new Date(f.fetchedAt+8*3600000).toISOString().replace('T',' ').slice(0,19)+'。':'资料取得时间：尚无成功记录。')+(f?.source?'资料来源：'+(sourceNames[f.source]||f.source)+'。':'')+'成交统计随行情刷新；公开基础指标每分钟检查，财报摘要最多缓存六小时。失败后保留未过期旧值并退避重试。取得时间不等于财报或股本日期。'+(f?.financialPeriod?'来源最近财报季度：'+f.financialPeriod+'。':'来源未提供最近财报季度。'));
       const formatter=formatterFor(q.d||{});
       dialog.querySelector('dl').innerHTML=definitions.map(def=>{const item=formatMetric(def,q.d||{},formatter);return '<div><dt>'+esc(item.label)+' <strong>'+esc(item.text)+'</strong></dt><dd>'+esc(item.detail)+'</dd></div>';}).join('');
       dialog.showModal();

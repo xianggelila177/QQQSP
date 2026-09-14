@@ -1,0 +1,17 @@
+[Unit]
+Description=QQQSP host capacity warning check
+
+[Service]
+Type=oneshot
+User=qqqsp
+Group=qqqsp
+ExecStart=/opt/dsh-node/bin/node /var/lib/qqqsp/current/ops/capacity-check.mjs
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/qqqsp/health
+MemoryMax=64M
+TasksMax=16
+StandardOutput=journal
+StandardError=journal
