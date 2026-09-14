@@ -1,0 +1,150 @@
+{
+  "data": {
+    "symbol": "AMD",
+    "incomeStatementTable": {
+      "asOf": null,
+      "headers": {
+        "value1": "Quarterly Ending:",
+        "value2": "6/27/2026",
+        "value3": "3/28/2026",
+        "value4": "12/27/2025",
+        "value5": "9/27/2025"
+      },
+      "rows": [
+        {
+          "value1": "Total Revenue",
+          "value2": "$11,536,000",
+          "value3": "$10,253,000",
+          "value4": "$10,270,000",
+          "value5": "$9,246,000"
+        },
+        {
+          "value1": "Cost of Revenue",
+          "value2": "$5,333,000",
+          "value3": "$4,837,000",
+          "value4": "$4,693,000",
+          "value5": "$4,466,000"
+        },
+        {
+          "value1": "Gross Profit",
+          "value2": "$6,203,000",
+          "value3": "$5,416,000",
+          "value4": "$5,577,000",
+          "value5": "$4,780,000"
+        },
+        {
+          "value1": "Operating Expenses",
+          "value2": "",
+          "value3": "",
+          "value4": "",
+          "value5": ""
+        },
+        {
+          "value1": "Research and Development",
+          "value2": "$2,528,000",
+          "value3": "$2,397,000",
+          "value4": "$2,330,000",
+          "value5": "$2,139,000"
+        },
+        {
+          "value1": "Sales, General and Admin.",
+          "value2": "$1,401,000",
+          "value3": "$1,253,000",
+          "value4": "$1,198,000",
+          "value5": "$1,069,000"
+        },
+        {
+          "value1": "Non-Recurring Items",
+          "value2": "--",
+          "value3": "--",
+          "value4": "--",
+          "value5": "--"
+        },
+        {
+          "value1": "Other Operating Items",
+          "value2": "$284,000",
+          "value3": "$290,000",
+          "value4": "$297,000",
+          "value5": "$302,000"
+        },
+        {
+          "value1": "Operating Income",
+          "value2": "$1,990,000",
+          "value3": "$1,476,000",
+          "value4": "$1,752,000",
+          "value5": "$1,270,000"
+        },
+        {
+          "value1": "Add'l income/expense items",
+          "value2": "$598,000",
+          "value3": "$165,000",
+          "value4": "$358,000",
+          "value5": "$82,000"
+        },
+        {
+          "value1": "Earnings Before Interest and Tax",
+          "value2": "$2,588,000",
+          "value3": "$1,641,000",
+          "value4": "$2,110,000",
+          "value5": "$1,352,000"
+        },
+        {
+          "value1": "Interest Expense",
+          "value2": "$37,000",
+          "value3": "$37,000",
+          "value4": "$36,000",
+          "value5": "$37,000"
+        },
+        {
+          "value1": "Earnings Before Tax",
+          "value2": "$2,551,000",
+          "value3": "$1,604,000",
+          "value4": "$2,074,000",
+          "value5": "$1,315,000"
+        },
+        {
+          "value1": "Income Tax",
+          "value2": "$252,000",
+          "value3": "$238,000",
+          "value4": "$455,000",
+          "value5": "$153,000"
+        },
+        {
+          "value1": "Minority Interest",
+          "value2": "$6,000",
+          "value3": "$6,000",
+          "value4": "$1,000",
+          "value5": "$10,000"
+        },
+        {
+          "value1": "Equity Earnings/Loss Unconsolidated Subsidiary",
+          "value2": "--",
+          "value3": "--",
+          "value4": "--",
+          "value5": "--"
+        },
+        {
+          "value1": "Net Income-Cont. Operations",
+          "value2": "$2,305,000",
+          "value3": "$1,372,000",
+          "value4": "$1,620,000",
+          "value5": "$1,172,000"
+        },
+        {
+          "value1": "Net Income",
+          "value2": "$2,297,000",
+          "value3": "$1,383,000",
+          "value4": "$1,511,000",
+          "value5": "$1,243,000"
+        },
+        {
+          "value1": "Net Income Applicable to Common Shareholders",
+          "value2": "$2,297,000",
+          "value3": "$1,383,000",
+          "value4": "$1,511,000",
+          "value5": "$1,243,000"
+        }
+      ]
+    }
+  }
+}

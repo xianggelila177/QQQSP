@@ -1,0 +1,38 @@
+{
+  "data": {
+    "dividendHeaderValues": [
+      {
+        "label": "Ex-Dividend Date",
+        "value": "N/A"
+      },
+      {
+        "label": "Dividend Yield",
+        "value": "N/A"
+      },
+      {
+        "label": "Annual Dividend",
+        "value": "N/A"
+      },
+      {
+        "label": "P/E Ratio",
+        "value": "N/A"
+      }
+    ],
+    "exDividendDate": "N/A",
+    "dividendPaymentDate": "N/A",
+    "yield": "N/A",
+    "annualizedDividend": "N/A",
+    "payoutRatio": "N/A",
+    "dividends": {
+      "asOf": null,
+      "headers": null,
+      "rows": null
+    }
+  },
+  "message": "Dividend History information is presently unavailable for this company. This could indicate that the company has never provided a dividend or that a dividend is pending",
+  "status": {
+    "rCode": 200,
+    "bCodeMessage": null,
+    "developerMessage": null
+  }
+}

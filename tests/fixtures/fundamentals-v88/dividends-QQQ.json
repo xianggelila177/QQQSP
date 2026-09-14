@@ -1,0 +1,559 @@
+{
+  "data": {
+    "dividendHeaderValues": [
+      {
+        "label": "Ex-Dividend Date",
+        "value": "06/22/2026"
+      },
+      {
+        "label": "Dividend Yield",
+        "value": "0.46%"
+      },
+      {
+        "label": "Annual Dividend",
+        "value": "$3.25396"
+      },
+      {
+        "label": "P/E Ratio",
+        "value": "N/A"
+      }
+    ],
+    "exDividendDate": "06/22/2026",
+    "dividendPaymentDate": "07/10/2026",
+    "yield": "0.46%",
+    "annualizedDividend": "3.25396",
+    "payoutRatio": "N/A",
+    "dividends": {
+      "asOf": null,
+      "headers": {
+        "exOrEffDate": "Ex/EFF Date",
+        "type": "Type",
+        "amount": "Cash Amount",
+        "declarationDate": "Declaration Date",
+        "recordDate": "Record Date",
+        "paymentDate": "Payment Date"
+      },
+      "rows": [
+        {
+          "exOrEffDate": "06/22/2026",
+          "type": "Cash",
+          "amount": "$0.81349",
+          "declarationDate": "N/A",
+          "recordDate": "06/22/2026",
+          "paymentDate": "07/10/2026",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "03/23/2026",
+          "type": "Cash",
+          "amount": "$0.73282",
+          "declarationDate": "N/A",
+          "recordDate": "03/23/2026",
+          "paymentDate": "03/27/2026",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "12/22/2025",
+          "type": "Cash",
+          "amount": "$0.79408",
+          "declarationDate": "N/A",
+          "recordDate": "12/22/2025",
+          "paymentDate": "12/31/2025",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "09/22/2025",
+          "type": "Cash",
+          "amount": "$0.69395",
+          "declarationDate": "N/A",
+          "recordDate": "09/22/2025",
+          "paymentDate": "10/31/2025",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "06/23/2025",
+          "type": "Cash",
+          "amount": "$0.59111",
+          "declarationDate": "N/A",
+          "recordDate": "06/23/2025",
+          "paymentDate": "07/31/2025",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "03/24/2025",
+          "type": "Cash",
+          "amount": "$0.71571",
+          "declarationDate": "N/A",
+          "recordDate": "03/24/2025",
+          "paymentDate": "04/30/2025",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "12/23/2024",
+          "type": "Cash",
+          "amount": "$0.83466",
+          "declarationDate": "N/A",
+          "recordDate": "12/23/2024",
+          "paymentDate": "12/31/2024",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "09/23/2024",
+          "type": "Cash",
+          "amount": "$0.67686",
+          "declarationDate": "N/A",
+          "recordDate": "09/23/2024",
+          "paymentDate": "10/31/2024",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "06/24/2024",
+          "type": "Cash",
+          "amount": "$0.7615",
+          "declarationDate": "N/A",
+          "recordDate": "06/24/2024",
+          "paymentDate": "07/31/2024",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "03/18/2024",
+          "type": "Cash",
+          "amount": "$0.57345",
+          "declarationDate": "N/A",
+          "recordDate": "03/19/2024",
+          "paymentDate": "04/30/2024",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "12/27/2023",
+          "type": "Cash",
+          "amount": "$0.21584",
+          "declarationDate": "12/26/2023",
+          "recordDate": "12/28/2023",
+          "paymentDate": "01/15/2024",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "12/18/2023",
+          "type": "Cash",
+          "amount": "$0.80826",
+          "declarationDate": "N/A",
+          "recordDate": "12/19/2023",
+          "paymentDate": "12/29/2023",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "09/18/2023",
+          "type": "Cash",
+          "amount": "$0.53555",
+          "declarationDate": "N/A",
+          "recordDate": "09/19/2023",
+          "paymentDate": "10/31/2023",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "06/20/2023",
+          "type": "Cash",
+          "amount": "$0.50395",
+          "declarationDate": "N/A",
+          "recordDate": "06/21/2023",
+          "paymentDate": "07/31/2023",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "03/20/2023",
+          "type": "Cash",
+          "amount": "$0.47223",
+          "declarationDate": "N/A",
+          "recordDate": "03/21/2023",
+          "paymentDate": "04/28/2023",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "12/19/2022",
+          "type": "Cash",
+          "amount": "$0.65541",
+          "declarationDate": "N/A",
+          "recordDate": "12/20/2022",
+          "paymentDate": "12/30/2022",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "09/19/2022",
+          "type": "Cash",
+          "amount": "$0.51856",
+          "declarationDate": "N/A",
+          "recordDate": "09/20/2022",
+          "paymentDate": "10/31/2022",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "06/21/2022",
+          "type": "Cash",
+          "amount": "$0.5274",
+          "declarationDate": "N/A",
+          "recordDate": "06/22/2022",
+          "paymentDate": "07/29/2022",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "03/21/2022",
+          "type": "Cash",
+          "amount": "$0.43369",
+          "declarationDate": "N/A",
+          "recordDate": "03/22/2022",
+          "paymentDate": "04/29/2022",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "12/20/2021",
+          "type": "Cash",
+          "amount": "$0.49141",
+          "declarationDate": "N/A",
+          "recordDate": "12/21/2021",
+          "paymentDate": "12/31/2021",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "09/20/2021",
+          "type": "Cash",
+          "amount": "$0.41391",
+          "declarationDate": "N/A",
+          "recordDate": "09/21/2021",
+          "paymentDate": "10/29/2021",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "06/21/2021",
+          "type": "Cash",
+          "amount": "$0.39679",
+          "declarationDate": "N/A",
+          "recordDate": "06/22/2021",
+          "paymentDate": "07/30/2021",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "03/22/2021",
+          "type": "Cash",
+          "amount": "$0.39468",
+          "declarationDate": "N/A",
+          "recordDate": "03/23/2021",
+          "paymentDate": "04/30/2021",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "12/21/2020",
+          "type": "Cash",
+          "amount": "$0.56133",
+          "declarationDate": "N/A",
+          "recordDate": "12/22/2020",
+          "paymentDate": "12/31/2020",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "09/21/2020",
+          "type": "Cash",
+          "amount": "$0.38824",
+          "declarationDate": "N/A",
+          "recordDate": "09/22/2020",
+          "paymentDate": "10/30/2020",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "06/22/2020",
+          "type": "Cash",
+          "amount": "$0.42426",
+          "declarationDate": "N/A",
+          "recordDate": "06/23/2020",
+          "paymentDate": "07/31/2020",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "03/23/2020",
+          "type": "Cash",
+          "amount": "$0.36269",
+          "declarationDate": "N/A",
+          "recordDate": "03/24/2020",
+          "paymentDate": "04/30/2020",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "12/23/2019",
+          "type": "Cash",
+          "amount": "$0.45765",
+          "declarationDate": "N/A",
+          "recordDate": "12/24/2019",
+          "paymentDate": "12/31/2019",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "09/23/2019",
+          "type": "Cash",
+          "amount": "$0.38415",
+          "declarationDate": "N/A",
+          "recordDate": "09/24/2019",
+          "paymentDate": "10/31/2019",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "06/24/2019",
+          "type": "Cash",
+          "amount": "$0.41558",
+          "declarationDate": "N/A",
+          "recordDate": "06/25/2019",
+          "paymentDate": "07/31/2019",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "03/18/2019",
+          "type": "Cash",
+          "amount": "$0.32421",
+          "declarationDate": "N/A",
+          "recordDate": "03/19/2019",
+          "paymentDate": "04/30/2019",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "12/24/2018",
+          "type": "Cash",
+          "amount": "$0.42061",
+          "declarationDate": "N/A",
+          "recordDate": "12/26/2018",
+          "paymentDate": "12/31/2018",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "09/24/2018",
+          "type": "Cash",
+          "amount": "$0.32975",
+          "declarationDate": "N/A",
+          "recordDate": "09/25/2018",
+          "paymentDate": "10/31/2018",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "06/18/2018",
+          "type": "Cash",
+          "amount": "$0.37837",
+          "declarationDate": "N/A",
+          "recordDate": "06/19/2018",
+          "paymentDate": "07/31/2018",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "03/19/2018",
+          "type": "Cash",
+          "amount": "$0.27655",
+          "declarationDate": "N/A",
+          "recordDate": "03/20/2018",
+          "paymentDate": "04/30/2018",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "12/18/2017",
+          "type": "Cash",
+          "amount": "$0.32941",
+          "declarationDate": "N/A",
+          "recordDate": "12/19/2017",
+          "paymentDate": "12/29/2017",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "09/18/2017",
+          "type": "Cash",
+          "amount": "$0.31938",
+          "declarationDate": "N/A",
+          "recordDate": "09/19/2017",
+          "paymentDate": "10/31/2017",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "06/16/2017",
+          "type": "Cash",
+          "amount": "$0.37842",
+          "declarationDate": "N/A",
+          "recordDate": "06/20/2017",
+          "paymentDate": "07/31/2017",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "03/17/2017",
+          "type": "Cash",
+          "amount": "$0.27415",
+          "declarationDate": "N/A",
+          "recordDate": "03/21/2017",
+          "paymentDate": "04/28/2017",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "12/16/2016",
+          "type": "Cash",
+          "amount": "$0.35494",
+          "declarationDate": "N/A",
+          "recordDate": "12/20/2016",
+          "paymentDate": "12/30/2016",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "09/16/2016",
+          "type": "Cash",
+          "amount": "$0.29387",
+          "declarationDate": "N/A",
+          "recordDate": "09/20/2016",
+          "paymentDate": "10/31/2016",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "06/17/2016",
+          "type": "Cash",
+          "amount": "$0.28665",
+          "declarationDate": "N/A",
+          "recordDate": "06/21/2016",
+          "paymentDate": "07/29/2016",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "03/18/2016",
+          "type": "Cash",
+          "amount": "$0.3178",
+          "declarationDate": "N/A",
+          "recordDate": "03/22/2016",
+          "paymentDate": "04/29/2016",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "12/18/2015",
+          "type": "Cash",
+          "amount": "$0.34233",
+          "declarationDate": "N/A",
+          "recordDate": "12/22/2015",
+          "paymentDate": "12/31/2015",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "09/18/2015",
+          "type": "Cash",
+          "amount": "$0.26002",
+          "declarationDate": "N/A",
+          "recordDate": "09/22/2015",
+          "paymentDate": "10/30/2015",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "06/19/2015",
+          "type": "Cash",
+          "amount": "$0.25416",
+          "declarationDate": "N/A",
+          "recordDate": "06/23/2015",
+          "paymentDate": "07/31/2015",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "03/20/2015",
+          "type": "Cash",
+          "amount": "$0.24806",
+          "declarationDate": "N/A",
+          "recordDate": "03/24/2015",
+          "paymentDate": "04/30/2015",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "12/19/2014",
+          "type": "Cash",
+          "amount": "$0.38681",
+          "declarationDate": "N/A",
+          "recordDate": "12/23/2014",
+          "paymentDate": "12/31/2014",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "09/19/2014",
+          "type": "Cash",
+          "amount": "$0.2378",
+          "declarationDate": "N/A",
+          "recordDate": "09/23/2014",
+          "paymentDate": "10/31/2014",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "06/20/2014",
+          "type": "Cash",
+          "amount": "$0.2491",
+          "declarationDate": "N/A",
+          "recordDate": "06/24/2014",
+          "paymentDate": "07/31/2014",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "03/21/2014",
+          "type": "Cash",
+          "amount": "$0.20606",
+          "declarationDate": "N/A",
+          "recordDate": "03/25/2014",
+          "paymentDate": "04/30/2014",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "02/27/2014",
+          "type": "Cash",
+          "amount": "$0.37313",
+          "declarationDate": "N/A",
+          "recordDate": "03/03/2014",
+          "paymentDate": "03/07/2014",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "12/20/2013",
+          "type": "Cash",
+          "amount": "$0.27241",
+          "declarationDate": "N/A",
+          "recordDate": "12/24/2013",
+          "paymentDate": "12/31/2013",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "09/20/2013",
+          "type": "Cash",
+          "amount": "$0.23771",
+          "declarationDate": "N/A",
+          "recordDate": "09/24/2013",
+          "paymentDate": "10/31/2013",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "06/21/2013",
+          "type": "Cash",
+          "amount": "$0.22361",
+          "declarationDate": "N/A",
+          "recordDate": "06/25/2013",
+          "paymentDate": "07/31/2013",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "03/15/2013",
+          "type": "Cash",
+          "amount": "$0.15931",
+          "declarationDate": "N/A",
+          "recordDate": "03/19/2013",
+          "paymentDate": "04/30/2013",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "06/15/2012",
+          "type": "Cash",
+          "amount": "$0.14312",
+          "declarationDate": "N/A",
+          "recordDate": "06/19/2012",
+          "paymentDate": "07/31/2012",
+          "currency": "USD"
+        }
+      ]
+    }
+  },
+  "message": null,
+  "status": {
+    "rCode": 200,
+    "bCodeMessage": null,
+    "developerMessage": null
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "reutersCode": "XLK",
+  "symbolCode": "XLK",
+  "stockExchangeType": {
+    "code": "AMX",
+    "zoneId": "EST5EDT",
+    "nationType": "USA",
+    "delayTime": 0,
+    "startTime": "0930",
+    "endTime": "1600",
+    "closePriceSendTime": "2031",
+    "nameKor": "아멕스 증권거래소",
+    "nameEng": "American Stock Exchange",
+    "nationName": "미국",
+    "stockType": "worldstock",
+    "nationCode": "USA",
+    "name": "AMEX"
+  },
+  "localTradedAt": "2026-09-14T03:41:40-04:00",
+  "marketStatus": "PREOPEN",
+  "overMarketPriceInfo": null,
+  "currencyType": {
+    "code": "USD",
+    "text": "US dollar",
+    "name": "USD"
+  },
+  "countOfListedStock": 649911794,
+  "stockItemTotalInfos": [
+    {
+      "code": "basePrice",
+      "key": "전일",
+      "value": "187.67"
+    },
+    {
+      "code": "openPrice",
+      "key": "시가",
+      "value": "-"
+    },
+    {
+      "code": "highPrice",
+      "key": "고가",
+      "value": "-"
+    },
+    {
+      "code": "lowPrice",
+      "key": "저가",
+      "value": "-"
+    },
+    {
+      "code": "accumulatedTradingVolume",
+      "key": "거래량",
+      "value": "-"
+    },
+    {
+      "code": "accumulatedTradingValue",
+      "key": "대금",
+      "value": "-",
+      "valueDesc": "-"
+    },
+    {
+      "code": "marketValue",
+      "key": "시총",
+      "value": "1,220억 USD",
+      "valueDesc": "164조 970억원"
+    },
+    {
+      "code": "industryGroupKor",
+      "key": "업종",
+      "value": "ETF"
+    },
+    {
+      "code": "highPriceOf52Weeks",
+      "key": "52주 최고",
+      "keyDesc": "2026.06.03.",
+      "value": "198.73"
+    },
+    {
+      "code": "lowPriceOf52Weeks",
+      "key": "52주 최저",
+      "keyDesc": "2026.03.30.",
+      "value": "126.68"
+    },
+    {
+      "code": "per",
+      "key": "PER",
+      "value": "N/A"
+    },
+    {
+      "code": "eps",
+      "key": "EPS",
+      "value": "N/A"
+    },
+    {
+      "code": "pbr",
+      "key": "PBR",
+      "value": "N/A"
+    },
+    {
+      "code": "bps",
+      "key": "BPS",
+      "value": "N/A"
+    },
+    {
+      "code": "dividend",
+      "key": "주당배당금",
+      "keyDesc": "2026.06.",
+      "value": "0.79"
+    },
+    {
+      "code": "dividendYieldRatio",
+      "key": "배당수익률",
+      "keyDesc": "2026.06.",
+      "value": "0.42%"
+    },
+    {
+      "code": "dividendAt",
+      "key": "배당일",
+      "value": "2026.06.24."
+    },
+    {
+      "code": "exDividendAt",
+      "key": "배당락일",
+      "value": "2026.06.22."
+    },
+    {
+      "code": "faceValueDivisionRate",
+      "key": "액면변경",
+      "keyDesc": "2025.12.05.",
+      "value": "1:2 분할"
+    },
+    {
+      "code": "faceValue",
+      "key": "액면가",
+      "value": "N/A"
+    }
+  ],
+  "isEtf": true,
+  "closePriceRaw": "187.67",
+  "marketValueFullRaw": "121968946379"
+}

@@ -1,0 +1,81 @@
+{
+  "data": {
+    "symbol": "NVDA",
+    "summaryData": {
+      "Exchange": {
+        "label": "Exchange",
+        "value": "NASDAQ-GS"
+      },
+      "Sector": {
+        "label": "Sector",
+        "value": "Technology"
+      },
+      "Industry": {
+        "label": "Industry",
+        "value": "Semiconductors"
+      },
+      "OneYrTarget": {
+        "label": "1 Year Target",
+        "value": "$315.00"
+      },
+      "TodayHighLow": {
+        "label": "Today's High/Low",
+        "value": "N/A"
+      },
+      "ShareVolume": {
+        "label": "Share Volume",
+        "value": "89,099,170"
+      },
+      "AverageVolume": {
+        "label": "Average Volume",
+        "value": "126,933,768"
+      },
+      "PreviousClose": {
+        "label": "Previous Close",
+        "value": "$218.36"
+      },
+      "FiftTwoWeekHighLow": {
+        "label": "52 Week High/Low",
+        "value": "$236.54/$164.27"
+      },
+      "MarketCap": {
+        "label": "Market Cap",
+        "value": "5,260,789,000,000"
+      },
+      "AnnualizedDividend": {
+        "label": "Annualized Dividend",
+        "value": "$1.00"
+      },
+      "ExDividendDate": {
+        "label": "Ex Dividend Date",
+        "value": "Sep 10, 2026"
+      },
+      "DividendPaymentDate": {
+        "label": "Dividend Pay Date",
+        "value": "Oct 1, 2026"
+      },
+      "Yield": {
+        "label": "Current Yield",
+        "value": "0.46%"
+      }
+    },
+    "assetClass": "STOCKS",
+    "additionalData": null,
+    "bidAsk": {
+      "Bid * Size": {
+        "label": "Bid * Size",
+        "value": "N/A"
+      },
+      "Ask * Size": {
+        "label": "Ask * Size",
+        "value": "N/A"
+      }
+    }
+  },
+  "message": null,
+  "status": {
+    "rCode": 200,
+    "bCodeMessage": null,
+    "developerMessage": null
+  }
+}

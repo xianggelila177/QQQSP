@@ -1,5 +1,4 @@
-import {createFundamentalsProvider} from './lib/providers/fundamentals.js';
-import {createPublicFundamentalsProvider} from './lib/providers/public-fundamentals.js';
+import {createFinancialSources} from './lib/providers/financial-sources.js';
 import {createFundamentalsService} from './lib/fundamentals-service.js';
 import {streamAvailability} from './lib/stream-policy.js';
 import {createMacroMonitor} from './lib/macro-monitor.js';
@@ -96,7 +95,7 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
   const polling=createFastPolling({httpsGet,legacy:batch,now,pollMs:config.POLL_MS,preferred:config.POLL_PRIMARY});
   const enrichCharts=createChartEnricher({fetchChart:fetchHistory,fallback:quoteCache.getCachedQuote,tx,now,includeDaily:false});
   let realtimeProvider,engine;
-  const fundamentals=createFundamentalsService({fetchFundamentals:providerOverrides.fetchFundamentals||createFundamentalsProvider({fetchPublicFundamentals:createPublicFundamentalsProvider({httpsGet,fetchTencent:batch.tencent,now}),fetchYahooSummary:yahoo.fetchQuoteSummary,httpsGet,finnhubToken:config.FINNHUB_TOKEN,now}),now,
+  const fundamentals=createFundamentalsService({...(providerOverrides.fetchFundamentals?{fetchFundamentals:providerOverrides.fetchFundamentals}:{sources:createFinancialSources({httpsGet,batch,fetchYahooSummary:yahoo.fetchQuoteSummary,finnhubToken:config.FINNHUB_TOKEN,now,statementTtlMs:config.FUNDAMENTALS_TTL_MS})}),now,
     enabled:config.FUNDAMENTALS_ENABLED==='1',ttlMs:config.FUNDAMENTALS_TTL_MS,retryMs:config.FUNDAMENTALS_RETRY_MS,maxAgeMs:config.FUNDAMENTALS_MAX_AGE_MS,onUpdate:symbol=>engine?.poke(symbol)});
   const snapshots=env.REALTIME_SNAPSHOTS==='1'?createSnapshotService({env,streamAvailable:symbol=>{const d=realtimeProvider?.read(symbol);return !streamAvailability(symbol,d,now()).needsBackup;},sessionFor:(symbol,q)=>marketStateFor(symbol,null,now(),q||''),fetchBatch:providerOverrides.fetchSnapshotBatch || polling.fetchSnapshotBatch,enrich:enrichCharts,onUpdate:symbol=>engine?.poke(symbol),now}):null;
   const baseGetQuote=snapshots?snapshots.getCachedQuote:quoteCache.getCachedQuote;

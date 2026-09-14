@@ -234,7 +234,7 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=87').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=88').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
         nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本','info',{label:'刷新页面',run:()=>location.reload()}); });
       });
@@ -407,6 +407,11 @@
     try{const response=await panelNetwork.request('sources','/api/sources',{cache:'no-store'});if(!response.ok)throw new Error();const data=await response.json();
       const labels={cooldown:'冷却中',probing:'恢复探测',requesting:'读取中',ready:'可读取',streaming:'已接收成交',subscribing:'等待订阅或首笔成交',connecting:'连接中',backoff:'等待重连',blocked:'权限或配置受限',idle:'空闲',stopped:'已停止','website-polling':'网站批量报价'};
       const rows=Object.entries(data.hosts||{}).map(([host,v])=>host+'：'+(labels[v.state]||v.state)+'；实际请求 '+v.calls+'；429 '+v.rateLimits+(v.retryAt?'；'+new Date(v.retryAt).toLocaleTimeString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false})+' 后可重试':''));
+      for(const [source,v] of Object.entries(data.fundamentals?.sources||{})){
+        const securities=Object.entries(v.securities||{}),failed=securities.filter(([,s])=>s.code),pending=securities.filter(([,s])=>s.inflight);
+        rows.push('基础资料 '+source+'：'+securities.length+' 只证券；补充中 '+pending.length+'；失败 '+failed.length);
+        for(const [symbol,s] of failed)rows.push('  '+symbol+'：'+s.code+'；缺失 '+(s.missingFields||[]).join('、')+(s.retryAt?'；'+new Date(s.retryAt).toLocaleTimeString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false})+' 后重试':''));
+      }
       const streams=data.stream?.primary||data.stream?.backup?[['主流',data.stream.primary],['备流',data.stream.backup]]:[['行情流',data.stream]];
       for(const [name,v] of streams)if(v)rows.unshift(name+'：'+(labels[v.status]||v.status||'未启用')+(v.errorCode?'（'+v.errorCode+'）':''));
       sourceText.textContent=rows.join('\n')||'尚未向上游发起请求';

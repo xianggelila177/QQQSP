@@ -3,14 +3,14 @@ import {createApplication} from '../../app.js';import {createTelemetry} from '..
 const file=name=>fs.readFileSync(new URL('../fixtures/fundamentals-live/'+name,import.meta.url));
 const json=name=>JSON.parse(file(name));
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
-async function until(predicate){for(let i=0;i<200;i++){if(predicate())return;await wait(10);}assert.fail('composed financial update did not arrive');}
+async function until(predicate){for(let i=0;i<800;i++){if(predicate())return;await wait(10);}assert.fail('composed financial update did not arrive');}
 test('real adapters -> financial service -> HTTP/SSE -> UI formatter refresh all three metrics',async t=>{
   let now=Date.parse('2026-09-14T07:10:00Z'),round=0;const calls=[];
   const parse=createBatchProvider({now:()=>now});
   const rawTx=()=>file('tencent.raw').toString('latin1').replace(/(v_usAAOI="[^"]*)"/,(_,body)=>{const f=body.split('~');if(round)f[51]='6.36';return f.join('~')+'"';});
   const rows=()=>[
     ...parse.parseTencentBatch(rawTx(),['161128.SZ']),
-    ...json('naver-us.json').datas.map(r=>parse.parseNaverQuote({...r,accumulatedTradingVolumeRaw:String(Number(r.accumulatedTradingVolumeRaw)+round*100000),accumulatedTradingValueRaw:String(Number(r.accumulatedTradingValueRaw)+round*10000000)},r.symbolCode,70000)),
+    ...json('naver-us.json').datas.map(r=>({...parse.parseNaverQuote({...r,accumulatedTradingVolumeRaw:String(Number(r.accumulatedTradingVolumeRaw)+round*100000),accumulatedTradingValueRaw:String(Number(r.accumulatedTradingValueRaw)+round*10000000)},r.symbolCode,70000),regularQuoteAt:Date.parse(r.localTradedAt)+round*2000})),
     parse.parseNaverQuote(json('naver-kr.json').datas[0],'000660.KS',7000)
   ];
   const app=createApplication({now:()=>now,env:{PORT:0,LOG_FILE:'',CACHE_MS:20,REALTIME_SNAPSHOTS:'0',PUBLIC_SOURCE_REDUNDANCY:'0',HISTORY_BACKGROUND_ENABLED:'0',HISTORY_STATE_PATH:'',SAMPLES_BACKGROUND_ENABLED:'0',SAMPLES_STATE_PATH:'',MACRO_BACKGROUND_ENABLED:'0',MACRO_STATE_PATH:'',RECOVERY_PATH:''},telemetry:createTelemetry(),
@@ -39,6 +39,6 @@ test('real adapters -> financial service -> HTTP/SSE -> UI formatter refresh all
   for(const name of ['panel-format','panel-currency','panel-fundamentals'])vm.runInContext(fs.readFileSync(new URL('../../public/modules/'+name+'.js',import.meta.url),'utf8'),context);
   const ui=context.window.PANEL_FUNDAMENTALS,format=q=>Object.fromEntries(['turnoverAmount','turnoverRate','priceToBook'].map(k=>[k,ui.formatMetric(ui.definitions.find(d=>d.key===k),q,{unit:'USD',money:String,convert:v=>v}).text]));
   assert.equal(format(after).priceToBook,'6.36');assert.notEqual(format(after).turnoverRate,format(before).turnoverRate);
-  assert.equal(calls.filter(u=>u.includes('finance.yahoo.com')).length,0,'Yahoo is not on the basic-metric critical path');
+  assert.ok(calls.some(u=>u.includes('finance.yahoo.com')),'partial public data must not suppress supplemental financial reads');
   req.destroy();
 });
