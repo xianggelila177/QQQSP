@@ -41,3 +41,15 @@ test('financial identity mismatch is rejected and cooled down without quote muta
   service.decorate(quote());await until(()=>service.diagnostics().inflight===0);
   const q=service.decorate(quote());assert.equal(q.fundamentals.fields.priceToBook.value,null);assert.equal(q.price,105.36);assert.equal(calls,1);assert.equal(service.diagnostics().failures,1);
 });
+test('queued securities get their own request deadline after earlier work completes',async t=>{
+  t.mock.timers.enable({apis:['setTimeout','Date'],now:NOW});
+  let release,calls=0;
+  const service=createFundamentalsService({fetchFundamentals:symbol=>new Promise(resolve=>{calls++;release=()=>resolve(record(symbol,Date.now()));})});
+  t.after(()=>service.stop());service.start();
+  for(const symbol of ['AAOI','LITE','NVDA'])service.decorate(quote(symbol));
+  const flush=()=>new Promise(r=>setImmediate(r));
+  await flush();assert.equal(calls,1);
+  t.mock.timers.tick(15000);release();await flush();assert.equal(calls,2);
+  t.mock.timers.tick(15000);release();await flush();assert.equal(calls,3);
+  release();await flush();assert.equal(service.diagnostics().entries,3);assert.equal(service.diagnostics().failures,0);
+});

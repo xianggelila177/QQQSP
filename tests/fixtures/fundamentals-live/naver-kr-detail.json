@@ -1,0 +1,118 @@
+{
+  "stockEndType": "stock",
+  "itemCode": "000660",
+  "reutersCode": "000660",
+  "totalInfos": [
+    {
+      "code": "lastClosePrice",
+      "key": "전일",
+      "value": "1,812,000"
+    },
+    {
+      "code": "openPrice",
+      "key": "시가",
+      "value": "1,750,000",
+      "compareToPreviousPrice": {
+        "code": "5",
+        "text": "하락",
+        "name": "FALLING"
+      }
+    },
+    {
+      "code": "highPrice",
+      "key": "고가",
+      "value": "1,770,000",
+      "compareToPreviousPrice": {
+        "code": "5",
+        "text": "하락",
+        "name": "FALLING"
+      }
+    },
+    {
+      "code": "lowPrice",
+      "key": "저가",
+      "value": "1,686,000",
+      "compareToPreviousPrice": {
+        "code": "5",
+        "text": "하락",
+        "name": "FALLING"
+      }
+    },
+    {
+      "code": "accumulatedTradingVolume",
+      "key": "거래량",
+      "value": "5,395,174"
+    },
+    {
+      "code": "accumulatedTradingValue",
+      "key": "대금",
+      "value": "9조 2,630억"
+    },
+    {
+      "code": "marketValue",
+      "key": "시총",
+      "value": "1,239조 6,455억"
+    },
+    {
+      "code": "foreignRate",
+      "key": "외인소진율",
+      "value": "50.47%"
+    },
+    {
+      "code": "highPriceOf52Weeks",
+      "key": "52주 최고",
+      "value": "3,002,000"
+    },
+    {
+      "code": "lowPriceOf52Weeks",
+      "key": "52주 최저",
+      "value": "325,000"
+    },
+    {
+      "code": "per",
+      "key": "PER",
+      "value": "7.57배",
+      "valueDesc": "2026.06."
+    },
+    {
+      "code": "eps",
+      "key": "EPS",
+      "value": "224,313원",
+      "valueDesc": "2026.06."
+    },
+    {
+      "code": "cnsPer",
+      "key": "추정PER",
+      "value": "4.85배"
+    },
+    {
+      "code": "cnsEps",
+      "key": "추정EPS",
+      "value": "349,573원"
+    },
+    {
+      "code": "pbr",
+      "key": "PBR",
+      "value": "4.58배",
+      "valueDesc": "2026.06."
+    },
+    {
+      "code": "bps",
+      "key": "BPS",
+      "value": "370,432원",
+      "valueDesc": "2026.06."
+    },
+    {
+      "code": "dividendYieldRatio",
+      "key": "배당수익률",
+      "value": "0.18%",
+      "valueDesc": "2026.02."
+    },
+    {
+      "code": "dividend",
+      "key": "주당배당금",
+      "value": "3,000원",
+      "valueDesc": "2026.02."
+    }
+  ]
+}
