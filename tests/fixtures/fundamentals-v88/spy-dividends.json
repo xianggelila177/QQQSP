@@ -1,0 +1,38 @@
+{
+  "data": {
+    "dividendHeaderValues": [
+      {
+        "label": "Ex-Dividend Date",
+        "value": "N/A"
+      },
+      {
+        "label": "Dividend Yield",
+        "value": "N/A"
+      },
+      {
+        "label": "Annual Dividend",
+        "value": "N/A"
+      },
+      {
+        "label": "P/E Ratio",
+        "value": "N/A"
+      }
+    ],
+    "exDividendDate": "N/A",
+    "dividendPaymentDate": "N/A",
+    "yield": "N/A",
+    "annualizedDividend": "N/A",
+    "payoutRatio": "N/A",
+    "dividends": {
+      "asOf": null,
+      "headers": null,
+      "rows": null
+    }
+  },
+  "message": "Dividend History for Non-Nasdaq symbols is not available",
+  "status": {
+    "rCode": 200,
+    "bCodeMessage": null,
+    "developerMessage": null
+  }
+}

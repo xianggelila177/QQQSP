@@ -1,0 +1,150 @@
+{
+  "data": {
+    "symbol": "AAOI",
+    "incomeStatementTable": {
+      "asOf": null,
+      "headers": {
+        "value1": "Quarterly Ending:",
+        "value2": "6/30/2026",
+        "value3": "3/31/2026",
+        "value4": "12/31/2025",
+        "value5": "9/30/2025"
+      },
+      "rows": [
+        {
+          "value1": "Total Revenue",
+          "value2": "$191,922",
+          "value3": "$151,144",
+          "value4": "$134,274",
+          "value5": "$118,630"
+        },
+        {
+          "value1": "Cost of Revenue",
+          "value2": "$138,715",
+          "value3": "$107,228",
+          "value4": "$92,330",
+          "value5": "$85,367"
+        },
+        {
+          "value1": "Gross Profit",
+          "value2": "$53,207",
+          "value3": "$43,916",
+          "value4": "$41,944",
+          "value5": "$33,263"
+        },
+        {
+          "value1": "Operating Expenses",
+          "value2": "",
+          "value3": "",
+          "value4": "",
+          "value5": ""
+        },
+        {
+          "value1": "Research and Development",
+          "value2": "$34,871",
+          "value3": "$25,656",
+          "value4": "$25,820",
+          "value5": "$21,265"
+        },
+        {
+          "value1": "Sales, General and Admin.",
+          "value2": "$43,063",
+          "value3": "$31,251",
+          "value4": "$27,625",
+          "value5": "$30,185"
+        },
+        {
+          "value1": "Non-Recurring Items",
+          "value2": "--",
+          "value3": "--",
+          "value4": "--",
+          "value5": "--"
+        },
+        {
+          "value1": "Other Operating Items",
+          "value2": "--",
+          "value3": "--",
+          "value4": "--",
+          "value5": "--"
+        },
+        {
+          "value1": "Operating Income",
+          "value2": "-$24,727",
+          "value3": "-$12,991",
+          "value4": "-$11,501",
+          "value5": "-$18,187"
+        },
+        {
+          "value1": "Add'l income/expense items",
+          "value2": "$4,162",
+          "value3": "$622",
+          "value4": "$1,847",
+          "value5": "$1,152"
+        },
+        {
+          "value1": "Earnings Before Interest and Tax",
+          "value2": "-$20,565",
+          "value3": "-$12,369",
+          "value4": "-$9,654",
+          "value5": "-$17,035"
+        },
+        {
+          "value1": "Interest Expense",
+          "value2": "$927",
+          "value3": "$863",
+          "value4": "$844",
+          "value5": "$901"
+        },
+        {
+          "value1": "Earnings Before Tax",
+          "value2": "-$21,492",
+          "value3": "-$13,232",
+          "value4": "-$10,498",
+          "value5": "-$17,936"
+        },
+        {
+          "value1": "Income Tax",
+          "value2": "$1,289",
+          "value3": "$1,049",
+          "value4": "-$8,476",
+          "value5": "--"
+        },
+        {
+          "value1": "Minority Interest",
+          "value2": "--",
+          "value3": "--",
+          "value4": "--",
+          "value5": "--"
+        },
+        {
+          "value1": "Equity Earnings/Loss Unconsolidated Subsidiary",
+          "value2": "--",
+          "value3": "--",
+          "value4": "--",
+          "value5": "--"
+        },
+        {
+          "value1": "Net Income-Cont. Operations",
+          "value2": "-$22,781",
+          "value3": "-$14,281",
+          "value4": "-$2,022",
+          "value5": "-$17,936"
+        },
+        {
+          "value1": "Net Income",
+          "value2": "-$22,781",
+          "value3": "-$14,281",
+          "value4": "-$2,022",
+          "value5": "-$17,936"
+        },
+        {
+          "value1": "Net Income Applicable to Common Shareholders",
+          "value2": "-$22,781",
+          "value3": "-$14,281",
+          "value4": "-$2,022",
+          "value5": "-$17,936"
+        }
+      ]
+    }
+  }
+}

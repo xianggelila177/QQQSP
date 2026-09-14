@@ -1,0 +1,838 @@
+{
+  "data": {
+    "dividendHeaderValues": [
+      {
+        "label": "Ex-Dividend Date",
+        "value": "N/A"
+      },
+      {
+        "label": "Dividend Yield",
+        "value": "N/A"
+      },
+      {
+        "label": "Annual Dividend",
+        "value": "N/A"
+      },
+      {
+        "label": "P/E Ratio",
+        "value": "N/A"
+      }
+    ],
+    "exDividendDate": "N/A",
+    "dividendPaymentDate": "09/01/2024",
+    "yield": "N/A",
+    "annualizedDividend": "N/A",
+    "payoutRatio": "N/A",
+    "dividends": {
+      "asOf": null,
+      "headers": {
+        "exOrEffDate": "Ex/EFF Date",
+        "type": "Type",
+        "amount": "Cash Amount",
+        "declarationDate": "Declaration Date",
+        "recordDate": "Record Date",
+        "paymentDate": "Payment Date"
+      },
+      "rows": [
+        {
+          "exOrEffDate": "08/07/2024",
+          "type": "Cash",
+          "amount": "$0.125",
+          "declarationDate": "07/17/2024",
+          "recordDate": "08/07/2024",
+          "paymentDate": "09/01/2024",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "05/06/2024",
+          "type": "Cash",
+          "amount": "$0.125",
+          "declarationDate": "04/22/2024",
+          "recordDate": "05/07/2024",
+          "paymentDate": "06/01/2024",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "02/06/2024",
+          "type": "Cash",
+          "amount": "$0.125",
+          "declarationDate": "01/24/2024",
+          "recordDate": "02/07/2024",
+          "paymentDate": "03/01/2024",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "11/06/2023",
+          "type": "Cash",
+          "amount": "$0.125",
+          "declarationDate": "N/A",
+          "recordDate": "11/07/2023",
+          "paymentDate": "12/01/2023",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "08/04/2023",
+          "type": "Cash",
+          "amount": "$0.125",
+          "declarationDate": "07/18/2023",
+          "recordDate": "08/07/2023",
+          "paymentDate": "09/01/2023",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "05/04/2023",
+          "type": "Cash",
+          "amount": "$0.125",
+          "declarationDate": "02/17/2023",
+          "recordDate": "05/07/2023",
+          "paymentDate": "06/01/2023",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "02/06/2023",
+          "type": "Cash",
+          "amount": "$0.365",
+          "declarationDate": "01/26/2023",
+          "recordDate": "02/07/2023",
+          "paymentDate": "03/01/2023",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "11/04/2022",
+          "type": "Cash",
+          "amount": "$0.365",
+          "declarationDate": "09/15/2022",
+          "recordDate": "11/07/2022",
+          "paymentDate": "12/01/2022",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "08/04/2022",
+          "type": "Cash",
+          "amount": "$0.365",
+          "declarationDate": "07/13/2022",
+          "recordDate": "08/07/2022",
+          "paymentDate": "09/01/2022",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "05/05/2022",
+          "type": "Cash",
+          "amount": "$0.365",
+          "declarationDate": "04/13/2022",
+          "recordDate": "05/07/2022",
+          "paymentDate": "06/01/2022",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "02/04/2022",
+          "type": "Cash",
+          "amount": "$0.365",
+          "declarationDate": "01/26/2022",
+          "recordDate": "02/07/2022",
+          "paymentDate": "03/01/2022",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "11/04/2021",
+          "type": "Cash",
+          "amount": "$0.3475",
+          "declarationDate": "09/16/2021",
+          "recordDate": "11/07/2021",
+          "paymentDate": "12/01/2021",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "08/05/2021",
+          "type": "Cash",
+          "amount": "$0.3475",
+          "declarationDate": "07/14/2021",
+          "recordDate": "08/07/2021",
+          "paymentDate": "09/01/2021",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "05/06/2021",
+          "type": "Cash",
+          "amount": "$0.3475",
+          "declarationDate": "03/10/2021",
+          "recordDate": "05/07/2021",
+          "paymentDate": "06/01/2021",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "02/04/2021",
+          "type": "Cash",
+          "amount": "$0.3475",
+          "declarationDate": "01/21/2021",
+          "recordDate": "02/07/2021",
+          "paymentDate": "03/01/2021",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "11/05/2020",
+          "type": "Cash",
+          "amount": "$0.33",
+          "declarationDate": "09/17/2020",
+          "recordDate": "11/07/2020",
+          "paymentDate": "12/01/2020",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "08/06/2020",
+          "type": "Cash",
+          "amount": "$0.33",
+          "declarationDate": "07/15/2020",
+          "recordDate": "08/07/2020",
+          "paymentDate": "09/01/2020",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "05/06/2020",
+          "type": "Cash",
+          "amount": "$0.33",
+          "declarationDate": "03/11/2020",
+          "recordDate": "05/07/2020",
+          "paymentDate": "06/01/2020",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "02/06/2020",
+          "type": "Cash",
+          "amount": "$0.33",
+          "declarationDate": "01/23/2020",
+          "recordDate": "02/07/2020",
+          "paymentDate": "03/01/2020",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "11/06/2019",
+          "type": "Cash",
+          "amount": "$0.315",
+          "declarationDate": "09/12/2019",
+          "recordDate": "11/07/2019",
+          "paymentDate": "12/01/2019",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "08/06/2019",
+          "type": "Cash",
+          "amount": "$0.315",
+          "declarationDate": "07/17/2019",
+          "recordDate": "08/07/2019",
+          "paymentDate": "09/01/2019",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "05/06/2019",
+          "type": "Cash",
+          "amount": "$0.315",
+          "declarationDate": "03/13/2019",
+          "recordDate": "05/07/2019",
+          "paymentDate": "06/01/2019",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "02/06/2019",
+          "type": "Cash",
+          "amount": "$0.315",
+          "declarationDate": "01/24/2019",
+          "recordDate": "02/07/2019",
+          "paymentDate": "03/01/2019",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "11/06/2018",
+          "type": "Cash",
+          "amount": "$0.30",
+          "declarationDate": "09/13/2018",
+          "recordDate": "11/07/2018",
+          "paymentDate": "12/01/2018",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "08/06/2018",
+          "type": "Cash",
+          "amount": "$0.30",
+          "declarationDate": "07/18/2018",
+          "recordDate": "08/07/2018",
+          "paymentDate": "09/01/2018",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "05/04/2018",
+          "type": "Cash",
+          "amount": "$0.30",
+          "declarationDate": "03/14/2018",
+          "recordDate": "05/07/2018",
+          "paymentDate": "06/01/2018",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "02/06/2018",
+          "type": "Cash",
+          "amount": "$0.30",
+          "declarationDate": "01/25/2018",
+          "recordDate": "02/07/2018",
+          "paymentDate": "03/01/2018",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "11/06/2017",
+          "type": "Cash",
+          "amount": "$0.2725",
+          "declarationDate": "09/13/2017",
+          "recordDate": "11/07/2017",
+          "paymentDate": "12/01/2017",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "08/03/2017",
+          "type": "Cash",
+          "amount": "$0.2725",
+          "declarationDate": "07/20/2017",
+          "recordDate": "08/07/2017",
+          "paymentDate": "09/01/2017",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "05/03/2017",
+          "type": "Cash",
+          "amount": "$0.2725",
+          "declarationDate": "03/22/2017",
+          "recordDate": "05/07/2017",
+          "paymentDate": "06/01/2017",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "02/03/2017",
+          "type": "Cash",
+          "amount": "$0.26",
+          "declarationDate": "01/20/2017",
+          "recordDate": "02/07/2017",
+          "paymentDate": "03/01/2017",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "11/03/2016",
+          "type": "Cash",
+          "amount": "$0.26",
+          "declarationDate": "09/12/2016",
+          "recordDate": "11/07/2016",
+          "paymentDate": "12/01/2016",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "08/03/2016",
+          "type": "Cash",
+          "amount": "$0.26",
+          "declarationDate": "07/11/2016",
+          "recordDate": "08/07/2016",
+          "paymentDate": "09/01/2016",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "05/04/2016",
+          "type": "Cash",
+          "amount": "$0.26",
+          "declarationDate": "03/16/2016",
+          "recordDate": "05/07/2016",
+          "paymentDate": "06/01/2016",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "02/03/2016",
+          "type": "Cash",
+          "amount": "$0.26",
+          "declarationDate": "01/21/2016",
+          "recordDate": "02/07/2016",
+          "paymentDate": "03/01/2016",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "11/04/2015",
+          "type": "Cash",
+          "amount": "$0.24",
+          "declarationDate": "09/10/2015",
+          "recordDate": "11/07/2015",
+          "paymentDate": "12/01/2015",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "08/05/2015",
+          "type": "Cash",
+          "amount": "$0.24",
+          "declarationDate": "07/22/2015",
+          "recordDate": "08/07/2015",
+          "paymentDate": "09/01/2015",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "05/05/2015",
+          "type": "Cash",
+          "amount": "$0.24",
+          "declarationDate": "03/18/2015",
+          "recordDate": "05/07/2015",
+          "paymentDate": "06/01/2015",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "02/04/2015",
+          "type": "Cash",
+          "amount": "$0.24",
+          "declarationDate": "01/22/2015",
+          "recordDate": "02/07/2015",
+          "paymentDate": "03/01/2015",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "11/05/2014",
+          "type": "Cash",
+          "amount": "$0.225",
+          "declarationDate": "09/11/2014",
+          "recordDate": "11/07/2014",
+          "paymentDate": "12/01/2014",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "08/05/2014",
+          "type": "Cash",
+          "amount": "$0.225",
+          "declarationDate": "07/23/2014",
+          "recordDate": "08/07/2014",
+          "paymentDate": "09/01/2014",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "05/05/2014",
+          "type": "Cash",
+          "amount": "$0.225",
+          "declarationDate": "03/18/2014",
+          "recordDate": "05/07/2014",
+          "paymentDate": "06/01/2014",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "02/05/2014",
+          "type": "Cash",
+          "amount": "$0.225",
+          "declarationDate": "01/22/2014",
+          "recordDate": "02/07/2014",
+          "paymentDate": "03/01/2014",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "11/05/2013",
+          "type": "Cash",
+          "amount": "$0.225",
+          "declarationDate": "09/24/2013",
+          "recordDate": "11/07/2013",
+          "paymentDate": "12/01/2013",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "08/05/2013",
+          "type": "Cash",
+          "amount": "$0.225",
+          "declarationDate": "07/24/2013",
+          "recordDate": "08/07/2013",
+          "paymentDate": "09/01/2013",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "05/05/2003",
+          "type": "Cash",
+          "amount": "$0.02",
+          "declarationDate": "N/A",
+          "recordDate": "05/05/2003",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "02/05/2003",
+          "type": "Cash",
+          "amount": "$0.02",
+          "declarationDate": "N/A",
+          "recordDate": "02/05/2003",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "11/05/2002",
+          "type": "Cash",
+          "amount": "$0.02",
+          "declarationDate": "N/A",
+          "recordDate": "11/05/2002",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "08/05/2002",
+          "type": "Cash",
+          "amount": "$0.02",
+          "declarationDate": "N/A",
+          "recordDate": "08/05/2002",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "05/03/2002",
+          "type": "Cash",
+          "amount": "$0.02",
+          "declarationDate": "N/A",
+          "recordDate": "05/03/2002",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "02/05/2002",
+          "type": "Cash",
+          "amount": "$0.02",
+          "declarationDate": "N/A",
+          "recordDate": "02/05/2002",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "11/05/2001",
+          "type": "Cash",
+          "amount": "$0.02",
+          "declarationDate": "N/A",
+          "recordDate": "11/05/2001",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "08/03/2001",
+          "type": "Cash",
+          "amount": "$0.02",
+          "declarationDate": "N/A",
+          "recordDate": "08/03/2001",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "05/03/2001",
+          "type": "Cash",
+          "amount": "$0.02",
+          "declarationDate": "N/A",
+          "recordDate": "05/03/2001",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "02/05/2001",
+          "type": "Cash",
+          "amount": "$0.02",
+          "declarationDate": "N/A",
+          "recordDate": "02/05/2001",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "11/03/2000",
+          "type": "Cash",
+          "amount": "$0.02",
+          "declarationDate": "N/A",
+          "recordDate": "11/03/2000",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "08/03/2000",
+          "type": "Cash",
+          "amount": "$0.02",
+          "declarationDate": "N/A",
+          "recordDate": "08/03/2000",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "05/03/2000",
+          "type": "Cash",
+          "amount": "$0.03",
+          "declarationDate": "N/A",
+          "recordDate": "05/03/2000",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "02/03/2000",
+          "type": "Cash",
+          "amount": "$0.03",
+          "declarationDate": "N/A",
+          "recordDate": "02/03/2000",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "11/03/1999",
+          "type": "Cash",
+          "amount": "$0.03",
+          "declarationDate": "N/A",
+          "recordDate": "11/03/1999",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "08/04/1999",
+          "type": "Cash",
+          "amount": "$0.03",
+          "declarationDate": "N/A",
+          "recordDate": "08/04/1999",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "05/05/1999",
+          "type": "Cash",
+          "amount": "$0.03",
+          "declarationDate": "N/A",
+          "recordDate": "05/05/1999",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "02/03/1999",
+          "type": "Cash",
+          "amount": "$0.04",
+          "declarationDate": "N/A",
+          "recordDate": "02/03/1999",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "11/04/1998",
+          "type": "Cash",
+          "amount": "$0.04",
+          "declarationDate": "N/A",
+          "recordDate": "11/04/1998",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "08/05/1998",
+          "type": "Cash",
+          "amount": "$0.03",
+          "declarationDate": "N/A",
+          "recordDate": "08/05/1998",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "04/29/1998",
+          "type": "Cash",
+          "amount": "$0.03",
+          "declarationDate": "N/A",
+          "recordDate": "04/29/1998",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "01/28/1998",
+          "type": "Cash",
+          "amount": "$0.03",
+          "declarationDate": "N/A",
+          "recordDate": "01/28/1998",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "10/29/1997",
+          "type": "Cash",
+          "amount": "$0.03",
+          "declarationDate": "N/A",
+          "recordDate": "10/29/1997",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "07/30/1997",
+          "type": "Cash",
+          "amount": "$0.03",
+          "declarationDate": "N/A",
+          "recordDate": "07/30/1997",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "04/29/1997",
+          "type": "Cash",
+          "amount": "$0.05",
+          "declarationDate": "N/A",
+          "recordDate": "04/29/1997",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "01/29/1997",
+          "type": "Cash",
+          "amount": "$0.05",
+          "declarationDate": "N/A",
+          "recordDate": "01/29/1997",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "10/30/1996",
+          "type": "Cash",
+          "amount": "$0.05",
+          "declarationDate": "N/A",
+          "recordDate": "10/30/1996",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "07/30/1996",
+          "type": "Cash",
+          "amount": "$0.05",
+          "declarationDate": "N/A",
+          "recordDate": "07/30/1996",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "04/29/1996",
+          "type": "Cash",
+          "amount": "$0.04",
+          "declarationDate": "N/A",
+          "recordDate": "04/29/1996",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "01/30/1996",
+          "type": "Cash",
+          "amount": "$0.04",
+          "declarationDate": "N/A",
+          "recordDate": "01/30/1996",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "10/30/1995",
+          "type": "Cash",
+          "amount": "$0.04",
+          "declarationDate": "N/A",
+          "recordDate": "10/30/1995",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "07/28/1995",
+          "type": "Cash",
+          "amount": "$0.04",
+          "declarationDate": "N/A",
+          "recordDate": "07/28/1995",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "04/25/1995",
+          "type": "Cash",
+          "amount": "$0.06",
+          "declarationDate": "N/A",
+          "recordDate": "04/25/1995",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "01/26/1995",
+          "type": "Cash",
+          "amount": "$0.06",
+          "declarationDate": "N/A",
+          "recordDate": "01/26/1995",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "10/26/1994",
+          "type": "Cash",
+          "amount": "$0.06",
+          "declarationDate": "N/A",
+          "recordDate": "10/26/1994",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "07/26/1994",
+          "type": "Cash",
+          "amount": "$0.065",
+          "declarationDate": "N/A",
+          "recordDate": "07/26/1994",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "04/25/1994",
+          "type": "Cash",
+          "amount": "$0.05",
+          "declarationDate": "N/A",
+          "recordDate": "04/25/1994",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "01/26/1994",
+          "type": "Cash",
+          "amount": "$0.05",
+          "declarationDate": "N/A",
+          "recordDate": "01/26/1994",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "10/26/1993",
+          "type": "Cash",
+          "amount": "$0.05",
+          "declarationDate": "N/A",
+          "recordDate": "10/26/1993",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "07/26/1993",
+          "type": "Cash",
+          "amount": "$0.05",
+          "declarationDate": "N/A",
+          "recordDate": "07/26/1993",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "04/26/1993",
+          "type": "Cash",
+          "amount": "$0.10",
+          "declarationDate": "N/A",
+          "recordDate": "04/26/1993",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "01/26/1993",
+          "type": "Cash",
+          "amount": "$0.10",
+          "declarationDate": "N/A",
+          "recordDate": "01/26/1993",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        },
+        {
+          "exOrEffDate": "10/26/1992",
+          "type": "Cash",
+          "amount": "$0.10",
+          "declarationDate": "N/A",
+          "recordDate": "10/26/1992",
+          "paymentDate": "N/A",
+          "currency": "USD"
+        }
+      ]
+    }
+  },
+  "message": null,
+  "status": {
+    "rCode": 200,
+    "bCodeMessage": null,
+    "developerMessage": null
+  }
+}
