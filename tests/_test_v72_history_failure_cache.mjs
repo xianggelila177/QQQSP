@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {createHistoryService} from '../lib/history-service.js';
+let now=Date.parse('2026-09-10T03:00:00Z'),calls=0;
+const service=createHistoryService({now:()=>now,maxFailureEntries:2,fetchChart:async()=>{calls++;throw Object.assign(new Error('limited'),{code:'RATE_LIMITED',statusCode:429,retryAt:now+120000});}});
+for(let i=0;i<5;i++)await assert.rejects(service.get('QQQ','yearly'),e=>e.code==='RATE_LIMITED');assert.equal(calls,1);
+now+=119999;await assert.rejects(service.get('QQQ','weekly'));assert.equal(calls,1);
+now+=2;await assert.rejects(service.get('QQQ','weekly'));assert.equal(calls,2);
+for(const symbol of ['SPY','NVDA'])await assert.rejects(service.get(symbol,'yearly'));
+assert.equal(service.diagnostics().failureEntries,2);service.close();assert.equal(service.diagnostics().failureEntries,0);
+console.log('v72 cold-start negative cache, provider hint, bounded memory and cleanup passed');

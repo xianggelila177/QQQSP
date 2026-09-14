@@ -1,0 +1,192 @@
+[
+  {
+    "root": "NQ",
+    "name": "纳斯达克100小型期货",
+    "exchange": "CME",
+    "timezone": "America/Chicago",
+    "currency": "USD",
+    "priceUnit": "POINTS",
+    "eastmoneyMarket": 103,
+    "aliases": [
+      "纳指期货",
+      "纳指夜盘",
+      "纳斯达克夜盘",
+      "纳斯达克100期货",
+      "纳指100期货",
+      "美股夜盘",
+      "E-mini Nasdaq 100"
+    ],
+    "relatedAliases": [
+      "NQW00",
+      "NQW00:CME_EMINIS",
+      "CME_MINI:NQ1!",
+      "NQ1!",
+      "NQ0W"
+    ],
+    "sources": [
+      "https://quote.eastmoney.com/globalfuture/NQ00Y.html",
+      "https://raw.githubusercontent.com/akfamily/akshare/main/akshare/futures/futures_hf_em.py"
+    ],
+    "verifiedAt": "2026-09-11"
+  },
+  {
+    "root": "ES",
+    "name": "标普500小型期货",
+    "exchange": "CME",
+    "timezone": "America/Chicago",
+    "currency": "USD",
+    "priceUnit": "POINTS",
+    "eastmoneyMarket": 103,
+    "aliases": [
+      "标普期货",
+      "标普夜盘",
+      "标普500期货",
+      "E-mini S&P 500"
+    ],
+    "relatedAliases": [
+      "ESW00",
+      "ESW00:CME_EMINIS",
+      "ES1!"
+    ],
+    "sources": [
+      "https://quote.eastmoney.com/globalfuture/ES00Y.html",
+      "https://raw.githubusercontent.com/akfamily/akshare/main/akshare/futures/futures_hf_em.py"
+    ],
+    "verifiedAt": "2026-09-11"
+  },
+  {
+    "root": "YM",
+    "name": "道琼斯小型期货",
+    "exchange": "CBOT",
+    "timezone": "America/Chicago",
+    "currency": "USD",
+    "priceUnit": "POINTS",
+    "eastmoneyMarket": 103,
+    "aliases": [
+      "道指期货",
+      "道琼斯期货",
+      "道指夜盘",
+      "E-mini Dow"
+    ],
+    "relatedAliases": [
+      "YMW00",
+      "YMW00:CBOT",
+      "YM1!"
+    ],
+    "sources": [
+      "https://quote.eastmoney.com/globalfuture/YM00Y.html",
+      "https://raw.githubusercontent.com/akfamily/akshare/main/akshare/futures/futures_hf_em.py"
+    ],
+    "verifiedAt": "2026-09-11"
+  },
+  {
+    "root": "GC",
+    "name": "纽约黄金期货",
+    "exchange": "COMEX",
+    "timezone": "America/Chicago",
+    "currency": "USD",
+    "priceUnit": "USD",
+    "eastmoneyMarket": 101,
+    "aliases": [
+      "黄金期货",
+      "纽约金",
+      "Gold futures"
+    ],
+    "relatedAliases": [
+      "GC1!"
+    ],
+    "sources": [
+      "https://quote.eastmoney.com/globalfuture/GC00Y.html",
+      "https://raw.githubusercontent.com/akfamily/akshare/main/akshare/futures/futures_hf_em.py"
+    ],
+    "verifiedAt": "2026-09-11"
+  },
+  {
+    "root": "SI",
+    "name": "纽约白银期货",
+    "exchange": "COMEX",
+    "timezone": "America/Chicago",
+    "currency": "USD",
+    "priceUnit": "USD",
+    "eastmoneyMarket": 101,
+    "aliases": [
+      "白银期货",
+      "纽约银",
+      "Silver futures"
+    ],
+    "relatedAliases": [
+      "SI1!"
+    ],
+    "sources": [
+      "https://quote.eastmoney.com/globalfuture/SI00Y.html",
+      "https://raw.githubusercontent.com/akfamily/akshare/main/akshare/futures/futures_hf_em.py"
+    ],
+    "verifiedAt": "2026-09-11"
+  },
+  {
+    "root": "HG",
+    "name": "纽约铜期货",
+    "exchange": "COMEX",
+    "timezone": "America/Chicago",
+    "currency": "USD",
+    "priceUnit": "USD",
+    "eastmoneyMarket": 101,
+    "aliases": [
+      "铜期货",
+      "纽约铜",
+      "Copper futures"
+    ],
+    "relatedAliases": [
+      "HG1!"
+    ],
+    "sources": [
+      "https://quote.eastmoney.com/globalfuture/HG00Y.html",
+      "https://raw.githubusercontent.com/akfamily/akshare/main/akshare/futures/futures_hf_em.py"
+    ],
+    "verifiedAt": "2026-09-11"
+  },
+  {
+    "root": "CL",
+    "name": "WTI原油期货",
+    "exchange": "NYMEX",
+    "timezone": "America/Chicago",
+    "currency": "USD",
+    "priceUnit": "USD",
+    "eastmoneyMarket": 102,
+    "aliases": [
+      "原油期货",
+      "美油",
+      "WTI",
+      "Crude oil futures"
+    ],
+    "relatedAliases": [
+      "CL1!"
+    ],
+    "sources": [
+      "https://quote.eastmoney.com/globalfuture/CL00Y.html",
+      "https://raw.githubusercontent.com/akfamily/akshare/main/akshare/futures/futures_hf_em.py"
+    ],
+    "verifiedAt": "2026-09-11"
+  },
+  {
+    "root": "NG",
+    "name": "天然气期货",
+    "exchange": "NYMEX",
+    "timezone": "America/Chicago",
+    "currency": "USD",
+    "priceUnit": "USD",
+    "eastmoneyMarket": 102,
+    "aliases": [
+      "天然气",
+      "Natural gas futures"
+    ],
+    "relatedAliases": [
+      "NG1!"
+    ],
+    "sources": [
+      "https://quote.eastmoney.com/globalfuture/NG00Y.html",
+      "https://raw.githubusercontent.com/akfamily/akshare/main/akshare/futures/futures_hf_em.py"
+    ],
+    "verifiedAt": "2026-09-11"
+  }
+]

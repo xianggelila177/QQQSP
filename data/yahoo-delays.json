@@ -1,0 +1,45 @@
+{
+  "url": "https://help.yahoo.com/kb/finance/exchanges-data-providers-yahoo-finance-sln2310.html",
+  "verifiedAt": "2026-09-06",
+  "suffixMinutes": {
+    ".AX": 20,
+    ".SA": 15,
+    ".TO": 0,
+    ".V": 0,
+    ".SS": 30,
+    ".SZ": 30,
+    ".PA": 15,
+    ".DE": 15,
+    ".HK": 15,
+    ".NS": 0,
+    ".BO": 15,
+    ".MI": 20,
+    ".T": 20,
+    ".MX": 20,
+    ".AS": 15,
+    ".SI": 20,
+    ".JO": 15,
+    ".KS": 20,
+    ".KQ": 20,
+    ".MC": 15,
+    ".SW": 30,
+    ".TW": 20,
+    ".TWO": 20,
+    ".L": 20
+  },
+  "explicitIndexMinutes": {
+    "^FTSE": 15,
+    "^N225": 30,
+    "^HSI": 15,
+    "^HSCE": 15,
+    "^GSPC": 0,
+    "^DJI": 0,
+    "^IXIC": 0
+  },
+  "notes": [
+    "Apply only to Yahoo source and supported matching suffix/explicit index identity, not Naver/Tencent/other providers.",
+    "These are documented nominal feed delays, not a freshness/SLA guarantee; quote-specific provider numeric metadata may take precedence.",
+    "For unlisted index identities do not invent delay=0; retain unknown/source-check distinction.",
+    "Yahoo help describes redistribution restrictions; technical availability does not establish data licensing."
+  ]
+}

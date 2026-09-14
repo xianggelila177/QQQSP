@@ -1,0 +1,39 @@
+{
+  "name": "qqqsp-v2",
+  "version": "2.11.0",
+  "private": true,
+  "type": "module",
+  "description": "单用户、零运行时依赖的多市场行情面板",
+  "engines": {
+    "node": ">=22.16.0"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "test": "node tests/run.mjs",
+    "test:core": "node --test tests/v2/*.test.mjs",
+    "test:browser": "python3 tests/v2/browser_check.py",
+    "test:legacy": "node tests/_run_all.mjs",
+    "check": "node scripts/verify.mjs",
+    "build": "node scripts/build.mjs",
+    "verify": "npm run check && npm test",
+    "test:charts": "python3 tests/v2/chart_browser_check.py",
+    "test:futures-browser": "python3 tests/v2/futures_browser_check.py",
+    "test:macro-browser": "python3 tests/v2/macro_browser_check.py",
+    "test:timezone": "node --test tests/v2/chart-timezone.test.mjs tests/v2/chart-time-cache.test.mjs",
+    "test:timezone-browser": "python3 tests/v2/chart_time_browser_check.py",
+    "test:repairs": "node --test tests/v2/repair-v29-*.test.mjs",
+    "test:repair-browser": "python3 tests/v2/repair_v29_browser_check.py",
+    "test:history-browser": "python3 tests/v2/history_v28_browser_check.py",
+    "test:e2e": "node scripts/e2e.mjs",
+    "coverage": "node scripts/coverage.mjs",
+    "test:fundamentals": "node --test tests/v2/fundamentals*.test.mjs",
+    "test:fundamentals-browser": "python3 tests/v2/fundamentals_browser_check.py"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.55.0",
+    "v8-to-istanbul": "9.3.0",
+    "istanbul-lib-coverage": "3.2.2",
+    "istanbul-lib-report": "3.0.1",
+    "istanbul-reports": "3.2.0"
+  }
+}

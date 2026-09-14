@@ -1,0 +1,1568 @@
+{
+  "version": "2026.09.06.1",
+  "verifiedAt": "2026-09-06",
+  "owner": "release-maintainer",
+  "markets": {
+    "us": {
+      "2026": {
+        "closed": [
+          "01-01",
+          "01-19",
+          "02-16",
+          "04-03",
+          "05-25",
+          "06-19",
+          "07-03",
+          "09-07",
+          "11-26",
+          "12-25"
+        ],
+        "halfDays": [
+          "11-27",
+          "12-24"
+        ],
+        "sources": [
+          "https://www.nyse.com/trade/hours-calendars",
+          "https://www.nasdaqtrader.com/trader.aspx?id=calendar"
+        ],
+        "validFrom": "2026-01-01",
+        "validThrough": "2026-12-31"
+      }
+    },
+    "cn": {
+      "2026": {
+        "closed": [
+          "01-01",
+          "01-02",
+          "01-03",
+          "02-15",
+          "02-16",
+          "02-17",
+          "02-18",
+          "02-19",
+          "02-20",
+          "02-21",
+          "02-22",
+          "02-23",
+          "04-04",
+          "04-05",
+          "04-06",
+          "05-01",
+          "05-02",
+          "05-03",
+          "05-04",
+          "05-05",
+          "06-19",
+          "06-20",
+          "06-21",
+          "09-25",
+          "09-26",
+          "09-27",
+          "10-01",
+          "10-02",
+          "10-03",
+          "10-04",
+          "10-05",
+          "10-06",
+          "10-07"
+        ],
+        "halfDays": [],
+        "sources": [
+          "https://www.sse.com.cn/disclosure/dealinstruc/closed/",
+          "https://investor.szse.cn/English/services/trading/calendar/index.html",
+          "https://www.bse.cn/important_news/200027428.html"
+        ],
+        "validFrom": "2026-01-01",
+        "validThrough": "2026-12-31"
+      }
+    },
+    "jp": {
+      "2026": {
+        "closed": [
+          "01-01",
+          "01-02",
+          "01-03",
+          "01-12",
+          "02-11",
+          "02-23",
+          "03-20",
+          "04-29",
+          "05-03",
+          "05-04",
+          "05-05",
+          "05-06",
+          "07-20",
+          "08-11",
+          "09-21",
+          "09-22",
+          "09-23",
+          "10-12",
+          "11-03",
+          "11-23",
+          "12-31"
+        ],
+        "halfDays": [],
+        "sources": [
+          "https://www.jpx.co.jp/english/corporate/about-jpx/calendar/"
+        ],
+        "validFrom": "2026-01-01",
+        "validThrough": "2026-12-31"
+      }
+    },
+    "hk": {
+      "2026": {
+        "closed": [
+          "01-01",
+          "02-17",
+          "02-18",
+          "02-19",
+          "04-03",
+          "04-06",
+          "04-07",
+          "05-01",
+          "05-25",
+          "06-19",
+          "07-01",
+          "10-01",
+          "10-19",
+          "12-25"
+        ],
+        "halfDays": [
+          "02-16",
+          "12-24",
+          "12-31"
+        ],
+        "sources": [
+          "https://www.hkex.com.hk/-/media/HKEX-Market/Services/Circulars-and-Notices/Participant-and-Members-Circulars/SEHK/2025/ce_SEHK_CT_075_2025.pdf"
+        ],
+        "validFrom": "2026-01-01",
+        "validThrough": "2026-12-31"
+      }
+    },
+    "kr": {
+      "2026": {
+        "closed": [
+          "01-01",
+          "02-16",
+          "02-17",
+          "02-18",
+          "03-02",
+          "05-01",
+          "05-05",
+          "05-25",
+          "06-03",
+          "07-17",
+          "08-17",
+          "09-24",
+          "09-25",
+          "10-05",
+          "10-09",
+          "12-25",
+          "12-31"
+        ],
+        "halfDays": [],
+        "sources": [
+          "https://open.krx.co.kr/contents/MKD/01/0110/01100305/MKD01100305.jsp"
+        ],
+        "validFrom": "2026-01-01",
+        "validThrough": "2026-12-31"
+      }
+    },
+    "de": {
+      "2026": {
+        "validFrom": "2026-01-01",
+        "validThrough": "2026-12-31",
+        "closed": [
+          "01-01",
+          "04-03",
+          "04-06",
+          "05-01",
+          "12-24",
+          "12-25",
+          "12-26",
+          "12-31"
+        ],
+        "halfDays": [],
+        "sources": [
+          "https://www.cashmarket.deutsche-boerse.com/cash-en/trading/trading-calendar-and-trading-hours"
+        ],
+        "unknownSessions": {
+          "12-30": "Official site says final session may deviate; later circular pending"
+        }
+      }
+    },
+    "fr": {
+      "2026": {
+        "validFrom": "2026-01-01",
+        "validThrough": "2026-12-31",
+        "closed": [
+          "01-01",
+          "04-03",
+          "04-06",
+          "05-01",
+          "12-25"
+        ],
+        "halfDays": [
+          "12-24",
+          "12-31"
+        ],
+        "sources": [
+          "https://www.euronext.com/en/trading/trading-hours-holidays"
+        ],
+        "unknownSessions": {
+          "12-24": "2026 half-day times not yet announced",
+          "12-31": "2026 half-day times not yet announced"
+        }
+      }
+    },
+    "nl": {
+      "2026": {
+        "validFrom": "2026-01-01",
+        "validThrough": "2026-12-31",
+        "closed": [
+          "01-01",
+          "04-03",
+          "04-06",
+          "05-01",
+          "12-25"
+        ],
+        "halfDays": [
+          "12-24",
+          "12-31"
+        ],
+        "sources": [
+          "https://www.euronext.com/en/trading/trading-hours-holidays"
+        ],
+        "unknownSessions": {
+          "12-24": "2026 half-day times not yet announced",
+          "12-31": "2026 half-day times not yet announced"
+        }
+      }
+    },
+    "it": {
+      "2026": {
+        "validFrom": "2026-01-01",
+        "validThrough": "2026-12-31",
+        "closed": [
+          "01-01",
+          "04-03",
+          "04-06",
+          "05-01",
+          "12-24",
+          "12-25",
+          "12-31"
+        ],
+        "halfDays": [],
+        "sources": [
+          "https://www.euronext.com/en/trading/trading-hours-holidays"
+        ]
+      }
+    },
+    "ch": {
+      "2026": {
+        "validFrom": "2026-01-01",
+        "validThrough": "2026-12-31",
+        "closed": [
+          "01-01",
+          "01-02",
+          "04-03",
+          "04-06",
+          "05-01",
+          "05-14",
+          "05-25",
+          "12-24",
+          "12-25",
+          "12-31"
+        ],
+        "halfDays": [],
+        "sources": [
+          "https://www.six-group.com/de/market-data/news-tools/trading-currency-holiday-calendar.html"
+        ]
+      }
+    },
+    "es": {
+      "2026": {
+        "validFrom": "2026-01-01",
+        "validThrough": "2026-12-31",
+        "closed": [
+          "01-01",
+          "04-03",
+          "04-06",
+          "05-01",
+          "12-25"
+        ],
+        "halfDays": [
+          "12-24",
+          "12-31"
+        ],
+        "sources": [
+          "https://www.bolsasymercados.es/en/bme-exchange/trading/trading-calendar.html"
+        ],
+        "overrides": {
+          "12-24": {
+            "reg": [
+              [
+                540,
+                840
+              ]
+            ],
+            "auc": [],
+            "post": []
+          },
+          "12-31": {
+            "reg": [
+              [
+                540,
+                840
+              ]
+            ],
+            "auc": [],
+            "post": []
+          }
+        }
+      }
+    },
+    "ca": {
+      "2026": {
+        "validFrom": "2026-01-01",
+        "validThrough": "2026-12-31",
+        "closed": [
+          "01-01",
+          "02-16",
+          "04-03",
+          "05-18",
+          "07-01",
+          "08-03",
+          "09-07",
+          "10-12",
+          "12-25",
+          "12-28"
+        ],
+        "halfDays": [
+          "12-24"
+        ],
+        "sources": [
+          "https://www.tsx.com/en/trading/calendars-and-trading-hours/calendar"
+        ],
+        "overrides": {
+          "12-24": {
+            "reg": [
+              [
+                570,
+                780
+              ]
+            ],
+            "post": [],
+            "auc": []
+          }
+        }
+      }
+    },
+    "au": {
+      "2026": {
+        "validFrom": "2026-01-01",
+        "validThrough": "2026-12-31",
+        "closed": [
+          "01-01",
+          "01-26",
+          "04-03",
+          "04-06",
+          "04-25",
+          "06-08",
+          "12-25",
+          "12-28"
+        ],
+        "halfDays": [
+          "12-24",
+          "12-31"
+        ],
+        "sources": [
+          "https://www.asx.com.au/markets/market-resources/trading-hours-calendar/cash-market-trading-hours/trading-calendar"
+        ],
+        "overrides": {
+          "12-24": {
+            "reg": [
+              [
+                600,
+                850
+              ]
+            ],
+            "auc": [],
+            "post": []
+          },
+          "12-31": {
+            "reg": [
+              [
+                600,
+                850
+              ]
+            ],
+            "auc": [],
+            "post": []
+          }
+        }
+      }
+    },
+    "in": {
+      "2026": {
+        "validFrom": "2026-01-01",
+        "validThrough": "2026-12-31",
+        "closed": [
+          "01-15",
+          "01-26",
+          "03-03",
+          "03-26",
+          "03-31",
+          "04-03",
+          "04-14",
+          "05-01",
+          "05-28",
+          "06-26",
+          "09-14",
+          "10-02",
+          "10-20",
+          "11-10",
+          "11-24",
+          "12-25"
+        ],
+        "halfDays": [],
+        "sources": [
+          "https://nsearchives.nseindia.com/content/circulars/CMTR71775.pdf",
+          "https://nsearchives.nseindia.com/content/circulars/CMTR72260.pdf",
+          "https://www.nseindia.com/resources/exchange-communication-holidays/"
+        ],
+        "unknownSessions": {
+          "11-08": "Sunday Muhurat announced; time not yet published; UNKNOWN rather than weekend CLOSED"
+        }
+      }
+    },
+    "tw": {
+      "2026": {
+        "validFrom": "2026-01-01",
+        "validThrough": "2026-12-31",
+        "closed": [
+          "01-01",
+          "02-12",
+          "02-13",
+          "02-15",
+          "02-16",
+          "02-17",
+          "02-18",
+          "02-19",
+          "02-20",
+          "02-27",
+          "02-28",
+          "04-03",
+          "04-04",
+          "04-05",
+          "04-06",
+          "05-01",
+          "06-19",
+          "09-25",
+          "09-28",
+          "10-09",
+          "10-10",
+          "10-25",
+          "10-26",
+          "12-25"
+        ],
+        "halfDays": [],
+        "sources": [
+          "https://www.twse.com.tw/holidaySchedule/holidaySchedule?response=html"
+        ]
+      }
+    },
+    "br": {
+      "2026": {
+        "validFrom": "2026-01-01",
+        "validThrough": "2026-12-31",
+        "closed": [
+          "01-01",
+          "02-16",
+          "02-17",
+          "04-03",
+          "04-21",
+          "05-01",
+          "06-04",
+          "09-07",
+          "10-12",
+          "11-02",
+          "11-20",
+          "12-24",
+          "12-25",
+          "12-31"
+        ],
+        "halfDays": [],
+        "overrides": {
+          "02-18": {
+            "sessions": {
+              "reg": [
+                [
+                  780,
+                  1075
+                ]
+              ],
+              "auc": [
+                [
+                  765,
+                  780
+                ],
+                [
+                  1075,
+                  1080
+                ]
+              ],
+              "post": [],
+              "unknown": [
+                [
+                  1165,
+                  1180
+                ]
+              ]
+            },
+            "sessionsByType": {
+              "ETF": {
+                "reg": [
+                  [
+                    785,
+                    1075
+                  ]
+                ],
+                "auc": [
+                  [
+                    765,
+                    785
+                  ],
+                  [
+                    1075,
+                    1095
+                  ]
+                ],
+                "post": [],
+                "unknown": [
+                  [
+                    1165,
+                    1180
+                  ]
+                ]
+              }
+            }
+          }
+        },
+        "unknownSessions": {},
+        "sources": [
+          "https://www.b3.com.br/data/files/FC/55/3B/12/7FE9B9109B5E99B9AC094EA8/OC%20003-2026-VNC%20ERRATA_CALENDARIO%20DE%20FERIADOS%20EM%202026%20E%20FUNCIONAMENTO%20DA%20B3%20EM%2018022026%20QUARTAFEIRA%20DE%20CINZAS_PT.pdf",
+          "https://www.b3.com.br/pt_br/noticias/calendario-de-negociacao-da-b3-confira-o-funcionamento-da-bolsa-em-2026.htm"
+        ],
+        "notes": [
+          "July9 has normal cash trading; it is not a B3 equity closure.",
+          "Calendar closure coverage is full2026; trading-hour periods are separately effective-dated."
+        ]
+      }
+    },
+    "mx": {
+      "2026": {
+        "validFrom": "2026-01-01",
+        "validThrough": "2026-12-31",
+        "closed": [
+          "01-01",
+          "02-02",
+          "03-16",
+          "04-02",
+          "04-03",
+          "05-01",
+          "09-16",
+          "11-02",
+          "11-16",
+          "12-12",
+          "12-25"
+        ],
+        "halfDays": [],
+        "overrides": {},
+        "unknownSessions": {},
+        "sources": [
+          "https://www.bmv.com.mx/es/Grupo_BMV/Calendario_de_dias_festivos"
+        ],
+        "notes": [
+          "December12 falls onSaturday; no substitute closure invented.",
+          "No2026 cash-equity half-day notice found. Empty halfDays means none in the retrieved calendar, not immunity to future exchange notices."
+        ]
+      }
+    },
+    "za": {
+      "2026": {
+        "validFrom": "2026-01-01",
+        "validThrough": "2026-12-31",
+        "coverageStatus": "derived_regular_public_holidays_with_explicit_special_day_gaps",
+        "closed": [
+          "01-01",
+          "03-21",
+          "04-03",
+          "04-06",
+          "04-27",
+          "05-01",
+          "06-16",
+          "08-09",
+          "08-10",
+          "09-24",
+          "12-16",
+          "12-25",
+          "12-26"
+        ],
+        "halfDays": [],
+        "overrides": {},
+        "unknownSessions": {
+          "11-04": "Parliament confirms election date and anticipates a public holiday;formal closure/proclamation not retrieved.",
+          "12-24": "2026 yearend timetable unverified",
+          "12-31": "2026 yearend timetable unverified"
+        },
+        "sources": [
+          "https://www.jse.co.za/sites/default/files/media/documents/equities-rules/Equities%20Rules_9.pdf",
+          "https://www.jse.co.za/sites/default/files/media/documents/equities-rules/Equities%20Rules_7.pdf",
+          "https://www.gov.za/about-sa/public-holidays"
+        ],
+        "derivation": "Government2026 public dates combined with JSE business-day exclusion and rule6.20.1;not extracted from the blocked2026 calendar PDF.",
+        "notes": [
+          "NoMarch23 orDecember28 substitute: Saturday holidays do not receiveMonday observance under retrieved government rule.",
+          "Potential additional proclamation such as election holiday must override this baseline.",
+          "Full2026 JSE holiday/half-day calendar PDF was not read;source completeness must not be claimed."
+        ]
+      }
+    },
+    "uk": {
+      "2026": {
+        "validFrom": "2026-01-01",
+        "validThrough": "2026-12-31",
+        "closed": [
+          "01-01",
+          "04-03",
+          "04-06",
+          "05-04",
+          "05-25",
+          "08-31",
+          "12-25",
+          "12-28"
+        ],
+        "halfDays": [
+          "12-24",
+          "12-31"
+        ],
+        "sources": [
+          "https://www.londonstockexchange.com/equities-trading/business-days",
+          "https://www.gov.uk/bank-holidays.json"
+        ],
+        "overrides": {
+          "12-24": {
+            "reg": [
+              [
+                480,
+                750
+              ]
+            ],
+            "auc": [
+              [
+                470,
+                480
+              ],
+              [
+                750,
+                755
+              ]
+            ],
+            "post": []
+          },
+          "12-31": {
+            "reg": [
+              [
+                480,
+                750
+              ]
+            ],
+            "auc": [
+              [
+                470,
+                480
+              ],
+              [
+                750,
+                755
+              ]
+            ],
+            "post": []
+          }
+        }
+      }
+    },
+    "sg": {
+      "2026": {
+        "validFrom": "2026-01-01",
+        "validThrough": "2026-12-31",
+        "closed": [
+          "01-01",
+          "02-17",
+          "02-18",
+          "03-21",
+          "04-03",
+          "05-01",
+          "05-27",
+          "05-31",
+          "06-01",
+          "08-09",
+          "08-10",
+          "11-08",
+          "11-09",
+          "12-25"
+        ],
+        "halfDays": [
+          "02-16",
+          "12-24",
+          "12-31"
+        ],
+        "sources": [
+          "https://www.sgx.com/stock-exchange/trading",
+          "https://www.mom.gov.sg/newsroom/press-releases/2025/0616-public-holidays-for-2026",
+          "https://data.gov.sg/datasets/d_149b61ad0a22f61c09dc80f2df5bbec8/view"
+        ],
+        "overrides": {
+          "02-16": {
+            "reg": [
+              [
+                540,
+                720
+              ]
+            ],
+            "brk": [],
+            "auc": [
+              [
+                510,
+                540
+              ],
+              [
+                720,
+                726
+              ]
+            ],
+            "post": [
+              [
+                726,
+                736
+              ]
+            ]
+          },
+          "12-24": {
+            "reg": [
+              [
+                540,
+                720
+              ]
+            ],
+            "brk": [],
+            "auc": [
+              [
+                510,
+                540
+              ],
+              [
+                720,
+                726
+              ]
+            ],
+            "post": [
+              [
+                726,
+                736
+              ]
+            ]
+          },
+          "12-31": {
+            "reg": [
+              [
+                540,
+                720
+              ]
+            ],
+            "brk": [],
+            "auc": [
+              [
+                510,
+                540
+              ],
+              [
+                720,
+                726
+              ]
+            ],
+            "post": [
+              [
+                726,
+                736
+              ]
+            ]
+          }
+        }
+      }
+    }
+  },
+  "profiles": {
+    "de": {
+      "sessions": {
+        "reg": [
+          [
+            540,
+            1050
+          ]
+        ]
+      },
+      "notes": [
+        "Xetra primary standard market; not Frankfurt or opt-in retail extension",
+        "May14/May25/June4 public holidays are trading days"
+      ]
+    },
+    "it": {
+      "sessions": {
+        "reg": [
+          [
+            540,
+            1050
+          ]
+        ],
+        "auc": [
+          [
+            450,
+            540
+          ],
+          [
+            1050,
+            1055
+          ]
+        ],
+        "post": [
+          [
+            1055,
+            1060
+          ]
+        ]
+      },
+      "hoursSources": [
+        "https://www.borsaitaliana.it/azioni/mercati/negoziazioni/negoziazioni/negoziazioni.en.htm",
+        "https://www.euronext.com/sites/default/files/2026-07/appendix%20to%20Euronext%20Instructions%204-01%204-03%20Trading%20Manuals_0.xlsx"
+      ],
+      "notes": [
+        "NoTAH days are not whole-day closures",
+        "Auction uncrossing random up to30s; standard minute schedule",
+        "July2026workbook MilanETFgroup3Jrow218/5Yrow258 open09:04random; stocks9:00."
+      ],
+      "sessionsByType": {
+        "ETF": {
+          "reg": [
+            [
+              544,
+              1050
+            ]
+          ],
+          "auc": [
+            [
+              1050,
+              1055
+            ]
+          ],
+          "post": [
+            [
+              1055,
+              1060
+            ]
+          ]
+        }
+      }
+    },
+    "ch": {
+      "sessions": {
+        "reg": [
+          [
+            540,
+            1040
+          ]
+        ],
+        "auc": [
+          [
+            1040,
+            1050
+          ]
+        ]
+      },
+      "sessionsByType": {
+        "ETF": {
+          "reg": [
+            [
+              540,
+              1050
+            ]
+          ],
+          "auc": [
+            [
+              1050,
+              1055
+            ]
+          ]
+        }
+      },
+      "hoursSources": [
+        "https://www.six-group.com/en/products-services/the-swiss-stock-exchange/trading/trading-provisions/trading-hours.html"
+      ],
+      "notes": [
+        "Opening randomized two-minute window; standard nominal times",
+        "Equity continuous ends17:20;ETF17:30;closing auctions end17:30/17:35"
+      ]
+    },
+    "es": {
+      "sessions": {
+        "reg": [
+          [
+            540,
+            1050
+          ]
+        ],
+        "auc": [
+          [
+            510,
+            540
+          ],
+          [
+            1050,
+            1055
+          ]
+        ],
+        "post": [
+          [
+            1055,
+            1065
+          ]
+        ]
+      },
+      "sessionsByType": {
+        "ETF": {
+          "reg": [
+            [
+              540,
+              1058
+            ]
+          ],
+          "auc": [
+            [
+              510,
+              540
+            ]
+          ]
+        }
+      },
+      "hoursSources": [
+        "https://www.bolsasymercados.es/es/bme-exchange/horario-del-mercado.html"
+      ],
+      "notes": [
+        "Official calendar/press says until14:00 on halfdays; do not infer extra ETF minutes/auction"
+      ]
+    },
+    "ca": {
+      "sessions": {
+        "reg": [
+          [
+            570,
+            960
+          ]
+        ],
+        "post": [
+          [
+            975,
+            1020
+          ]
+        ]
+      },
+      "hoursSources": [
+        "https://www.tsx.com/en/trading/calendars-and-trading-hours/trading-hours"
+      ],
+      "notes": [
+        "US holidays on calendar are special settlement only, not TSX closures",
+        "TSXV same calendar/hours if added; Alpha different"
+      ]
+    },
+    "au": {
+      "sessions": {
+        "reg": [
+          [
+            600,
+            960
+          ]
+        ],
+        "auc": [
+          [
+            599,
+            600
+          ],
+          [
+            960,
+            971
+          ]
+        ]
+      },
+      "hoursSources": [
+        "https://www.asx.com.au/markets/market-resources/trading-hours-calendar/cash-market-trading-hours."
+      ],
+      "notes": [
+        "Official normal starts09:59:45±15s; conservative minute model usesauction09:59–10:00 thenregular10:00",
+        "Halfday normal ends14:10; do not synthesizeauctiontime afterhalfdayend"
+      ]
+    },
+    "in": {
+      "sessions": {
+        "reg": [
+          [
+            555,
+            930
+          ]
+        ],
+        "auc": [
+          [
+            540,
+            555
+          ]
+        ]
+      },
+      "hoursSources": [
+        "https://www.nseindia.com/resources/exchange-communication-holidays/"
+      ],
+      "notes": [
+        "NSEequity, not settlement/currency calendar; Jan15 election closure addedJan12",
+        "No .BO until BSE calendar independentlyverified"
+      ]
+    },
+    "tw": {
+      "sessions": {
+        "reg": [
+          [
+            540,
+            810
+          ]
+        ],
+        "auc": [
+          [
+            510,
+            540
+          ]
+        ]
+      },
+      "hoursSources": [
+        "https://www.twse.com.tw/en/products/system/trading.html"
+      ],
+      "notes": [
+        "Jan2/Feb11(lasttradingday)/Feb23 areOPEN annotations",
+        "Feb12/13 settlementonly=>notrading",
+        "Typhoon futureclosures requireupdates; do not inferTPEx .TWO"
+      ]
+    },
+    "br": {
+      "sessions": {
+        "reg": [
+          [
+            600,
+            1015
+          ]
+        ],
+        "auc": [
+          [
+            585,
+            600
+          ],
+          [
+            1015,
+            1020
+          ]
+        ],
+        "post": [],
+        "unknown": [
+          [
+            1050,
+            1120
+          ]
+        ]
+      },
+      "hoursSources": [
+        "https://www.b3.com.br/data/files/FC/55/3B/12/7FE9B9109B5E99B9AC094EA8/OC%20003-2026-VNC%20ERRATA_CALENDARIO%20DE%20FERIADOS%20EM%202026%20E%20FUNCIONAMENTO%20DA%20B3%20EM%2018022026%20QUARTAFEIRA%20DE%20CINZAS_PT.pdf",
+        "https://www.b3.com.br/pt_br/noticias/calendario-de-negociacao-da-b3-confira-o-funcionamento-da-bolsa-em-2026.htm",
+        "https://www.b3.com.br/data/files/36/22/17/A0/0131A910F51990A9AC094EA8/OC%20043-2025-VNC%20NOVOS%20HORARIOS%20DE%20NEGOCIACAO_PT.pdf",
+        "https://www.b3.com.br/data/files/E3/B2/C2/12/BC09C910F37907C9AC094EA8/OC%20005-2026%20PRE%20NOVOS%20HORARIOS%20DE%20NEGOCIACAO_PT.pdf"
+      ],
+      "notes": [
+        "No local UTC-offset season rule is used to infer exchange session changes.",
+        "Stock versus equity-ETF opening/closing-auction times differ. Financial futures and settlement calendars are excluded.",
+        "Expiry-day aftermarket schedule is not fully enumerated. Unverified aftermarket windows return UNKNOWN; no guessed daily post-market session.",
+        "Generic ETF shares only the common verified interval across equity and fixed-income ETFs; differing opening interval remains UNKNOWN."
+      ],
+      "sessionsByType": {
+        "ETF": {
+          "reg": [
+            [
+              605,
+              1015
+            ]
+          ],
+          "auc": [
+            [
+              1015,
+              1035
+            ]
+          ],
+          "post": [],
+          "unknown": [
+            [
+              585,
+              605
+            ],
+            [
+              1050,
+              1120
+            ]
+          ]
+        }
+      },
+      "sessionPeriods": [
+        {
+          "validFrom": "2026-01-01",
+          "validThrough": "2026-03-08",
+          "sessions": {
+            "reg": [
+              [
+                600,
+                1075
+              ]
+            ],
+            "auc": [
+              [
+                585,
+                600
+              ],
+              [
+                1075,
+                1080
+              ]
+            ],
+            "post": [],
+            "unknown": [
+              [
+                1165,
+                1180
+              ]
+            ]
+          },
+          "sessionsByType": {
+            "ETF": {
+              "reg": [
+                [
+                  605,
+                  1075
+                ]
+              ],
+              "auc": [
+                [
+                  1075,
+                  1095
+                ]
+              ],
+              "post": [],
+              "unknown": [
+                [
+                  585,
+                  605
+                ],
+                [
+                  1165,
+                  1180
+                ]
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "mx": {
+      "sessions": {
+        "reg": [
+          [
+            450,
+            840
+          ]
+        ],
+        "auc": [
+          [
+            420,
+            450
+          ]
+        ],
+        "post": []
+      },
+      "hoursSources": [
+        "https://www.bmv.com.mx/es/Grupo_BMV/Calendario_de_dias_festivos",
+        "https://www.bmv.com.mx/es/Grupo_BMV/Calendario_de_dias_festivos/_rid/662/_mod/TAB_HORARIOS_NEG",
+        "https://www.bmv.com.mx/docs-pub/MARCO_NORMATIVO/CTEN_MERMO/20260102_V1.95_Act_Tarifas.pdf",
+        "https://www.mexder.com.mx/wb3/wb/MEX/MEX_Repositorio/_vtp/MEX/21ae_operacion/_rid/21/_mto/3/20260212_AVISO_HORARIO_DE_NEGOCIACION_MARZO_2026.pdf?repfiddoc=9189&repfop=view&repinline=true&reptp=21ae_operacion"
+      ],
+      "notes": [
+        "Exact2026 BMV March6 cash notice was discovered only through a distributor; distributor text is not used as a primary source here.",
+        "2026 operation-manual URL is indexed but direct retrieval currently redirects to maintenance; winter baseline is explicitly attributed to indexed official text.",
+        "Debt TRACs/PSOTRAC/DLRTRAC have distinct14:00 winter close; do not infer allETF schedules from equityETF schedule.",
+        "After-close entries/allocation are not another continuous-price session."
+      ],
+      "sessionPeriods": [
+        {
+          "validFrom": "2026-01-01",
+          "validThrough": "2026-03-08",
+          "sessions": {
+            "reg": [
+              [
+                510,
+                900
+              ]
+            ],
+            "auc": [
+              [
+                480,
+                510
+              ]
+            ],
+            "post": []
+          },
+          "sessionsByType": {
+            "ETF": {
+              "reg": [
+                [
+                  510,
+                  900
+                ]
+              ],
+              "auc": [
+                [
+                  480,
+                  510
+                ]
+              ],
+              "post": []
+            }
+          },
+          "evidenceMode": "official_indexed_manual"
+        },
+        {
+          "validFrom": "2026-03-09",
+          "validThrough": "2026-10-30",
+          "sessions": {
+            "reg": [
+              [
+                450,
+                840
+              ]
+            ],
+            "auc": [
+              [
+                420,
+                450
+              ]
+            ],
+            "post": []
+          },
+          "sessionsByType": {
+            "ETF": {
+              "reg": [
+                [
+                  450,
+                  840
+                ]
+              ],
+              "auc": [
+                [
+                  420,
+                  450
+                ]
+              ],
+              "post": []
+            }
+          },
+          "evidenceMode": "joint_inference_from_current_BMV_cash_hours_and_MexDer_explicit_BMV_temporary_period"
+        },
+        {
+          "validFrom": "2026-11-01",
+          "validThrough": "2026-12-31",
+          "sessions": {
+            "reg": [
+              [
+                510,
+                900
+              ]
+            ],
+            "auc": [
+              [
+                480,
+                510
+              ]
+            ],
+            "post": []
+          },
+          "sessionsByType": {
+            "ETF": {
+              "reg": [
+                [
+                  510,
+                  900
+                ]
+              ],
+              "auc": [
+                [
+                  480,
+                  510
+                ]
+              ],
+              "post": []
+            }
+          },
+          "evidenceMode": "ordinary_manual_schedule_resumes_after_express_temporary_period; recheck_autumn_BMV_notice"
+        }
+      ]
+    },
+    "za": {
+      "sessions": {
+        "reg": [
+          [
+            540,
+            720
+          ],
+          [
+            735,
+            1010
+          ]
+        ],
+        "auc": [
+          [
+            510,
+            540
+          ],
+          [
+            1010,
+            1020
+          ]
+        ],
+        "unknown": [
+          [
+            720,
+            735
+          ]
+        ],
+        "post": []
+      },
+      "hoursSources": [
+        "https://www.jse.co.za/sites/default/files/media/documents/equities-rules/Equities%20Rules_9.pdf",
+        "https://www.jse.co.za/sites/default/files/media/documents/equities-rules/Equities%20Rules_7.pdf",
+        "https://www.gov.za/about-sa/public-holidays",
+        "https://clientportal.jse.co.za/Content/JSENoticesandCircularsItems/JSE%20Market%20Notice%2038025%20All%20Markets%20-%20JSE%20Markets%20Calendar%202026.pdf",
+        "https://www.jse.co.za/sites/default/files/media/documents/jse-factsheeteqm/JSE%20Factsheet_EQM.pdf",
+        "https://clientportal.jse.co.za/Content/JSE%20Technology%20Document%20Items/Volume%2000D%20-%20Trading%20and%20Information%20Overview%20for%20Derivative%20Markets%20v2.04.pdf",
+        "https://clientportal.jse.co.za/Content/JSEHotlinesItems/JSE%20Service%20Hotline%2013025%20All%20Markets%20-%20Trading%20Clearing%20and%20Settlement%20Market%20Schedule%20-%20December%202025%20and%20January%202026.pdf",
+        "https://www.parliament.gov.za/press-releases/media-statement-standing-committee-appropriations-satisfied-budget-allocations-2026-local-government-elections"
+      ],
+      "notes": [
+        "JSE380/2025 calendar existence verified;PDF retrieval403.",
+        "Official source search-index extraction used for JSE rules and session tables;parent should inspect originalPDF before production promotion.",
+        "2026 legislative/election exception prevents unconditional all-weekday normal-session assumption.",
+        "ZA06ETF has no opening/closing auction in JSE factsheet and technology normal-day table; closing-price cross is not continuous trading.",
+        "ZA03 less-liquid equities have midday auction12:00-12:15. Do not assign ZA01/02 schedule to all JSE symbols.",
+        "Post-close and trade-reporting intervals are administrative, not advertised as continuous trading.",
+        "Unknown equity trading segment: 12:00–12:15 is UNKNOWN rather than inventing ZA01/ZA03 classification."
+      ],
+      "sessionsByType": {
+        "ETF": {
+          "reg": [
+            [
+              540,
+              1010
+            ]
+          ],
+          "auc": [],
+          "post": []
+        }
+      }
+    },
+    "uk": {
+      "sessions": {
+        "reg": [
+          [
+            480,
+            990
+          ]
+        ],
+        "auc": [
+          [
+            470,
+            480
+          ],
+          [
+            990,
+            995
+          ]
+        ]
+      },
+      "hoursSources": [
+        "https://docs.londonstockexchange.com/sites/default/files/documents/20260727-mit-and-te-parameters-version-10-0.xlsx"
+      ],
+      "notes": [
+        "Canonical LSE businessdays page read using nativeChrome 2026-09-06. LSE expressly follows England/Wales bankholidays; dates joined with currentGovJSON.",
+        "SETS normal08:00–16:30 and halfday08:00–12:30 from July2026workbook TradingCycles; closing call5min. Standard minute schedule does not guarantee randomuncrossing/SETSqx/individualEDSP intraday auctions."
+      ]
+    },
+    "sg": {
+      "sessions": {
+        "reg": [
+          [
+            540,
+            720
+          ],
+          [
+            780,
+            1020
+          ]
+        ],
+        "brk": [
+          [
+            720,
+            780
+          ]
+        ],
+        "auc": [
+          [
+            510,
+            540
+          ],
+          [
+            1020,
+            1026
+          ]
+        ],
+        "post": [
+          [
+            1026,
+            1036
+          ]
+        ]
+      },
+      "hoursSources": [
+        "https://www.sgx.com/stock-exchange/trading",
+        "https://rulebook.sgx.com/rulebook/practice-note-61-trading-halt-and-suspension"
+      ],
+      "notes": [
+        "SGXprimarypageexpandednativeChrome explicitlyfollowsMOMpublicholidaycalendar andlists16Feb/24Dec/31Dec2026halfday.",
+        "PublicSundayholidaysobservedMondayJune1/Aug10/Nov9 perMOMfootnotes; noMondayMarch23substitute forSaturdayMarch21."
+      ]
+    },
+    "fr": {
+      "sessions": {
+        "reg": [
+          [
+            540,
+            1050
+          ]
+        ],
+        "auc": [
+          [
+            1050,
+            1055
+          ]
+        ],
+        "post": [
+          [
+            1055,
+            1060
+          ]
+        ]
+      },
+      "sessionsByType": {
+        "ETF": {
+          "reg": [
+            [
+              544,
+              1050
+            ]
+          ],
+          "auc": [
+            [
+              1050,
+              1055
+            ]
+          ],
+          "post": [
+            [
+              1055,
+              1060
+            ]
+          ]
+        }
+      },
+      "hoursSources": [
+        "https://www.euronext.com/sites/default/files/2026-07/appendix%20to%20Euronext%20Instructions%204-01%204-03%20Trading%20Manuals_0.xlsx",
+        "https://www.euronext.com/en/regulation/euronext-regulated-markets"
+      ],
+      "notes": [
+        "Read latestofficial27July2026workbook Appendixto4-01ManualOPTQ: AmsterdamEquities AEX row114 &ParisSRDrow421 09:00–17:30; equityclosingauction17:35random thenTALto17:40",
+        "ETFgroupsAmsterdamDH/DJ rows99/100,Paris08/18/47rows419/427/445 open09:04random, continuous to17:30,closing17:35,TAL17:40",
+        "Standard continuous stock/ETF groups only; IPO/fixing-specific securities have other phases, notclaimedidentical"
+      ]
+    },
+    "nl": {
+      "sessions": {
+        "reg": [
+          [
+            540,
+            1050
+          ]
+        ],
+        "auc": [
+          [
+            1050,
+            1055
+          ]
+        ],
+        "post": [
+          [
+            1055,
+            1060
+          ]
+        ]
+      },
+      "sessionsByType": {
+        "ETF": {
+          "reg": [
+            [
+              544,
+              1050
+            ]
+          ],
+          "auc": [
+            [
+              1050,
+              1055
+            ]
+          ],
+          "post": [
+            [
+              1055,
+              1060
+            ]
+          ]
+        }
+      },
+      "hoursSources": [
+        "https://www.euronext.com/sites/default/files/2026-07/appendix%20to%20Euronext%20Instructions%204-01%204-03%20Trading%20Manuals_0.xlsx",
+        "https://www.euronext.com/en/regulation/euronext-regulated-markets"
+      ],
+      "notes": [
+        "Read latestofficial27July2026workbook Appendixto4-01ManualOPTQ: AmsterdamEquities AEX row114 &ParisSRDrow421 09:00–17:30; equityclosingauction17:35random thenTALto17:40",
+        "ETFgroupsAmsterdamDH/DJ rows99/100,Paris08/18/47rows419/427/445 open09:04random, continuous to17:30,closing17:35,TAL17:40",
+        "Standard continuous stock/ETF groups only; IPO/fixing-specific securities have other phases, notclaimedidentical"
+      ]
+    }
+  }
+}

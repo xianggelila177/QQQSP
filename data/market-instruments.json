@@ -1,0 +1,689 @@
+[
+  {
+    "market": "us",
+    "symbol": "^GSPC",
+    "name": "标普500",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "verifiedAt": "2026-09-06T06:17:56.284Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "us",
+    "symbol": "AAPL",
+    "name": "Apple Inc.",
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:18:00.094Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "us",
+    "symbol": "SPY",
+    "name": "State Street SPDR S&P 500 ETF T",
+    "type": "ETF",
+    "providerType": "ETF",
+    "verifiedAt": "2026-09-06T06:18:04.007Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "us",
+    "symbol": "XLK",
+    "name": "科技行业精选 SPDR ETF",
+    "type": "ETF",
+    "providerType": "ETF",
+    "typeSource": "catalog",
+    "naverCode": "XLK",
+    "verifiedAt": "2026-09-13T15:20:00.000Z",
+    "source": "State Street / Nasdaq / Naver",
+    "sources": [
+      "https://www.ssga.com/us/en/individual/etfs/state-street-technology-select-sector-spdr-etf-xlk",
+      "https://api.nasdaq.com/api/quote/XLK/chart?assetclass=etf",
+      "https://polling.finance.naver.com/api/realtime/worldstock/stock/XLK"
+    ]
+  },
+  {
+    "market": "cn",
+    "symbol": "000300.SS",
+    "name": "沪深300",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "verifiedAt": "2026-09-06T06:18:07.787Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "cn",
+    "symbol": "600519.SS",
+    "name": "KWEICHOW MOUTAI",
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:18:11.282Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "cn",
+    "symbol": "510300.SS",
+    "name": "华泰柏瑞沪深300ETF",
+    "type": "ETF",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:18:14.750Z",
+    "source": "Yahoo Finance",
+    "sources": [
+      "https://star.sse.com.cn/assortment/options/disclo/update/c/c_20260116_10805396.shtml"
+    ],
+    "typeSource": "catalog"
+  },
+  {
+    "market": "hk",
+    "symbol": "^HSI",
+    "name": "恒生指数",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "verifiedAt": "2026-09-06T06:18:18.269Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "hk",
+    "symbol": "0700.HK",
+    "name": "TENCENT",
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:18:21.687Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "hk",
+    "symbol": "2800.HK",
+    "name": "TRACKER FUND",
+    "type": "ETF",
+    "providerType": "ETF",
+    "verifiedAt": "2026-09-06T06:18:25.254Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "jp",
+    "symbol": "^N225",
+    "name": "日经225",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "verifiedAt": "2026-09-06T06:18:28.733Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "jp",
+    "symbol": "7203.T",
+    "name": "TOYOTA MOTOR CORP",
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:18:32.205Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "jp",
+    "symbol": "1306.T",
+    "name": "NOMURA ASSET MANAGEMENT CO LTD ",
+    "type": "ETF",
+    "providerType": "ETF",
+    "verifiedAt": "2026-09-06T06:18:35.761Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "kr",
+    "symbol": "^KS11",
+    "name": "韩国KOSPI",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "verifiedAt": "2026-09-06T06:18:39.284Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "kr",
+    "symbol": "005930.KS",
+    "name": "三星电子（韩国普通股）",
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:18:42.831Z",
+    "source": "Yahoo Finance",
+    "aliases": [
+      "三星",
+      "三星电子",
+      "Samsung",
+      "Samsung Electronics",
+      "삼성전자",
+      "005930"
+    ],
+    "exchange": "KOSPI"
+  },
+  {
+    "market": "kr",
+    "symbol": "069500.KS",
+    "name": "KODEX 200",
+    "type": "ETF",
+    "providerType": "ETF",
+    "verifiedAt": "2026-09-06T06:18:46.277Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "uk",
+    "symbol": "^FTSE",
+    "name": "富时100",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "verifiedAt": "2026-09-06T06:18:49.967Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "uk",
+    "symbol": "VOD.L",
+    "name": "VODAFONE GROUP PLC ORD USD0.20 ",
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:18:54.491Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "uk",
+    "symbol": "ISF.L",
+    "name": "ISHARES PLC ISHARES CORE FTSE10",
+    "type": "ETF",
+    "providerType": "ETF",
+    "verifiedAt": "2026-09-06T06:18:58.288Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "de",
+    "symbol": "^GDAXI",
+    "name": "德国DAX",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "verifiedAt": "2026-09-06T06:19:02.062Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "de",
+    "symbol": "SAP.DE",
+    "name": "SAP SE                        I",
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:19:05.434Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "de",
+    "symbol": "EXS1.DE",
+    "name": "iShares Core DAX UCITS ETF DE I",
+    "type": "ETF",
+    "providerType": "ETF",
+    "verifiedAt": "2026-09-06T06:19:09.206Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "fr",
+    "symbol": "^FCHI",
+    "name": "法国CAC40",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "verifiedAt": "2026-09-06T06:19:12.844Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "fr",
+    "symbol": "MC.PA",
+    "name": "LVMH",
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:19:16.458Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "fr",
+    "symbol": "CAC.PA",
+    "name": "Amundi CAC 40 UCITS ETF Dist",
+    "type": "ETF",
+    "providerType": "ETF",
+    "verifiedAt": "2026-09-06T06:19:20.158Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "ch",
+    "symbol": "^SSMI",
+    "name": "瑞士SMI",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "verifiedAt": "2026-09-06T06:19:23.749Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "ch",
+    "symbol": "NESN.SW",
+    "name": "NESTLE N",
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:19:27.250Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "ch",
+    "symbol": "CSSMI.SW",
+    "name": "iSh SMI (CH) CHF D",
+    "type": "ETF",
+    "providerType": "ETF",
+    "verifiedAt": "2026-09-06T06:19:31.007Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "nl",
+    "symbol": "^AEX",
+    "name": "荷兰AEX",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "verifiedAt": "2026-09-06T06:19:34.798Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "nl",
+    "symbol": "ASML.AS",
+    "name": "ASML HOLDING",
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:19:38.606Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "nl",
+    "symbol": "IAEX.AS",
+    "name": "iShares AEX",
+    "type": "ETF",
+    "providerType": "ETF",
+    "verifiedAt": "2026-09-06T06:19:42.277Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "it",
+    "symbol": "FTSEMIB.MI",
+    "name": "富时MIB",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "verifiedAt": "2026-09-06T06:19:46.007Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "it",
+    "symbol": "ENI.MI",
+    "name": "ENI",
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:19:49.539Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "it",
+    "symbol": "CSSPX.MI",
+    "name": "ISHARES CORE S&P 500 UCITS ETF ",
+    "type": "ETF",
+    "providerType": "ETF",
+    "verifiedAt": "2026-09-06T06:19:53.342Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "es",
+    "symbol": "^IBEX",
+    "name": "西班牙IBEX35",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "verifiedAt": "2026-09-06T06:19:56.926Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "es",
+    "symbol": "SAN.MC",
+    "name": "BANCO SANTANDER S.A.",
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:20:00.193Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "es",
+    "symbol": "BBVAI.MC",
+    "name": "ACCION IBEX 35 ETF F.I. COTIZAD",
+    "type": "ETF",
+    "providerType": "ETF",
+    "verifiedAt": "2026-09-06T06:20:04.149Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "ca",
+    "symbol": "^GSPTSE",
+    "name": "加拿大S&P/TSX",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "verifiedAt": "2026-09-06T06:20:07.996Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "ca",
+    "symbol": "RY.TO",
+    "name": "ROYAL BANK OF CANADA",
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:20:11.575Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "ca",
+    "symbol": "XIU.TO",
+    "name": "iSHARES SP TSX 60 INDEX ETF",
+    "type": "ETF",
+    "providerType": "ETF",
+    "verifiedAt": "2026-09-06T06:20:15.226Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "au",
+    "symbol": "^AXJO",
+    "name": "澳大利亚ASX200",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "verifiedAt": "2026-09-06T06:20:18.928Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "au",
+    "symbol": "BHP.AX",
+    "name": "BHP GROUP FPO [BHP]",
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:20:22.722Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "au",
+    "symbol": "STW.AX",
+    "name": "SPDR 200 ETF UNITS [STW]",
+    "type": "ETF",
+    "providerType": "ETF",
+    "verifiedAt": "2026-09-06T06:20:26.486Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "in",
+    "symbol": "^NSEI",
+    "name": "印度NIFTY50",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "verifiedAt": "2026-09-06T06:20:30.009Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "in",
+    "symbol": "RELIANCE.NS",
+    "name": "RELIANCE INDUSTRIES LTD",
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:20:33.369Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "in",
+    "symbol": "NIFTYBEES.NS",
+    "name": "Nippon India ETF Nifty 50 BeES",
+    "type": "ETF",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:20:36.741Z",
+    "source": "Yahoo Finance",
+    "sources": [
+      "https://www.nseindia.com/get-quote/equity/NIFTYBEES/Nippon-India-ETF-Nifty-50-BeES",
+      "https://mf.nipponindiaim.com/FundsAndPerformance/Pages/NipponIndia-ETF-Nifty-50-BeES.aspx"
+    ],
+    "typeSource": "catalog"
+  },
+  {
+    "market": "sg",
+    "symbol": "^STI",
+    "name": "新加坡海峡时报指数",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "verifiedAt": "2026-09-06T06:20:40.419Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "sg",
+    "symbol": "D05.SI",
+    "name": "DBS",
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:20:43.968Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "sg",
+    "symbol": "ES3.SI",
+    "name": "SS SPDR STI ETF",
+    "type": "ETF",
+    "providerType": "ETF",
+    "verifiedAt": "2026-09-06T06:20:47.577Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "tw",
+    "symbol": "^TWII",
+    "name": "台湾加权指数",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "verifiedAt": "2026-09-06T06:20:51.591Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "tw",
+    "symbol": "2330.TW",
+    "name": "TAIWAN SEMICONDUCTOR MANUFACTUR",
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:20:55.447Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "tw",
+    "symbol": "0050.TW",
+    "name": "YUANTA SECURITIES INV TRUST CO ",
+    "type": "ETF",
+    "providerType": "ETF",
+    "verifiedAt": "2026-09-06T06:20:58.853Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "br",
+    "symbol": "^BVSP",
+    "name": "巴西IBOVESPA",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "verifiedAt": "2026-09-06T06:21:02.673Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "br",
+    "symbol": "PETR4.SA",
+    "name": "PETROBRAS   PN      N2",
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:21:06.268Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "br",
+    "symbol": "BOVA11.SA",
+    "name": "iShares Ibovespa ETF",
+    "type": "ETF",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:21:09.916Z",
+    "source": "Yahoo Finance",
+    "sources": [
+      "https://www.blackrock.com/br/products/251816/ishares-ibovespa-fundo-de-ndice-fund"
+    ],
+    "typeSource": "catalog"
+  },
+  {
+    "market": "mx",
+    "symbol": "^MXX",
+    "name": "墨西哥IPC",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "verifiedAt": "2026-09-06T06:21:13.425Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "mx",
+    "symbol": "WALMEX.MX",
+    "name": "WAL-MART DE MEXICO SAB DE CV",
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:21:17.089Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "mx",
+    "symbol": "NAFTRACISHRS.MX",
+    "name": "iShares NAFTRAC ETF",
+    "type": "ETF",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:21:20.834Z",
+    "source": "Yahoo Finance",
+    "sources": [
+      "https://www.blackrock.com/mx/intermediarios/productos/251895/ishares-naftrac-fund",
+      "https://staging.bmv.com.mx/en/Grupo_BMV/tracks"
+    ],
+    "notes": "CurrentYahooqualifiedlegacycodeverified; issuerReutersNAFTRAC.MX and olderBMVqualifiedticker identifyETF",
+    "typeSource": "catalog"
+  },
+  {
+    "market": "za",
+    "symbol": "^J203.JO",
+    "name": "南非全股指数",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "verifiedAt": "2026-09-06T06:21:24.447Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "za",
+    "symbol": "NPN.JO",
+    "name": "Naspers Ltd -N-",
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:21:27.965Z",
+    "source": "Yahoo Finance"
+  },
+  {
+    "market": "za",
+    "symbol": "STX40.JO",
+    "name": "Satrix 40 ETF",
+    "type": "ETF",
+    "providerType": "EQUITY",
+    "verifiedAt": "2026-09-06T06:21:31.318Z",
+    "source": "Yahoo Finance",
+    "sources": [
+      "https://www.jse.co.za/news/news/satrix-income-actively-managed-etf-joins-jses-growing-ametf-suite",
+      "https://www.jse.co.za/jse/instruments/3905",
+      "https://www.jse.co.za/sites/default/files/media/documents/jse-etf-factsheet-july-2025/September%202025.pdf"
+    ],
+    "typeSource": "catalog"
+  },
+  {
+    "symbol": "000660.KS",
+    "market": "kr",
+    "type": "EQUITY",
+    "name": "SK海力士（韩国普通股）",
+    "aliases": [
+      "海力士",
+      "SK海力士",
+      "SK Hynix",
+      "Hynix",
+      "하이닉스",
+      "000660"
+    ],
+    "exchange": "KOSPI"
+  },
+  {
+    "symbol": "SKHY",
+    "market": "us",
+    "type": "EQUITY",
+    "name": "SK海力士（美国存托证券）",
+    "aliases": [
+      "海力士",
+      "SK海力士",
+      "SK Hynix",
+      "Hynix"
+    ],
+    "exchange": "OTC"
+  },
+  {
+    "symbol": "QQQ",
+    "market": "us",
+    "type": "ETF",
+    "name": "纳指100 ETF",
+    "aliases": [
+      "QQQ",
+      "纳指100",
+      "纳斯达克100"
+    ],
+    "exchange": "NASDAQ"
+  },
+  {
+    "symbol": "NVDA",
+    "market": "us",
+    "type": "EQUITY",
+    "name": "英伟达",
+    "aliases": [
+      "英伟达",
+      "NVIDIA"
+    ],
+    "exchange": "NASDAQ"
+  },
+  {
+    "symbol": "LITE",
+    "market": "us",
+    "type": "EQUITY",
+    "name": "Lumentum",
+    "aliases": [
+      "Lumentum",
+      "lumentum",
+      "光联"
+    ],
+    "exchange": "NASDAQ"
+  },
+  {
+    "symbol": "AAOI",
+    "market": "us",
+    "type": "EQUITY",
+    "name": "应用光电",
+    "aliases": [
+      "应用光电",
+      "Applied Optoelectronics"
+    ],
+    "exchange": "NASDAQ"
+  },
+  {
+    "symbol": "MRVL",
+    "market": "us",
+    "type": "EQUITY",
+    "name": "迈威尔科技",
+    "aliases": [
+      "迈威尔",
+      "迈威尔科技",
+      "Marvell"
+    ],
+    "exchange": "NASDAQ"
+  },
+  {
+    "symbol": "AVGO",
+    "market": "us",
+    "type": "EQUITY",
+    "name": "博通",
+    "aliases": [
+      "博通",
+      "Broadcom"
+    ],
+    "exchange": "NASDAQ"
+  }
+]

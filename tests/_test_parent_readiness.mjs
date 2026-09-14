@@ -1,0 +1,40 @@
+import assert from 'node:assert/strict';
+import http from 'node:http';
+process.env.PORT = '0';
+process.env.HTTP_CLIENT_QUOTA = '8';
+process.env.TRUST_PROXY_LOOPBACK = '0';
+process.env.LOG_LEVEL = 'error';
+const H = await import('../lib/http.js');
+const { stats } = await import('../log.mjs');
+let quoteAge = 0;
+H.initHttp({getCachedQuote: async symbol => ({symbol,price:100,src:'tx-us',marketState:'REGULAR',quoteAt:Date.now()-quoteAge,charts:{intraday:[],daily30:[]}}),getMacro:async()=>({items:[]}),cacheSizes:()=>({}),newsCache:new Map(),cacheSet:(map,key,value)=>map.set(key,value),requestNews:async()=>({items:[]})});
+H.startListen();
+while (!H.httpServer.address()) await new Promise(resolve => setTimeout(resolve, 1));
+const port = H.httpServer.address().port;
+const get = (pathname, headers={}) => new Promise((resolve,reject)=>{
+ const req=http.get({host:'127.0.0.1',port,path:pathname,headers},res=>{let body='';res.on('data',d=>body+=d);res.on('end',()=>resolve({status:res.statusCode,body:JSON.parse(body)}));});req.on('error',reject);
+});
+let failed=false;
+const realNow=Date.now;
+try {
+ assert.equal((await get('/readyz')).status,503);
+ assert.equal((await get('/api/market?symbols=QQQ')).status,200);
+ assert.equal(stats.quote.fetched,0,'only fallback response evidence exists');
+ assert.equal((await get('/readyz')).status,503,'one core symbol does not hide another missing core quote');
+ await get('/api/market?symbols=SPY');
+ assert.equal((await get('/readyz')).status,200,'all core symbols served by fallback make service ready');
+ quoteAge = 86400000;
+ await get('/api/market?symbols=QQQ');
+ assert.equal((await get('/readyz')).status,503,'frozen active-session quote invalidates previous success');
+ quoteAge = 0;
+ await get('/api/market?symbols=QQQ');
+ assert.equal((await get('/readyz')).status,200,'fresh quote restores readiness');
+ Date.now=()=>realNow()+300001;
+ assert.equal((await get('/readyz')).status,503,'expired business evidence must not stay green forever');
+ assert.equal((await get('/healthz')).status,200,'liveness remains independent');
+ Date.now=realNow;
+ const responses=[];
+ for(let i=0;i<12;i++) responses.push(await get('/api/market?symbols=QQQ',{Host:'qqqsp.digital-reality.shop'}));
+ assert.ok(responses.some(r=>r.status===429),'public loopback cannot bypass quota without trusted-proxy configuration');
+ console.log('PASS fallback readiness, recent evidence expiry, liveness and default public quota');
+} catch(error) {failed=true;console.error(error);} finally {Date.now=realNow;H.httpServer.close();process.exit(failed?1:0);}
