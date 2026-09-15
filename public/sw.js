@@ -1,4 +1,4 @@
-const VERSION = 'v88';
+const VERSION = 'v89';
 // 版本源: panel/VERSION(P1-Q5 单一来源) · 由 build_version.sh 同步 sw.js/index.html/app.js; 升版只改 VERSION 后跑一次脚本
 const CACHE = 'qqq-panel-' + VERSION;
 const CORE = ['/', '/index.html', '/style.css', '/panel.bundle.js', '/manifest.webmanifest', '/icon.svg'];

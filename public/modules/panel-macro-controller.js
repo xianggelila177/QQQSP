@@ -66,6 +66,11 @@
   }
   function applySnapshot(payload){
    if(!payload?.news||!Array.isArray(payload.news.items)||!Array.isArray(payload.context?.factors))throw new Error('宏观快照格式错误');
+   const previousEpoch=lastPayload?.monitor?.startedAt,incomingEpoch=payload.monitor?.startedAt;
+   if(Number.isFinite(previousEpoch)&&previousEpoch>0&&Number.isFinite(incomingEpoch)&&incomingEpoch>0){
+    if(incomingEpoch<previousEpoch)return;
+    if(incomingEpoch===previousEpoch&&Number.isSafeInteger(lastPayload.revision)&&Number.isSafeInteger(payload.revision)&&payload.revision<lastPayload.revision)return;
+   }
    lastPayload=payload;const n=payload.news;all=n.items;sources=n.sources||{};stale=!!n.stale;error=n.error||null;refreshing=!!n.refreshing;updatedAt=Number(n.updatedAt)||0;
    context?.apply(payload.context);renderMonitor();
    if(isOpen()&&!document.hidden){const signature=JSON.stringify(all.map(x=>[x.title,x.t,x.src,x.topic,{...x.assessment,assessedAt:0},x.reports]));if(signature!==renderedNews){renderedNews=signature;renderFilters();renderList();}renderStatus();}onChange();

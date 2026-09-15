@@ -4,6 +4,7 @@ import {streamAvailability} from './lib/stream-policy.js';
 import {createMacroMonitor} from './lib/macro-monitor.js';
 import {createMacroNotifier} from './lib/macro-notify.js';
 import {createMacroQuoteReader} from './lib/providers/macro-quotes.js';
+import {createPublicMacroSources} from './lib/providers/macro-public-quotes.js';
 import {createFuturesProvider} from './lib/providers/futures.js';
 import {isFutureSymbol} from './lib/futures-instruments.js';
 // Composition root. Every application owns its transport, queues, caches,
@@ -81,7 +82,7 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
   const fx=referenceFx?createFxService({getPrimary:yahoo.getFxRates,primaryMetadata:yahoo.fxMetadata,getReference:referenceFx.getRates,canUsePrimary:()=>env.FX_MODE==='market'&&!breaker.state().blocked,referenceOnly:env.FX_MODE!=='market',now}):null;
   const officialNews=redundancyEnabled?createOfficialFeeds({httpsGet,now,log:telemetry.log,feeds:MACRO_OFFICIAL_FEEDS}):undefined;
   const macroCalendar=createMacroCalendar({httpsGet,key:config.TE_API_KEY,now});
-  const macroQuotes=createMacroQuoteReader({httpsGet,futures,fetchChart:yahoo.fetchChart,now});
+  const macroQuotes=createMacroQuoteReader({httpsGet,futures,fetchChart:yahoo.fetchChart,now,publicSources:createPublicMacroSources({httpsGet,now})});
   const macroContext=createMacroContext({now,pollMs:config.MACRO_CONTEXT_MS,readQuote:providerOverrides.macroQuote||macroQuotes.readQuote});
   const macro=createMacroService({httpsGet,yahooNews,googleNewsTopic:news.googleNewsTopic,officialNews,allowYahooFallback:false,now,log:telemetry.log});
   const macroMonitor=createMacroMonitor({macro,context:macroContext,calendar:macroCalendar,now,enabled:config.MACRO_BACKGROUND_ENABLED==='1',statePath:config.MACRO_STATE_PATH,contextMs:config.MACRO_CONTEXT_MS,newsMs:config.MACRO_NEWS_MS,notify:providerOverrides.macroNotify||createMacroNotifier({url:config.MACRO_WEBHOOK_URL,token:config.MACRO_WEBHOOK_TOKEN,now}),log:telemetry.log});

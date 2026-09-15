@@ -95,27 +95,27 @@
     {
       "path": "public/modules/panel-macro-context.js",
       "startOffset": 122958,
-      "endOffset": 131287
+      "endOffset": 131828
     },
     {
       "path": "public/modules/panel-macro-controller.js",
-      "startOffset": 131339,
-      "endOffset": 142006
+      "startOffset": 131880,
+      "endOffset": 142965
     },
     {
       "path": "public/modules/panel-market-store.js",
-      "startOffset": 142054,
-      "endOffset": 144766
+      "startOffset": 143013,
+      "endOffset": 145725
     },
     {
       "path": "public/modules/panel-live-store.js",
-      "startOffset": 144812,
-      "endOffset": 148564
+      "startOffset": 145771,
+      "endOffset": 149523
     },
     {
       "path": "public/app.js",
-      "startOffset": 148589,
-      "endOffset": 177071
+      "startOffset": 149548,
+      "endOffset": 178030
     }
   ]
 }
