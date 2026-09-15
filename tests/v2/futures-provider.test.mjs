@@ -93,7 +93,7 @@ test('futures without source history remain in history mode and do not fabricate
  assert.equal(q.price,25000.25);
 });
 
-test('the slower futures catalogue quote actually waits 30 seconds before retrying its primary endpoint',async t=>{
+test('catalogue polls at its own cadence and retries the primary after the bounded preference window',async t=>{
  let current=asOf,calls=0,primaryReady=false;
  const p=createFuturesProvider({now:()=>current,httpsGet:async url=>{
   calls++;
@@ -102,5 +102,6 @@ test('the slower futures catalogue quote actually waits 30 seconds before retryi
  }});t.after(()=>p.close());
  const q=await p.getQuote('NQ00Y.FUT');assert.equal(q.src,'eastmoney-futures-list');assert.equal(q.quoteAt,null);assert.equal(calls,2);
  current+=6000;primaryReady=true;const cached=await p.getQuote('NQ00Y.FUT');assert.equal(cached.src,'eastmoney-futures-list');assert.equal(calls,2,'declared 30-second fallback interval is not merely a label');
- current+=25000;assert.equal((await p.getQuote('NQ00Y.FUT')).src,'eastmoney-futures');assert.equal(calls,3);
+ current+=25000;assert.equal((await p.getQuote('NQ00Y.FUT')).src,'eastmoney-futures-list');assert.equal(calls,3);
+ current+=300001;assert.equal((await p.getQuote('NQ00Y.FUT')).src,'eastmoney-futures');assert.equal(calls,4);
 });
