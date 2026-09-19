@@ -24,6 +24,9 @@ test('market identity, failures, recovery and watchlist/news generation', async 
 });
 
 test('macro cache, error/retry status and stable keyboard focus', async ({ page, panelServer }) => {
+  // Keep the manual refresh path deterministic: with the push channel live,
+  // refreshMacro() defers to stream snapshots and never exercises error/retry.
+  await page.route('**/api/macro/stream', route => route.abort());
   await openPanel(page, panelServer);
   await page.locator('.macrohead').click();
   await expect(page.locator('#macrolist')).toContainText('Fixture macro headline');

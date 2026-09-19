@@ -1,4 +1,5 @@
 (() => {
+  const MAX_WATCHLIST_SYMBOLS = 100;
   function createSafeStorage(getStorage, onUnavailable = () => {}) {
     const memory=new Map();let storage=null,failed=false;
     const fail=()=>{if(!failed){failed=true;onUnavailable();}storage=null;};
@@ -57,7 +58,7 @@
   function scrollToCard(element, options = {}) {
     element?.scrollIntoView?.({...options,behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
   }
-  const createState = (storage, { maxWatchlist = 12 } = {}) => {
+  const createState = (storage, { maxWatchlist = MAX_WATCHLIST_SYMBOLS } = {}) => {
     const readJSON = (key, fallback) => { try { const value = JSON.parse(storage.getItem(key) || ''); return value == null ? fallback : value; } catch { return fallback; } };
     const writeJSON = (key, value) => { try { storage.setItem(key, JSON.stringify(value)); } catch {} };
     const validSymbol = (value) => /^[A-Z0-9.&\-^=]{1,16}$/i.test(String(value || ''));
@@ -115,5 +116,5 @@
       resume() { samples = []; synced = false; },
       status: () => ({ synced, uncertaintyMs: samples.length ? Math.min(...samples.map(s => s.rtt)) / 2 : null }) };
   }
-  window.PANEL_STATE = Object.freeze({ createSafeStorage, createState, selectFreshness, pollingPolicy, scrollToCard, calendarStatus, formatQuoteAge, createQuoteClock });
+  window.PANEL_STATE = Object.freeze({ MAX_WATCHLIST_SYMBOLS, createSafeStorage, createState, selectFreshness, pollingPolicy, scrollToCard, calendarStatus, formatQuoteAge, createQuoteClock });
 })();

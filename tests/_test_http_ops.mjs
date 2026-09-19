@@ -76,20 +76,20 @@ const tooMany = await request('GET', '/api/market?symbols=' + Array.from({ lengt
 check('symbol cap is enforced with HTTP 400', tooMany.status === 400);
 const post = await request('POST', '/api/market?symbols=QQQ');
 check('invalid method is HTTP 405 with Allow', post.status === 405 && post.headers.allow === 'GET, HEAD, OPTIONS');
-const options = await request('OPTIONS', '/api/market', { Origin: 'https://qqqsp.digital-reality.shop' });
-check('OPTIONS is explicit and CORS-safe', options.status === 204 && options.headers['access-control-allow-origin'] === 'https://qqqsp.digital-reality.shop');
+const options = await request('OPTIONS', '/api/market', { Origin: 'https://quotes.example.com' });
+check('OPTIONS is explicit and CORS-safe', options.status === 204 && options.headers['access-control-allow-origin'] === 'https://quotes.example.com');
 await request('GET','/api/market?symbols=SPY');
 const live = await request('GET', '/healthz');
 const ready = await request('GET', '/readyz');
 check('healthz is liveness and remains HTTP 200', live.status === 200 && JSON.parse(live.body).ok === true);
 check('readyz accepts recent usable responses including injected/fallback paths', ready.status === 200 && JSON.parse(ready.body).ready === true);
 check('health diagnostics include bounded disk thresholds', JSON.parse(live.body).disk && typeof JSON.parse(live.body).disk.warning === 'boolean' && typeof JSON.parse(live.body).disk.critical === 'boolean');
-const publicStats = await request('GET', '/api/stats', { Host: 'qqqsp.digital-reality.shop' });
+const publicStats = await request('GET', '/api/stats', { Host: 'quotes.example.com' });
 check('public proxy cannot read stats without an admin token', publicStats.status === 404);
-const news = await request('GET', '/api/news?symbols=QQQ', { Origin: 'https://qqqsp.digital-reality.shop' });
+const news = await request('GET', '/api/news?symbols=QQQ', { Origin: 'https://quotes.example.com' });
 check('news keeps compatibility object shape', news.status === 200 && Array.isArray(JSON.parse(news.body).QQQ));
 check('news freshness metadata is ASCII-safe', !news.headers['x-news-meta'] || /^[A-Za-z0-9_-]+$/.test(news.headers['x-news-meta']) && news.headers['x-news-meta-encoding'] === 'base64url-json');
-const big = await request('GET', '/api/market?symbols=QQQ', { Origin: 'https://qqqsp.digital-reality.shop', 'Accept-Encoding': 'gzip' });
+const big = await request('GET', '/api/market?symbols=QQQ', { Origin: 'https://quotes.example.com', 'Accept-Encoding': 'gzip' });
 check('gzip and CORS preserve both Vary values', big.headers['content-encoding'] === 'gzip' && String(big.headers.vary).toLowerCase().includes('origin') && String(big.headers.vary).toLowerCase().includes('accept-encoding'));
 
 H.httpServer.close();

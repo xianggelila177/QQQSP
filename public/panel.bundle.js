@@ -511,6 +511,7 @@
 
 ;/* public/modules/panel-state.js */
 (() => {
+  const MAX_WATCHLIST_SYMBOLS = 100;
   function createSafeStorage(getStorage, onUnavailable = () => {}) {
     const memory=new Map();let storage=null,failed=false;
     const fail=()=>{if(!failed){failed=true;onUnavailable();}storage=null;};
@@ -569,7 +570,7 @@
   function scrollToCard(element, options = {}) {
     element?.scrollIntoView?.({...options,behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
   }
-  const createState = (storage, { maxWatchlist = 12 } = {}) => {
+  const createState = (storage, { maxWatchlist = MAX_WATCHLIST_SYMBOLS } = {}) => {
     const readJSON = (key, fallback) => { try { const value = JSON.parse(storage.getItem(key) || ''); return value == null ? fallback : value; } catch { return fallback; } };
     const writeJSON = (key, value) => { try { storage.setItem(key, JSON.stringify(value)); } catch {} };
     const validSymbol = (value) => /^[A-Z0-9.&\-^=]{1,16}$/i.test(String(value || ''));
@@ -627,7 +628,7 @@
       resume() { samples = []; synced = false; },
       status: () => ({ synced, uncertaintyMs: samples.length ? Math.min(...samples.map(s => s.rtt)) / 2 : null }) };
   }
-  window.PANEL_STATE = Object.freeze({ createSafeStorage, createState, selectFreshness, pollingPolicy, scrollToCard, calendarStatus, formatQuoteAge, createQuoteClock });
+  window.PANEL_STATE = Object.freeze({ MAX_WATCHLIST_SYMBOLS, createSafeStorage, createState, selectFreshness, pollingPolicy, scrollToCard, calendarStatus, formatQuoteAge, createQuoteClock });
 })();
 
 ;
@@ -968,7 +969,7 @@
       if(q.slider){q.slider.min=0;q.slider.max=Math.max(0,p.all.length-p.vis);q.slider.value=p.a;q.slider.hidden=p.all.length-p.vis<=0;}
     }
 
-    const sourceName=source=>({'nasdaq-history':'Nasdaq 历史','nasdaq-intraday':'Nasdaq 分时','eastmoney-history':'东方财富历史','naver-fchart':'Naver 韩国历史','yahoo':'Yahoo','sina':'新浪','tencent':'腾讯'})[source]||source||'未知来源';
+    const sourceName=source=>({'nasdaq-history':'Nasdaq 历史','nasdaq-intraday':'Nasdaq 分时','eastmoney-history':'东方财富历史','naver-index-history':'Naver 指数历史','naver-fchart':'Naver 韩国历史','yahoo':'Yahoo','sina':'新浪','tencent':'腾讯'})[source]||source||'未知来源';
     function updateChartStatus(q){
       if(q._unmounted)return;
       const e=q.historyStore?.getMeta(q.tf),intra=q.tf==='intraday',m=e?.meta;
@@ -1331,7 +1332,7 @@
   function updateQuoteMeta(q, now = quoteClock ? quoteClock.now() : Date.now()) {
     const d = q.d; if (!d || !q.quoteMeta) return;
     applyStaleBadge(q,d,now);
-    const sourceNames = { 'yahoo-futures':'Yahoo · 期货', 'eastmoney-futures':'东方财富 · 期货', 'eastmoney-futures-list':'东方财富 · 期货目录（成交时间未知）', 'alpaca-iex':'Alpaca · IEX 单一交易所', 'alpaca-sip':'Alpaca · 美国 SIP 数据源', 'sina-batch':'新浪批量报价',yahoo: 'Yahoo', 'tx-cn': '腾讯', 'tx-us': '腾讯', 'tx-batch': '腾讯批量报价', 'naver-us': 'Naver 美股', 'naver-kr': 'Naver 韩股', 'em-cn': '东方财富', finnhub:'Finnhub · 覆盖依账户权限',fixture: '测试数据' };
+    const sourceNames = { 'yahoo-futures':'Yahoo · 期货', 'eastmoney-futures':'东方财富 · 期货', 'eastmoney-futures-list':'东方财富 · 期货目录（成交时间未知）', 'alpaca-iex':'Alpaca · IEX 单一交易所', 'alpaca-sip':'Alpaca · 美国 SIP 数据源', 'sina-batch':'新浪批量报价',yahoo: 'Yahoo', 'tx-cn': '腾讯', 'tx-us': '腾讯', 'tx-batch': '腾讯批量报价', 'naver-index': 'Naver 指数', 'naver-us': 'Naver 美股', 'naver-kr': 'Naver 韩股', 'em-cn': '东方财富', finnhub:'Finnhub · 覆盖依账户权限',fixture: '测试数据' };
     const sessionNames = { SOURCE_SNAPSHOT:'统计来自独立快照，非逐笔同步', CACHED_REGULAR: '常规时段统计', REGULAR: '常规时段统计', PRE: '盘前统计', POST: '盘后统计', CN_SNAPSHOT: '交易日快照', UNKNOWN: '统计时段未核验' };
     const at = quoteTimeMs(d.quoteAt ?? d.ts), checked = quoteTimeMs(d.sourceCheckedAt);
     const parts = ['报价 ' + (at ? fmtTime8(at) : '时刻未知'), sourceNames[d.src] || '来源未标明'];
@@ -1339,6 +1340,7 @@
     const streamNames={streaming:'逐笔推送中',connecting:'连接行情源中',authenticating:'行情源鉴权中',subscribing:'等待订阅确认',backoff:'行情源重试中',blocked:'权限受限，使用后备数据','subscription-limited':'订阅数量受限',TRADE_INVALIDATED:'成交已撤销，使用后备报价',NEW_SOURCE_OLDER_THAN_FALLBACK:'推送报价较旧，保留较新后备报价'};
     if(d.realtimeStatus)parts.push(streamNames[d.realtimeStatus]||'推送暂不可用，使用后备数据');
     if(d.feedDelayMinutes==null)parts.push('来源延迟未核验');
+    if(d.quoteTimeBasis==='provider-published')parts.push('时间为来源发布时刻');
     if(d.quoteTimePrecision==='minute')parts.push('来源成交时间精度为分钟');
     const age = window.PANEL_STATE.formatQuoteAge(d.quoteAt ?? d.ts, now);
     if (Number.isFinite(d.feedDelayMinutes) && d.feedDelayMinutes > 0) parts.push('源延迟 ' + d.feedDelayMinutes + ' 分钟');
@@ -1593,7 +1595,7 @@
         const existed = getWatchlist().includes(item.symbol);
         const accepted = onSelect(item.symbol, item.name);
         syncMembership();
-        status.textContent = accepted ? item.name + (existed ? ' 已在自选，已定位到行情卡片' : ' 已加入自选，正在读取行情') : '未添加 ' + item.name + '，自选最多保留 12 只标的';
+        status.textContent = accepted ? item.name + (existed ? ' 已在自选，已定位到行情卡片' : ' 已加入自选，正在读取行情') : '未添加 ' + item.name + '，自选最多保留 '+window.PANEL_STATE.MAX_WATCHLIST_SYMBOLS+' 只标的';
       });
       buttons.push({ button, item }); return button;
     }
@@ -1713,14 +1715,19 @@
       const entry={key,generation:current,promise:null};
       entry.promise=(async()=>{
         try {
-          const r=await network.request('news','/api/news?symbols='+encodeURIComponent(key)+'&t='+Date.now(),{replace:true});
-          if(!r.ok)throw new Error('HTTP '+r.status);
-          const payload=await r.json(), meta=PANEL.decodeNewsMetadata(r.headers);
-          if(current!==generation || key!==getWatchlist().join(','))return false;
-          for(const symbol of requested){
-            const items=payload?.[symbol];
-            metadata[symbol]=meta[symbol] || (Array.isArray(items)?{}:{error:'未返回此标的资讯',stale:true});
-            if(Array.isArray(items) && (items.length || !metadata[symbol].error))data[symbol]=items;
+          for(let offset=0;offset<requested.length;offset+=12){
+            if(current!==generation || key!==getWatchlist().join(','))return false;
+            const batch=requested.slice(offset,offset+12);
+            const r=await network.request('news','/api/news?symbols='+encodeURIComponent(batch.join(','))+'&t='+Date.now(),{replace:true});
+            if(!r.ok)throw new Error('HTTP '+r.status);
+            const payload=await r.json(), meta=PANEL.decodeNewsMetadata(r.headers);
+            if(current!==generation || key!==getWatchlist().join(','))return false;
+            for(const symbol of batch){
+              const items=payload?.[symbol];
+              metadata[symbol]=meta[symbol] || (Array.isArray(items)?{}:{error:'未返回此标的资讯',stale:true});
+              if(Array.isArray(items) && (items.length || !metadata[symbol].error))data[symbol]=items;
+            }
+            distribute();
           }
           distribute();return !requested.some(symbol=>metadata[symbol]?.error || metadata[symbol]?.stale);
         } catch(error) {
@@ -1981,6 +1988,13 @@
 
 ;/* public/modules/panel-live-store.js */
 (() => {
+  function symbolsUrl(path,symbols,cv=''){
+    const base=path+(path.includes('?')?'&':'?')+'symbols='+encodeURIComponent(symbols.join(','));
+    const withVersions=base+'&cv='+encodeURIComponent(cv);
+    // Nginx accepts request lines up to 8 KiB. Cache hints are optional;
+    // membership is never truncated to squeeze a large watchlist into the URL.
+    return withVersions.length<=6500?withVersions:base;
+  }
   function createLiveStore({getSymbols,getCv,readSnapshot,onQuotes,onHistory=()=>{},onSamples=()=>{},onClock=()=>{},onState=()=>{},
     getPolicy=()=>({marketMs:2000}),getRetryAt=()=>0,EventSourceImpl=window.EventSource,now=Date.now}){
     let stream=null,reconnect=null,pollTimer=null,watchdog=null,paused=true,epoch=0,attempts=0,lastMessage=0,state='idle',polling=false;
@@ -2012,7 +2026,7 @@
       clearConnection();const owner=++epoch;
       if(!EventSourceImpl){fallback();return;}
       if(state!=='fallback')setState('connecting');lastMessage=now();
-      try{stream=new EventSourceImpl('/api/stream?symbols='+encodeURIComponent(getSymbols().join(','))+'&cv='+encodeURIComponent(getCv()));}
+      try{stream=new EventSourceImpl(symbolsUrl('/api/stream',getSymbols(),getCv()));}
       catch{fail(owner);return;}
       const receive=(event,kind)=>{
         if(owner!==epoch||paused)return;
@@ -2038,7 +2052,7 @@
     function resume(){if(!paused){reschedule();return;}paused=false;connect();}
     return {pause,resume,setSymbols,reschedule,stop:pause,healthy:()=>state==='streaming',state:()=>state,quotes};
   }
-  window.PANEL_LIVE_STORE=Object.freeze({createLiveStore});
+  window.PANEL_LIVE_STORE=Object.freeze({createLiveStore,symbolsUrl});
 })();
 
 ;
@@ -2054,7 +2068,7 @@
   const panelNetwork = PANEL.createNetwork({ fetchImpl: fetch, timeoutMs: 20000 });
   const quoteClock = window.PANEL_STATE.createQuoteClock();
   const storage=window.PANEL_STATE.createSafeStorage(()=>window.localStorage,()=>queueMicrotask(()=>flash('浏览器存储不可用，偏好仅在本次页面会话中保留','warn')));
-  const panelState = PANEL.createState(storage, { maxWatchlist: 12 });
+  const panelState = PANEL.createState(storage, { maxWatchlist: window.PANEL_STATE.MAX_WATCHLIST_SYMBOLS });
   let refreshMode=panelState.loadRefreshMode();
   let lastData = [];
   let liveStore=null;
@@ -2201,7 +2215,7 @@
     if (marketInFlight) return marketInFlight;
     lastMarketBeat=beatN;
     const requested = [...watchlist], generation = ++marketGeneration;
-    const url = '/api/market?t='+Date.now()+'&symbols='+encodeURIComponent(requested.join(','))+'&cv='+cvParam();
+    const url = window.PANEL_LIVE_STORE.symbolsUrl('/api/market?t='+Date.now(),requested,cvParam());
     marketInFlight = (async () => {
       try{
         const clockStarted = quoteClock.monotonic();
@@ -2280,7 +2294,7 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=89').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=92').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
         nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本','info',{label:'刷新页面',run:()=>location.reload()}); });
       });
@@ -2310,7 +2324,7 @@
   function addToWatch(sym, name) {
     const changed=!watchlist.includes(sym);
     if (!watchlist.includes(sym)) {
-      if (watchlist.length >= 12) { flash('自选最多添加 12 只标的', 'warn'); return false; }
+      if (watchlist.length >= window.PANEL_STATE.MAX_WATCHLIST_SYMBOLS) { flash('自选最多添加 '+window.PANEL_STATE.MAX_WATCHLIST_SYMBOLS+' 只标的', 'warn'); return false; }
       watchlist.push(sym); marketGeneration++; saveWL();
     }
     saveName(sym, name || '');

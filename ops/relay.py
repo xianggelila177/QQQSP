@@ -4,8 +4,8 @@
 qqq-relay — Yahoo 温和中继（规范副本: <panel>/ops/relay.py，对齐 RackNerd 在用版 /root/qqq-relay/relay.py）
 
 【部署方式】由编排者人工执行（本物料仓库内不允许 SSH/部署，代理只准备物料）:
-    1) scp /var/lib/dsh/qqq/panel/ops/relay.py root@107.172.90.49:/root/qqq-relay/relay.py
-    2) ssh root@107.172.90.49 'systemctl restart qqq-relay'
+    1) scp /var/lib/dsh/qqq/panel/ops/relay.py root@203.0.113.10:/root/qqq-relay/relay.py
+    2) ssh root@203.0.113.10 'systemctl restart qqq-relay'
     3) 验证: RackNerd 上 systemctl status qqq-relay / tail relay.log；面板侧观察 /api/stats 上游耗时回落
     （systemd 单元 qqq-relay: ExecStart=/usr/bin/python3 /root/qqq-relay/relay.py, Restart=always）
 

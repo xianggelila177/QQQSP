@@ -9,7 +9,8 @@ test('API shapes, symbol/search merge, news metadata and static encodings remain
  assert.deepEqual((await (await fetch(url+'/api/macro')).json()).items,[]);
  const market=await (await fetch(url+'/api/market?symbols=QQQ')).json();assert.ok(Array.isArray(market));assert.equal(market[0].price,100);assert.equal(market[0].intradayVer,0);
  assert.equal((await (await fetch(url+'/api/history?symbol=QQQ&period=weekly')).json()).period,'weekly');
- assert.equal((await fetch(url+'/api/market?symbols='+Array(13).fill('QQQ').join(','))).status,400);
+ assert.equal((await fetch(url+'/api/market?symbols='+Array(100).fill('QQQ').join(','))).status,200);
+ assert.equal((await fetch(url+'/api/market?symbols='+Array(101).fill('QQQ').join(','))).status,400);
  assert.equal((await fetch(url+'/api/stats',{headers:{'CF-Connecting-IP':'203.0.113.12'}})).status,404);
  const plain=await rawGet(url+'/panel.bundle.js',{'Accept-Encoding':'br;q=0,gzip;q=0'}),br=await rawGet(url+'/panel.bundle.js',{'Accept-Encoding':'br, gzip'});
  assert.equal(br.headers['content-encoding'],'br');assert.equal(plain.headers['content-encoding'],undefined);assert.deepEqual(zlib.brotliDecompressSync(br.body),plain.body);

@@ -78,8 +78,8 @@ try {
 
   // Q25/Q27/Q28/Q30/Q31/Q37/Q38: state, controls, indicators, accessibility,
   // field clearing and real module decomposition remain behaviorally visible.
-  for (let i = 0; i < 10; i++) H().addToWatch('T' + i, 'test');
-  ok(H().addToWatch('OVER', 'test') === false && !H().cardCache.has('OVER'), 'Q25 twelve-card cap blocks ghost cards');
+  for (let i = 0; i < 98; i++) H().addToWatch('T' + i, 'test');
+  ok(H().addToWatch('OVER', 'test') === false && !H().cardCache.has('OVER'), 'Q25 hundred-card cap blocks ghost cards');
   H().setCardCurrency('QQQ', 'CNY');
   const qqq = H().cardCache.get('QQQ');
   ok(qqq.ccybtns.some(b => b.dataset.ccy === 'CNY' && b.classList.contains('on')) && !qqq.ccybtns.find(b => b.dataset.ccy === 'USD').classList.contains('on'), 'Q27 selected currency drives control state');

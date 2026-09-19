@@ -1,5 +1,5 @@
 import { test, expect } from './real-fixtures.mjs';
-import { openPanel, symbols12 } from './fixtures.mjs';
+import { openPanel } from './fixtures.mjs';
 
 test('real market directory adds FTSE by keyboard without subscribing the entire catalog or changing saved preferences', async ({page,panelServer}) => {
   await page.clock.install();
@@ -54,15 +54,16 @@ test.describe('directory transport failure',()=>{
 // intercept page requests already owned by a service worker. SW behavior has
 // separate real-browser journeys; keep this fault injection deterministic.
 test.use({serviceWorkers:'block'});
-test('directory failure retries independently and cannot add a thirteenth watch item',async({page,panelServer})=>{
-  await page.clock.install();await openPanel(page,panelServer,symbols12);
+test('directory failure retries independently and cannot add beyond the 100-item watchlist limit',async({page,panelServer})=>{
+  const symbols100=Array.from({length:100},(_,i)=>'TST'+String(i+1).padStart(3,'0'));
+  await page.clock.install();await openPanel(page,panelServer,symbols100);
   let first=true;await page.route('**/api/markets',route=>{if(first){first=false;return route.fulfill({status:503,body:'{}',contentType:'application/json'});}return route.continue();});
   await page.locator('#marketDirectory summary').click();await expect(page.locator('#marketDirectoryStatus')).toContainText('加载失败');
-  await expect(page.locator('.price-card')).toHaveCount(12);
+  await expect(page.locator('.price-card')).toHaveCount(100);
   await page.getByRole('button',{name:'重试加载市场目录'}).click();
   await page.locator('.directory-featured button[data-symbol="^FTSE"]').click();
-  await expect(page.locator('#marketDirectoryStatus')).toContainText('未添加');await expect(page.locator('.price-card')).toHaveCount(12);
-  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('qqq-watchlist')))).toEqual(symbols12);
+  await expect(page.locator('#marketDirectoryStatus')).toContainText('未添加');await expect(page.locator('.price-card')).toHaveCount(100);
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('qqq-watchlist')))).toEqual(symbols100);
 });
 });
 
