@@ -1,6 +1,6 @@
 // tests/_test_cors_allowlist.mjs — T9 CORS Origin 白名单契约测试(RED→GREEN)
 // 契约: 所有 /api/* 的 Access-Control-Allow-Origin: '*' 收紧为白名单回显:
-//   请求带 Origin 且 === https://qqqsp.digital-reality.shop → 回显该 Origin;
+//   请求带 Origin 且 === https://quotes.example.com → 回显该 Origin;
 //   其他 Origin(恶意站)/无 Origin(同源/curl) → 一律不带 CORS 头。
 process.env.PORT = '0';
 process.env.CACHE_MS = '300';
@@ -14,7 +14,7 @@ let pass = 0, fail = 0;
 const check = (name, cond, detail) => { if (cond) { pass++; console.log('  PASS', name); } else { fail++; console.log('  FAIL', name, '|', detail); } };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const WL = 'https://qqqsp.digital-reality.shop';
+const WL = 'https://quotes.example.com';
 const TX_QQQ = 'v_usQQQ="200~纳指100ETF-Invesco~QQQ.OQ~711.95~709.24~710.85~9217218~0~0~0~0~0~0~0~0~0~0~0~0~0~0~0~0~0~0~0~0~0~0~~2026-09-03 10:50:20~2.71~0.38~713.85~709.69~USD~9217218~6559912038~~~~~~0.59~~~Invesco Qqq Trust Unit Ser 1~~747.83~554.99~0~~~~16.17~-1.27~GP-ETF~~~0.14~-0.38~0.69~~~1.44~~~711.70~~~"';
 const TX_HINT = 'v_hint="us~NVDA~英伟达~Nvidia~gp"';
 

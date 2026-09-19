@@ -68,6 +68,10 @@ test('identity conflict retries once and minute refresh preserves keyboard focus
     const j=history('monthly',79);j.seriesId=calls===1?'first':'second';j.revision='r'+calls;
     await route.fulfill({contentType:'application/json',body:JSON.stringify(j)});
   });
+  // Prewarm marks history freshly prepared and would suppress the 60s refresh;
+  // keep the minute-refresh path deterministic (registered last, wins over the counter).
+  await page.route('**/api/history/bundle**',route=>route.fulfill({status:200,contentType:'application/json',body:'{}'}));
+  await page.route('**/api/history/watchlist**',route=>route.fulfill({status:200,contentType:'application/json',body:'{}'}));
   await page.clock.install();
   await openPanel(page,panelServer,['QQQ']);const card=page.locator('.price-card[data-sym="QQQ"]');
   await card.locator('[data-tf="monthly"]').click();await expect(card.locator('.chart-summary')).toContainText('月K');

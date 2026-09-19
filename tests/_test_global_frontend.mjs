@@ -76,10 +76,10 @@ await test('directory failure and malformed data are recoverable without disturb
   d.setFail(false);d.setPayload({version:1,markets:[]});assert.equal(await d.controller.load(),false);assert.equal(d.retry.hidden,false);
   d.setPayload(catalog);assert.equal(await d.controller.load(),true);assert.equal(d.retry.hidden,true);assert.deepEqual([...d.e.hooks().cardCache.keys()],['QQQ']);
 });
-await test('directory respects twelve-card limit and updates membership without replacing focused button',async()=>{
-  const d=await directoryFixture(Array.from({length:12},(_,i)=>'S'+i));await d.controller.load();
+await test('directory respects hundred-card limit and updates membership without replacing focused button',async()=>{
+  const d=await directoryFixture(Array.from({length:100},(_,i)=>'S'+i));await d.controller.load();
   const button=descendants(d.content).find(node=>node.dataset.symbol==='^FTSE');button.focus();button.click();await d.e.drain();
-  assert.equal(d.e.hooks().cardCache.size,12);assert.match(d.status.textContent,/未添加/);d.controller.syncMembership();assert.equal(d.e.doc.activeElement,button);
+  assert.equal(d.e.hooks().cardCache.size,100);assert.match(d.status.textContent,/未添加/);d.controller.syncMembership();assert.equal(d.e.doc.activeElement,button);
 });
 await test('ampersand search is URL encoded and renders instrument type without HTML injection',async()=>{
   const e=await loadApp({watchlist:[]});await e.drain();e.byId('q').value='M&M.NS';

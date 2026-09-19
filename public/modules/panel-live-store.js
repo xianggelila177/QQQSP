@@ -1,4 +1,11 @@
 (() => {
+  function symbolsUrl(path,symbols,cv=''){
+    const base=path+(path.includes('?')?'&':'?')+'symbols='+encodeURIComponent(symbols.join(','));
+    const withVersions=base+'&cv='+encodeURIComponent(cv);
+    // Nginx accepts request lines up to 8 KiB. Cache hints are optional;
+    // membership is never truncated to squeeze a large watchlist into the URL.
+    return withVersions.length<=6500?withVersions:base;
+  }
   function createLiveStore({getSymbols,getCv,readSnapshot,onQuotes,onHistory=()=>{},onSamples=()=>{},onClock=()=>{},onState=()=>{},
     getPolicy=()=>({marketMs:2000}),getRetryAt=()=>0,EventSourceImpl=window.EventSource,now=Date.now}){
     let stream=null,reconnect=null,pollTimer=null,watchdog=null,paused=true,epoch=0,attempts=0,lastMessage=0,state='idle',polling=false;
@@ -30,7 +37,7 @@
       clearConnection();const owner=++epoch;
       if(!EventSourceImpl){fallback();return;}
       if(state!=='fallback')setState('connecting');lastMessage=now();
-      try{stream=new EventSourceImpl('/api/stream?symbols='+encodeURIComponent(getSymbols().join(','))+'&cv='+encodeURIComponent(getCv()));}
+      try{stream=new EventSourceImpl(symbolsUrl('/api/stream',getSymbols(),getCv()));}
       catch{fail(owner);return;}
       const receive=(event,kind)=>{
         if(owner!==epoch||paused)return;
@@ -56,5 +63,5 @@
     function resume(){if(!paused){reschedule();return;}paused=false;connect();}
     return {pause,resume,setSymbols,reschedule,stop:pause,healthy:()=>state==='streaming',state:()=>state,quotes};
   }
-  window.PANEL_LIVE_STORE=Object.freeze({createLiveStore});
+  window.PANEL_LIVE_STORE=Object.freeze({createLiveStore,symbolsUrl});
 })();

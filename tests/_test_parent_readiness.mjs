@@ -34,7 +34,7 @@ try {
  assert.equal((await get('/healthz')).status,200,'liveness remains independent');
  Date.now=realNow;
  const responses=[];
- for(let i=0;i<12;i++) responses.push(await get('/api/market?symbols=QQQ',{Host:'qqqsp.digital-reality.shop'}));
+ for(let i=0;i<12;i++) responses.push(await get('/api/market?symbols=QQQ',{Host:'quotes.example.com'}));
  assert.ok(responses.some(r=>r.status===429),'public loopback cannot bypass quota without trusted-proxy configuration');
  console.log('PASS fallback readiness, recent evidence expiry, liveness and default public quota');
 } catch(error) {failed=true;console.error(error);} finally {Date.now=realNow;H.httpServer.close();process.exit(failed?1:0);}

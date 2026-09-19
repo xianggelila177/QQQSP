@@ -1,6 +1,6 @@
 QQQSP 基础信息修复记录（v87，2026-09-14）
 
-已发布到 https://qqqsp.digital-reality.shop，并通过公网 HTTPS 接口、浏览器实际页面和连续两轮刷新验收。
+已发布到 https://quotes.example.com，并通过公网 HTTPS 接口、浏览器实际页面和连续两轮刷新验收。
 
 故障原因：
 

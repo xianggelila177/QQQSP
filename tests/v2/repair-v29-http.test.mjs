@@ -46,7 +46,7 @@ test('R13 allowed/rejected origins have consistent CORS on new GET, HEAD, OPTION
 test('R11 read-only APIs preserve durable membership; explicit save is validated and origin-protected',async t=>{
  const f=await fixture(t);f.prewarm.retain(['QQQ','SPY']);for(const route of ['/api/market?symbols=AAPL','/api/AAPL','/api/history/bundle?symbols=AAPL'])await (await fetch(f.url+route)).text();assert.deepEqual(f.prewarm.status().persistentWatchlist,['QQQ','SPY']);
  const post=body=>fetch(f.url+'/api/history/watchlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
- assert.equal((await post(null)).status,400);assert.equal((await post({symbols:['bad;symbol']})).status,400);assert.equal((await post({symbols:Array.from({length:13},(_,n)=>'A'+n)})).status,400);
+ assert.equal((await post(null)).status,400);assert.equal((await post({symbols:['bad;symbol']})).status,400);assert.equal((await post({symbols:Array.from({length:101},(_,n)=>'A'+n)})).status,400);
  assert.equal((await fetch(f.url+'/api/history/watchlist',{method:'POST',headers:{'Content-Type':'application/json',Origin:'http://wrong.test'},body:'{"symbols":[]}'})).status,403);
  assert.equal((await post({symbols:['NVDA']})).status,200);assert.deepEqual(f.prewarm.status().persistentWatchlist,['NVDA']);assert.equal((await post({symbols:[]})).status,200);assert.deepEqual(f.prewarm.status().watchlist,[]);
 });

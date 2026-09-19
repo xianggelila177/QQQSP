@@ -60,14 +60,19 @@
       const entry={key,generation:current,promise:null};
       entry.promise=(async()=>{
         try {
-          const r=await network.request('news','/api/news?symbols='+encodeURIComponent(key)+'&t='+Date.now(),{replace:true});
-          if(!r.ok)throw new Error('HTTP '+r.status);
-          const payload=await r.json(), meta=PANEL.decodeNewsMetadata(r.headers);
-          if(current!==generation || key!==getWatchlist().join(','))return false;
-          for(const symbol of requested){
-            const items=payload?.[symbol];
-            metadata[symbol]=meta[symbol] || (Array.isArray(items)?{}:{error:'未返回此标的资讯',stale:true});
-            if(Array.isArray(items) && (items.length || !metadata[symbol].error))data[symbol]=items;
+          for(let offset=0;offset<requested.length;offset+=12){
+            if(current!==generation || key!==getWatchlist().join(','))return false;
+            const batch=requested.slice(offset,offset+12);
+            const r=await network.request('news','/api/news?symbols='+encodeURIComponent(batch.join(','))+'&t='+Date.now(),{replace:true});
+            if(!r.ok)throw new Error('HTTP '+r.status);
+            const payload=await r.json(), meta=PANEL.decodeNewsMetadata(r.headers);
+            if(current!==generation || key!==getWatchlist().join(','))return false;
+            for(const symbol of batch){
+              const items=payload?.[symbol];
+              metadata[symbol]=meta[symbol] || (Array.isArray(items)?{}:{error:'未返回此标的资讯',stale:true});
+              if(Array.isArray(items) && (items.length || !metadata[symbol].error))data[symbol]=items;
+            }
+            distribute();
           }
           distribute();return !requested.some(symbol=>metadata[symbol]?.error || metadata[symbol]?.stale);
         } catch(error) {

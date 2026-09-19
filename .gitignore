@@ -19,3 +19,15 @@ playwright-report/
 test-results/
 *.zip
 .DS_Store
+
+# Private deployment material and local delivery bundles
+/private/
+/outputs/
+/work/
+/node_modules
+.ssh/
+*.headers
+*.pem
+*.key
+*.p12
+*.pfx

@@ -37,7 +37,7 @@
         const existed = getWatchlist().includes(item.symbol);
         const accepted = onSelect(item.symbol, item.name);
         syncMembership();
-        status.textContent = accepted ? item.name + (existed ? ' 已在自选，已定位到行情卡片' : ' 已加入自选，正在读取行情') : '未添加 ' + item.name + '，自选最多保留 12 只标的';
+        status.textContent = accepted ? item.name + (existed ? ' 已在自选，已定位到行情卡片' : ' 已加入自选，正在读取行情') : '未添加 ' + item.name + '，自选最多保留 '+window.PANEL_STATE.MAX_WATCHLIST_SYMBOLS+' 只标的';
       });
       buttons.push({ button, item }); return button;
     }

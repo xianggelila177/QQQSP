@@ -685,5 +685,35 @@
       "Broadcom"
     ],
     "exchange": "NASDAQ"
+  },
+  {
+    "market": "us",
+    "symbol": "SOXX",
+    "name": "iShares 半导体 ETF",
+    "type": "ETF",
+    "providerType": "ETF",
+    "typeSource": "catalog",
+    "naverCode": "SOXX.O",
+    "verifiedAt": "2026-09-18T14:16:27.000Z",
+    "source": "iShares / Nasdaq / Naver",
+    "sources": [
+      "https://www.ishares.com/us/products/239705/fund",
+      "https://api.nasdaq.com/api/quote/SOXX/chart?assetclass=etf",
+      "https://polling.finance.naver.com/api/realtime/worldstock/stock/SOXX.O"
+    ]
+  },
+  {
+    "market": "us",
+    "symbol": "^SOX",
+    "name": "费城半导体指数",
+    "type": "INDEX",
+    "providerType": "INDEX",
+    "typeSource": "catalog",
+    "verifiedAt": "2026-09-18T14:15:35.000Z",
+    "source": "Naver / Nasdaq",
+    "sources": [
+      "https://api.stock.naver.com/index/.SOX/basic",
+      "https://indexes.nasdaq.com/Index/Overview/SOX"
+    ]
   }
 ]

@@ -44,8 +44,10 @@ if (N !== null) {
     const M = String(Number(N) + 1);
     tmp = mkdtempSync(path.join(tmpdir(), 'ver_t_'));
     mkdirSync(path.join(tmp, 'panel', 'scripts'), { recursive: true });
+    mkdirSync(path.join(tmp, 'panel', 'lib'), { recursive: true });
     for (const file of ['VERSION', 'build_version.sh', 'config.js', 'package.json']) cpSync(path.join(root, file), path.join(tmp, 'panel', file));
-    for (const file of ['version.mjs','build.mjs','build-static.mjs','precompress.mjs','env-example.mjs']) cpSync(path.join(root,'scripts',file),path.join(tmp,'panel','scripts',file));
+    cpSync(path.join(root, 'lib', 'watchlist-limits.js'), path.join(tmp, 'panel', 'lib', 'watchlist-limits.js'));
+    for (const file of ['version.mjs','build-context-docs.mjs','build.mjs','build-static.mjs','precompress.mjs','env-example.mjs']) cpSync(path.join(root,'scripts',file),path.join(tmp,'panel','scripts',file));
     cpSync(pub, path.join(tmp, 'panel', 'public'), { recursive: true });
     writeFileSync(path.join(tmp, 'panel', 'VERSION'), M + '\n');
     execSync('bash build_version.sh', { cwd: path.join(tmp, 'panel'), stdio: 'pipe' });

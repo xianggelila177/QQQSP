@@ -8,7 +8,7 @@
   const panelNetwork = PANEL.createNetwork({ fetchImpl: fetch, timeoutMs: 20000 });
   const quoteClock = window.PANEL_STATE.createQuoteClock();
   const storage=window.PANEL_STATE.createSafeStorage(()=>window.localStorage,()=>queueMicrotask(()=>flash('浏览器存储不可用，偏好仅在本次页面会话中保留','warn')));
-  const panelState = PANEL.createState(storage, { maxWatchlist: 12 });
+  const panelState = PANEL.createState(storage, { maxWatchlist: window.PANEL_STATE.MAX_WATCHLIST_SYMBOLS });
   let refreshMode=panelState.loadRefreshMode();
   let lastData = [];
   let liveStore=null;
@@ -155,7 +155,7 @@
     if (marketInFlight) return marketInFlight;
     lastMarketBeat=beatN;
     const requested = [...watchlist], generation = ++marketGeneration;
-    const url = '/api/market?t='+Date.now()+'&symbols='+encodeURIComponent(requested.join(','))+'&cv='+cvParam();
+    const url = window.PANEL_LIVE_STORE.symbolsUrl('/api/market?t='+Date.now(),requested,cvParam());
     marketInFlight = (async () => {
       try{
         const clockStarted = quoteClock.monotonic();
@@ -234,7 +234,7 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=89').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=92').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
         nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本','info',{label:'刷新页面',run:()=>location.reload()}); });
       });
@@ -264,7 +264,7 @@
   function addToWatch(sym, name) {
     const changed=!watchlist.includes(sym);
     if (!watchlist.includes(sym)) {
-      if (watchlist.length >= 12) { flash('自选最多添加 12 只标的', 'warn'); return false; }
+      if (watchlist.length >= window.PANEL_STATE.MAX_WATCHLIST_SYMBOLS) { flash('自选最多添加 '+window.PANEL_STATE.MAX_WATCHLIST_SYMBOLS+' 只标的', 'warn'); return false; }
       watchlist.push(sym); marketGeneration++; saveWL();
     }
     saveName(sym, name || '');

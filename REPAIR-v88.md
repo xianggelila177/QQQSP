@@ -1,6 +1,6 @@
 # v88 修复与验收记录
 
-已于 2026-09-14 发布到 https://qqqsp.digital-reality.shop。公网 HTTPS、真实推送和浏览器检查均通过。
+已于 2026-09-14 发布到 https://quotes.example.com。公网 HTTPS、真实推送和浏览器检查均通过。
 
 ## 修复内容
 

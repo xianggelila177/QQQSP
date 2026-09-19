@@ -20,7 +20,7 @@ export async function createRealServer({snapshots=false,startupPartial=false,fix
     throw new Error('Unstubbed real-application E2E provider: ' + url.hostname + url.pathname);
   };
   const app = createApplication({
-    env: { NODE_ENV: 'test', PORT: '0', SYMBOLS: snapshots?'QQQ':'!', CACHE_MS: '1', QUOTE_MAX_AGE: '1', NEWS_TTL: '1', HTTP_SNAPSHOT_QUOTA: '30', HTTP_CLIENT_QUOTA: '10000', REALTIME_SNAPSHOTS: snapshots?'1':'0', PUBLIC_SOURCE_REDUNDANCY: '0',MACRO_BACKGROUND_ENABLED:'0',MACRO_STATE_PATH:'',HISTORY_STATE_PATH:'',SAMPLES_BACKGROUND_ENABLED:'0',SAMPLES_STATE_PATH:'' },
+    env: { NODE_ENV: 'test', PORT: '0', SYMBOLS: snapshots?'QQQ':'!', CACHE_MS: '1', QUOTE_MAX_AGE: '1', NEWS_TTL: '1', HTTP_SNAPSHOT_QUOTA: '30', HTTP_CLIENT_QUOTA: '10000', REALTIME_SNAPSHOTS: snapshots?'1':'0', PUBLIC_SOURCE_REDUNDANCY: '0',FUNDAMENTALS_ENABLED:'0',MACRO_BACKGROUND_ENABLED:'0',MACRO_STATE_PATH:'',HISTORY_STATE_PATH:'',SAMPLES_BACKGROUND_ENABLED:'0',SAMPLES_STATE_PATH:'' },
     now, upstream, providerOverrides: {
       newsLoader:async symbol=>{
         if(state.failedNews.has(symbol))throw new Error('fixture partial source unavailable');

@@ -26,8 +26,8 @@ try {
   await env.drain();
   const H = () => env.hooks();
 
-  // ---- A. 首次请求: 无缓存 → 全 0 版本 ----
-  ok(lastMarketUrl(env).includes('&cv=QQQ:0:0;SPY:0:0'),
+  // ---- A. 首次请求: 无缓存 → 全 0 版本 (cv 经 encodeURIComponent 编码) ----
+  ok(lastMarketUrl(env).includes('&cv=QQQ%3A0%3A0%3BSPY%3A0%3A0'),
     'A1 首次 /api/market 请求拼 &cv=QQQ:0:0;SPY:0:0(每自选符号, 无缓存用0)', lastMarketUrl(env));
 
   // ---- B. 全量响应入库带版本 ----
@@ -54,7 +54,7 @@ try {
   env.fetch.push('market', { body: [mkQ('QQQ', { charts: { intraday: 'same', daily30: 'same' }, intradayVer: 101, daily30Version: 202, intradayLast: [now + 30, 481.25] })] });
   await H().refresh(false);
   await env.drain();
-  ok(lastMarketUrl(env).includes('&cv=QQQ:101:202;SPY:0:0'),
+  ok(lastMarketUrl(env).includes('&cv=QQQ%3A101%3A202%3BSPY%3A0%3A0'),
     'C1 入库后请求携带 &cv=QQQ:101:202;SPY:0:0', lastMarketUrl(env));
   ok(q.d.charts.intraday === iRef, "C2 charts.intraday === 'same' → 复用缓存数组(引用相等, 服务端未重发)");
   ok(q.d.charts.daily30 === dRef, "C3 charts.daily30 === 'same' → 复用缓存数组(引用相等)");
