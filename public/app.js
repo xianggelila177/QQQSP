@@ -231,7 +231,7 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=94').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=95').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
         nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本','info',{label:'刷新页面',run:()=>location.reload()}); });
       });
@@ -315,6 +315,7 @@
   refreshModeButton.addEventListener('click',()=>setRefreshMode(refreshMode==='continuous'?'economy':'continuous'));updateRefreshModeLabel();
   function tickClock() {
     chartController.tickStatus?.();
+    newsController.tick?.();
     macroController.tick?.();
     if(!document.hidden&&!liveStore?.healthy())void refreshPreparedHistory();
     const d8=new Date(Date.now()+8*3600e3); const p2=n=>String(n).padStart(2,'0');   // 强制 UTC+8

@@ -95,42 +95,42 @@
     {
       "path": "public/modules/panel-search-controller.js",
       "startOffset": 120872,
-      "endOffset": 127076
+      "endOffset": 127593
     },
     {
       "path": "public/modules/panel-market-directory.js",
-      "startOffset": 127128,
-      "endOffset": 133143
+      "startOffset": 127645,
+      "endOffset": 133660
     },
     {
       "path": "public/modules/panel-news-controller.js",
-      "startOffset": 133194,
-      "endOffset": 138607
+      "startOffset": 133711,
+      "endOffset": 139341
     },
     {
       "path": "public/modules/panel-macro-context.js",
-      "startOffset": 138656,
-      "endOffset": 147526
+      "startOffset": 139390,
+      "endOffset": 148260
     },
     {
       "path": "public/modules/panel-macro-controller.js",
-      "startOffset": 147578,
-      "endOffset": 158663
+      "startOffset": 148312,
+      "endOffset": 159965
     },
     {
       "path": "public/modules/panel-market-store.js",
-      "startOffset": 158711,
-      "endOffset": 161423
+      "startOffset": 160013,
+      "endOffset": 162725
     },
     {
       "path": "public/modules/panel-live-store.js",
-      "startOffset": 161469,
-      "endOffset": 165593
+      "startOffset": 162771,
+      "endOffset": 166895
     },
     {
       "path": "public/app.js",
-      "startOffset": 165618,
-      "endOffset": 193812
+      "startOffset": 166920,
+      "endOffset": 195143
     }
   ]
 }

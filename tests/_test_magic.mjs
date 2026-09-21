@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { MACRO_MAX_AGE, createMacroService } from '../lib/macro.js';
 
-assert.equal(MACRO_MAX_AGE, 48 * 3600e3);
+assert.equal(MACRO_MAX_AGE, 7 * 24 * 3600e3);
 const topics=[];
 let yahooCalls=0,flashCalls=0;
 const now=Date.parse('2026-09-05T12:00:00Z');

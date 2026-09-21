@@ -1,5 +1,5 @@
 (() => {
- const createMacroController=({document,network,client,box,filters,status,retry,isOpen=()=>true,onChange=()=>{}})=>{
+ const createMacroController=({document,network,client,box,filters,status,retry,isOpen=()=>true,onChange=()=>{},now=Date.now})=>{
   const {esc,fmtTime8}=window.PANEL_FORMAT;
   let all=[],filter='重点',inFlight=null,updatedAt=0,stale=false,error=null,sources={},refreshing=false,generation=0;
   let stream=null,streamState='connecting',lastPayload=null,lastEventAt=0,nextFallback=0,suspended=false;
@@ -7,9 +7,11 @@
   let followupTimer=null,followups=0;const filterNodes=new Map(),rows=new Map();let renderedNews='';
   const contextRoot=document.getElementById('macroFactors'),contextStatus=document.getElementById('macroContextStatus');
   const context=contextRoot&&contextStatus&&window.PANEL_MACRO_CONTEXT?window.PANEL_MACRO_CONTEXT.createMacroContext({document,network,root:contextRoot,status:contextStatus,isOpen}):null;
+  function pruneNews(){const clock=now(),before=all.length;all=all.filter(n=>Number.isFinite(n.t)&&n.t>0&&n.t<=clock&&n.t>=clock-7*864e5&&n.title&&n.src&&/^https?:\/\//i.test(n.link||'')&&client.safeURL(n.link)&&n.linkScope!=='feed'&&n.provenance?.link_scope!=='feed'&&(!Array.isArray(n.groupFragments)||n.groupFragments.every(f=>f&&typeof f==='object'&&Number.isFinite(f.t)&&f.t<=clock&&f.t>=clock-7*864e5)));return all.length!==before;}
   function renderStatus(loading=false){
+   pruneNews();
    status.dataset.state=loading?'loading':error||stale?(all.length?'stale':'error'):refreshing?'refreshing':all.length?'ready':'empty';
-   status.textContent=loading?(all.length?'正在更新，保留已有证据':'正在获取宏观资讯…'):error||stale?(all.length?'部分来源不可用 · 请核对每条发布时间':'宏观资讯暂不可用'):refreshing?'后台更新中 · 保留最近内容':all.length?'宏观证据已更新':'暂无宏观资讯';
+   status.textContent=loading?(all.length?'正在更新，保留已有证据':'正在获取宏观资讯…'):error||stale?(all.length?'部分来源不可用 · 请核对每条发布时间':'宏观资讯暂不可用'):refreshing?'后台更新中 · 保留最近内容':all.length?'近7天宏观资讯已更新':'近7天暂无可核验出处的宏观资讯';
    if(updatedAt)status.textContent+=' · 最近成功 '+fmtTime8(updatedAt);
    status.title=Object.entries(sources).map(([name,info])=>name+'：'+(info.error||info.stale?'缓存/不可用':'正常')).join('；');retry.hidden=!(error||stale);retry.disabled=loading;
   }
@@ -34,7 +36,7 @@
     <p class="evidence-note">${esc(a.horizon||'不作为交易指令')}。这里只读取标题或订阅摘要，并未阅读全文；报道中的“预期”未核验是否为发布前冻结共识。转载数量不等于独立确认。</p>${additional?'<p class="related-reports">相同报道入口：'+additional+'</p>':''}</details>`;
   }
   function renderList(){
-   const list=all.filter(chosen).sort((a,b)=>({focus:2,watch:1,background:0}[b.assessment?.importance]||0)-({focus:2,watch:1,background:0}[a.assessment?.importance]||0)||b.t-a.t),used=new Set(),scroll=box.scrollTop;
+   pruneNews();const list=all.filter(chosen).sort((a,b)=>({focus:2,watch:1,background:0}[b.assessment?.importance]||0)-({focus:2,watch:1,background:0}[a.assessment?.importance]||0)||b.t-a.t),used=new Set(),scroll=box.scrollTop;
    for(const [i,item]of list.entries()){
     const key=String(item.id||[item.link,item.title,item.t].join('|'));used.add(key);let row=rows.get(key);
     if(!row){const el=document.createElement('article');el.className='macro-event';row={el,sig:null};rows.set(key,row);}
@@ -54,7 +56,7 @@
     const response=await network.request('macro','/api/macro');if(!response.ok)throw new Error('HTTP '+response.status);
     const payload=await response.json();if(!Array.isArray(payload?.items))throw new Error('宏观数据格式错误');if(epoch!==generation)return false;
     sources=payload.sources||{};stale=payload.stale===true;error=payload.error||null;refreshing=payload.refreshing===true;
-    if(payload.items.length||!(stale||error))all=payload.items;if(Number(payload.updatedAt)>0)updatedAt=Number(payload.updatedAt);
+    all=payload.items;pruneNews();if(Number(payload.updatedAt)>0)updatedAt=Number(payload.updatedAt);
     renderFilters();renderList();renderStatus();onChange();
     if(isOpen()&&refreshing&&followups<6){followups++;followupTimer=setTimeout(()=>{followupTimer=null;void refreshLegacy({followup:true});},2000);}return !(stale||error);
    }catch(e){if(epoch!==generation)return false;refreshing=false;stale=all.length>0;error=e.message;renderFilters();renderList();renderStatus();return false;}finally{inFlight=null;}})();return inFlight;
@@ -71,7 +73,7 @@
     if(incomingEpoch<previousEpoch)return;
     if(incomingEpoch===previousEpoch&&Number.isSafeInteger(lastPayload.revision)&&Number.isSafeInteger(payload.revision)&&payload.revision<lastPayload.revision)return;
    }
-   lastPayload=payload;const n=payload.news;all=n.items;sources=n.sources||{};stale=!!n.stale;error=n.error||null;refreshing=!!n.refreshing;updatedAt=Number(n.updatedAt)||0;
+   lastPayload=payload;const n=payload.news;all=n.items;pruneNews();sources=n.sources||{};stale=!!n.stale;error=n.error||null;refreshing=!!n.refreshing;updatedAt=Number(n.updatedAt)||0;
    context?.apply(payload.context);renderMonitor();
    if(isOpen()&&!document.hidden){const signature=JSON.stringify(all.map(x=>[x.title,x.t,x.src,x.topic,{...x.assessment,assessedAt:0},x.reports]));if(signature!==renderedNews){renderedNews=signature;renderFilters();renderList();}renderStatus();}onChange();
   }
@@ -99,6 +101,7 @@
   connect();
   return Object.freeze({refreshMacro,tick(){
    if(suspended)return;
+   if(pruneNews()&&isOpen()&&!document.hidden){renderFilters();renderList();renderStatus();}
    if(lastPayload?.monitor?.enabled===false){context?.tick();return;}
    if(streamState==='live'&&Date.now()-lastEventAt>95000){streamState='retry';renderMonitor();}
    if(streamState!=='live'&&Date.now()>=nextFallback)void readSnapshot();

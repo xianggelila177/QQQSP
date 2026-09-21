@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {loadApp} from './_harness.mjs';
 const env=await loadApp({watchlist:['QQQ']});await env.drain();const H=env.hooks(),q=H.cardCache.get('QQQ');
-const article=(id,t,extra={})=>({id,link:'https://example.test/'+id,title:'Article '+id,t,src:'Source',sent:'中性',...extra});
+const article=(id,t,extra={})=>({id,link:'https://example.test/'+id,title:'Article '+id,t:Date.now()-10000+t,src:'Source',sent:'中性',...extra});
 H.renderNews(q,[article('a',2000),article('b',1000)]);const focused=q.newslist.children.find(row=>row.href==='https://example.test/b');assert.ok(focused);focused.focus();q.newslist.scrollTop=95;
 H.renderNews(q,[article('new',3000),article('a',2000,{title:'Corrected A'}),article('b',1000)]);
 assert.equal(env.doc.activeElement,focused,'focused article is the identical DOM node after inserting other news');assert.equal(q.newslist.scrollTop,95);assert.ok(q.newslist.children.includes(focused));

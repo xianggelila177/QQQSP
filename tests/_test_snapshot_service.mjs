@@ -68,6 +68,7 @@ try {
   await new Promise(resolve => setTimeout(resolve, 150));
   assert.deepEqual(partitions.find(p => p.group === 'us').symbols, ['QQQ','BRK-B']);
   assert.deepEqual(partitions.find(p => p.group === 'kr').symbols, ['005930.KS','247540.KQ']);
+  assert.deepEqual(partitions.find(p => p.group === 'jp').symbols, ['7203.T']);
   assert.deepEqual(partitions.find(p => p.group === 'other').symbols, ['000001.SS']);
   for (let i=0;i<300;i++) grouped.getCachedQuote('CAP'+i);
   assert.equal(grouped.diagnostics().active, 200);

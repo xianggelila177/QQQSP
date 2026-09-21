@@ -11,15 +11,15 @@ test('macro initial HTTP snapshot preserves analysisVersion before slow upstream
  const s=setup();assert.equal(s.monitor.snapshot().news.analysisVersion,1);
 });
 test('stale news cache is retained without advancing the last successful source collection',async t=>{
- const s=setup();t.after(()=>s.monitor.stop());const item={title:'市场背景',t:s.now()};s.set({items:[item],updatedAt:s.now()});
+ const s=setup();t.after(()=>s.monitor.stop());const item={title:'市场背景',src:'Reuters',link:'https://www.reuters.com/markets/background',t:s.now()};s.set({items:[item],updatedAt:s.now()});
  await s.monitor.start();await s.monitor.settled();const success=s.monitor.status().lanes.news.successAt;
  s.advance(60000);s.set({items:[item],updatedAt:success,stale:true,error:'all sources unavailable'});s.monitor.runDue();await s.monitor.settled();
  assert.equal(s.monitor.status().lanes.news.successAt,success);assert.equal(s.monitor.snapshot().news.items.length,1);
 });
 test('failed webhook is abandoned after five attempts and cannot be silently re-enqueued each news cycle',async t=>{
  let attempts=0;const s=setup({notify:async()=>{attempts++;throw Error('HTTP 503');}});t.after(()=>s.monitor.stop());
- s.set({items:[{title:'市场背景',t:s.now()}],updatedAt:s.now()});await s.monitor.start();await s.monitor.settled();s.advance(60000);
- s.set({items:[{title:'OPEC announces oil production cuts',t:s.now()}],updatedAt:s.now()});
+ s.set({items:[{title:'市场背景',src:'Reuters',link:'https://www.reuters.com/markets/background',t:s.now()}],updatedAt:s.now()});await s.monitor.start();await s.monitor.settled();s.advance(60000);
+ s.set({items:[{title:'OPEC announces oil production cuts',src:'Reuters',link:'https://www.reuters.com/markets/oil',t:s.now()}],updatedAt:s.now()});
  for(let i=0;i<7;i++){s.monitor.runDue();await s.monitor.settled();await new Promise(r=>setTimeout(r,0));s.advance(900000);}
  assert.equal(attempts,5);assert.equal(s.monitor.status().delivery.pending,0);
 });

@@ -27,7 +27,7 @@ def verify(target):
         for name,sha in expected.items(): assert digest(archive.read(name))==sha,name
         return {'zipEntries':len(names),'verifiedFiles':len(expected),'root':prefix[:-1]}
 def package(target):
-    version=json.loads((ROOT/'package.json').read_text())['version'];suffix=version
+    version=json.loads((ROOT/'package.json').read_text(encoding='utf-8'))['version'];suffix=version
     prefix='qqqsp-v'+suffix+'/'
     files={}
     for p in sorted(ROOT.rglob('*')):
@@ -41,7 +41,7 @@ def package(target):
     required=['server.js','app.js','package.json','VERSION','public/panel.bundle.js','public/index.html','部署说明.md']
     assert all(name in files for name in required),'Missing required source'
     manifest=''.join(f'{digest(data)}  {name}\n' for name,data in files.items())
-    (ROOT/'SHA256SUMS').write_text(manifest)
+    (ROOT/'SHA256SUMS').write_bytes(manifest.encode('utf-8'))
     files['SHA256SUMS']=manifest.encode()
     target.parent.mkdir(parents=True,exist_ok=True)
     with zipfile.ZipFile(target,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
@@ -50,7 +50,7 @@ def package(target):
             info.external_attr=(stat.S_IFREG|(0o755 if name.endswith('.sh') else 0o644))<<16
             info.compress_type=zipfile.ZIP_DEFLATED;archive.writestr(info,data,compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
     result=verify(target);result.update({'file':str(target),'bytes':target.stat().st_size,'sha256':digest(target.read_bytes()),'applicationVersion':version,'assetVersion':files['VERSION'].decode().strip()})
-    Path(str(target)+'.sha256').write_text(result['sha256']+'  '+target.name+'\n')
+    Path(str(target)+'.sha256').write_bytes((result['sha256']+'  '+target.name+'\n').encode('utf-8'))
     return result
 if __name__=='__main__':
     if len(sys.argv)==3 and sys.argv[1]=='--verify': print(json.dumps(verify(Path(sys.argv[2])),ensure_ascii=False,indent=2))

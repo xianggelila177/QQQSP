@@ -3,7 +3,7 @@ export function createMacroFixture({survey=false}={}){
  const base=Date.now()-15*60000;let offset=0,failed=false;const calls=[];
  const now=()=>base+offset;
  const xml=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
- const rss=(items)=>'<rss version="2.0"><channel>'+items.map(x=>`<item><title>${xml(x.title)}</title><pubDate>${new Date(now()-60000).toUTCString()}</pubDate><link>${xml(x.link)}</link><source>${xml(x.src||'验收来源')}</source>${x.text?'<description>'+xml(x.text)+'</description>':''}</item>`).join('')+'</channel></rss>';
+ const rss=(items)=>'<rss version="2.0"><channel>'+items.map(x=>`<item><title>${xml(x.title)}</title><pubDate>${new Date(now()-60000).toUTCString()}</pubDate><link>${xml(x.link)}</link><source url="${xml(x.publisherUrl||'https://www.reuters.com')}">${xml(x.src||'Reuters（验收样本）')}</source>${x.text?'<description>'+xml(x.text)+'</description>':''}</item>`).join('')+'</channel></rss>';
  const response=body=>({status:200,headers:{'content-type':'application/json'},body:typeof body==='string'?body:JSON.stringify(body)});
  async function upstream(url){
   calls.push(url);if(failed)return {status:429,headers:{'retry-after':'120'},body:''};

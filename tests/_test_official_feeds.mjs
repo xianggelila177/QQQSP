@@ -61,14 +61,14 @@ async function main() {
     check('原机构 HTTPS 链接保留', () => assert.ok(r.items.every(x => /^https:\/\/(www\.federalreserve\.gov|www\.ecb\.europa\.eu|www\.bea\.gov)\//.test(x.link))));
   }
 
-  console.log('[T3] 30 天窗口、未来/过旧过滤且不改 pubDate');
+  console.log('[T3] 7 天窗口、未来/过旧过滤且不改 pubDate');
   {
     const clock = makeClock();
-    const xml = `<rss version="2.0"><channel><item><title>old</title><link>https://www.federalreserve.gov/old</link><pubDate>Tue, 04 Aug 2026 23:59:59 GMT</pubDate></item><item><title>edge</title><link>https://www.federalreserve.gov/edge</link><pubDate>Thu, 06 Aug 2026 00:00:00 GMT</pubDate></item><item><title>future</title><link>https://www.federalreserve.gov/future</link><pubDate>Sun, 06 Sep 2026 00:00:00 GMT</pubDate></item><item><title>keep</title><link>https://www.federalreserve.gov/keep</link><pubDate>Sat, 05 Sep 2026 00:00:00 GMT</pubDate></item></channel></rss>`;
+    const xml = `<rss version="2.0"><channel><item><title>old</title><link>https://www.federalreserve.gov/old</link><pubDate>Fri, 28 Aug 2026 23:59:59 GMT</pubDate></item><item><title>edge</title><link>https://www.federalreserve.gov/edge</link><pubDate>Sat, 29 Aug 2026 00:00:00 GMT</pubDate></item><item><title>future</title><link>https://www.federalreserve.gov/future</link><pubDate>Sun, 06 Sep 2026 00:00:00 GMT</pubDate></item><item><title>keep</title><link>https://www.federalreserve.gov/keep</link><pubDate>Sat, 05 Sep 2026 00:00:00 GMT</pubDate></item></channel></rss>`;
     const get = makeGet({ fed: xml, ecb: '<rss version="2.0"><channel/></rss>', bea: '<rss version="2.0"><channel/></rss>' });
     const svc = createOfficialFeeds({ httpsGet: get, now: clock.now, log: () => {} }); const r = await svc.getNews();
-    check('只保留含边界的近 30 天及过去', () => assert.deepEqual(r.items.map(x => x.title), ['keep', 'edge']));
-    check('pubDate 保留源文本不重写', () => assert.equal(r.items[1].pubDate, 'Thu, 06 Aug 2026 00:00:00 GMT'));
+    check('只保留含边界的近 7 天及过去', () => assert.deepEqual(r.items.map(x => x.title), ['keep', 'edge']));
+    check('pubDate 保留源文本不重写', () => assert.equal(r.items[1].pubDate, 'Sat, 29 Aug 2026 00:00:00 GMT'));
   }
 
   console.log('[T4] 每源 8 项、聚合 18 项上限');
@@ -129,11 +129,11 @@ async function main() {
     check('diagnostics 不触发网络', () => { const n = get.calls.length; svc.diagnostics(); assert.equal(get.calls.length, n); });
   }
 
-  console.log('[T9] 缓存公告随当前时间再次执行 30 天窗口');
+  console.log('[T9] 缓存公告随当前时间再次执行 7 天窗口');
   {
     const clock = makeClock(); const get = makeGet({ fed: `<rss version="2.0"><channel><item><title>expires</title><link>https://www.federalreserve.gov/expires</link><pubDate>Sat, 05 Sep 2026 00:00:00 GMT</pubDate></item></channel></rss>`, ecb: '<rss version="2.0"><channel/></rss>', bea: '<rss version="2.0"><channel/></rss>' });
-    const svc = createOfficialFeeds({ httpsGet: get, now: clock.now, log: () => {}, ttlMs: 365 * 86400000 }); await svc.getNews(); clock.add(31 * 86400000); const r = svc.diagnostics();
-    check('诊断 itemCount 与聚合均剔除已过 30 天缓存', () => { assert.equal(source(r).fed.itemCount, 0); assert.equal(r.items.length, 0); });
+    const svc = createOfficialFeeds({ httpsGet: get, now: clock.now, log: () => {}, ttlMs: 365 * 86400000 }); await svc.getNews(); clock.add(8 * 86400000); const r = svc.diagnostics();
+    check('诊断 itemCount 与聚合均剔除已过 7 天缓存', () => { assert.equal(source(r).fed.itemCount, 0); assert.equal(r.items.length, 0); });
   }
 
   console.log('[T10] 官方 snapshot 按 pubDate 降序后再截取 18 条');

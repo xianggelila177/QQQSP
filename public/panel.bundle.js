@@ -1661,15 +1661,17 @@
     try {
       const r = await panelNetwork.request('search', '/api/search?q=' + encodeURIComponent(v) + (more ? '&more=1' : ''), { replace: true, signal: searchController?.signal });
       if (!r.ok) throw new Error('HTTP ' + r.status);
+      const sourceStatus=r.headers?.get?.('X-Search-Status')||'available';
       const list = PANEL.normalizeList(await r.json());
       if (myId !== searchReqId) return;   // P1-U2: 已有更新的搜索, 本次过期响应直接丢弃
       srEl.innerHTML = (list && list.length)
         ? list.map((x, i) => '<div class="sitem" title="' + esc(x.matchNote || x.seriesNote || '') + '" role="option" tabindex="-1" id="sitem-' + i + '" data-sym="' + esc(x.symbol) + '" data-name="' + esc(x.name) + '"><span class="mkttag" data-mkt="' + esc(x.market) + '">' + esc(x.market) + '</span><b>' + esc(x.symbol) + '</b><span class="sname">' + esc(x.name) + '</span><span class="stype">' + ({INDEX:'指数',ETF:'ETF',EQUITY:'股票',FUTURE:'期货',MUTUALFUND:'基金',CURRENCY:'汇率'}[x.type] || '证券') + '</span><span class="sexch">' + esc(x.exch) + '</span>' + (x.matchNote ? '<small class="search-note">' + esc(x.matchNote) + '</small>' : '') + '</div>').join('')
-        : '<div class="sempty">无结果，可尝试完整代码或展开全球市场目录，如 富时100 / VOD.L / M&amp;M.NS</div>';
+        : sourceStatus==='unavailable'?'<div class="sempty">搜索来源暂不可用，未能确认是否存在匹配证券。<button type="button" data-search-retry="1">重新查询</button>；也可尝试完整代码，如 9766.T / VOD.L / M&amp;M.NS</div>':'<div class="sempty">无结果，可尝试公司英文名或完整代码，如 科乐美 / 9766.T / VOD.L / M&amp;M.NS</div>';
+      if(list.length&&sourceStatus==='partial')srEl.innerHTML+='<div class="sempty">部分搜索来源暂不可用，当前结果可能不完整。<button type="button" data-search-retry="1">重新查询</button></div>';
       srEl.innerHTML += more ? '<div class="sempty">已合并可用来源；目录可能不完整或限流，连续合约请核对来源。</div>' : '<div class="search-more" id="search-more-option" role="option" tabindex="0" data-search-more="1" aria-label="查询更多来源与具体合约">查询更多来源与具体合约</div>';
       srEl.hidden = false;
       qEl.setAttribute('aria-expanded', 'true'); searchIndex = -1;
-      status.textContent=list.length?'找到 '+list.length+' 个结果，可用上下方向键选择':'没有匹配结果';return list.length;
+      status.textContent=list.length?'找到 '+list.length+' 个结果'+(sourceStatus==='partial'?'，部分来源暂不可用':'')+'，可用上下方向键选择':sourceStatus==='unavailable'?'搜索来源暂不可用，可重新查询':'没有匹配结果';return list.length;
     } catch (e) { if (myId !== searchReqId) return 0; srEl.innerHTML = '<div class="sempty">搜索失败，<button type="button" data-search-retry="1">重新查询</button></div>'; srEl.hidden = false; qEl.setAttribute('aria-expanded', 'true');status.textContent='搜索失败，可重新查询';return 0; }finally{if(myId===searchReqId)busy(false);}
   }
   qEl.addEventListener('input', () => {
@@ -1819,7 +1821,7 @@
 
 ;/* public/modules/panel-news-controller.js */
 (() => {
-  const createNewsController = ({ network, client:PANEL, getWatchlist, getCards }) => {
+  const createNewsController = ({ network, client:PANEL, getWatchlist, getCards, now=Date.now }) => {
     const { esc, fmtTime8 } = window.PANEL_FORMAT;
     let inFlight=null, generation=0;
     const data={}, metadata={};
@@ -1829,8 +1831,9 @@
   }
   function renderNews(q, items, meta = {}) {
     if (!q.newslist) return;
-    if (q.newshead) q.newshead.textContent = meta.pending ? '资讯 · 正在获取' : meta.stale || meta.error ? '资讯 · 缓存/刷新暂不可用' : '相关资讯 / 市场资讯';
-    const list = (items || []).slice().sort((a, b) => b.t - a.t).slice(0, 6);
+    if (q.newshead) q.newshead.textContent = meta.pending ? '资讯 · 正在获取' : meta.stale || meta.error ? '资讯 · 缓存/刷新暂不可用' : '相关资讯 · 近7天';
+    const clock=now();
+    const list = (items || []).filter(n=>Number.isFinite(n.t)&&n.t>0&&n.t<=clock&&n.t>=clock-7*864e5&&n.title&&n.src&&/^https?:\/\//i.test(n.link||'')&&PANEL.safeURL(n.link)&&n.linkScope!=='feed'&&n.provenance?.link_scope!=='feed').slice().sort((a, b) => b.t - a.t).slice(0, 6);
     const sig = JSON.stringify([list.map(n => [n.id,n.title, n.t, n.link, n.src, n.sent, !!n.general]),!!meta.pending,!!meta.stale,!!meta.error]);
     if (sig === q._newsSig) return;
     q._newsSig = sig;
@@ -1853,7 +1856,7 @@
       if(box.children[index]!==row.el){if(box.insertBefore)box.insertBefore(row.el,box.children[index]||null);else box.appendChild(row.el);}index++;
     }
     for(const [key,row] of rows)if(!used.has(key)){row.el.remove();rows.delete(key);}
-    if(!used.size){const empty=doc.createElement('div');empty.className='newsempty';empty.textContent=meta.pending?'正在获取资讯…':meta.stale||meta.error?'资讯暂不可用，将自动重试':'暂无相关资讯';box.appendChild(empty);}
+    if(!used.size){const empty=doc.createElement('div');empty.className='newsempty';empty.textContent=meta.pending?'正在获取资讯…':meta.stale||meta.error?'资讯暂不可用，将自动重试':'近7天暂无可核验出处的相关资讯';box.appendChild(empty);}
     if(activeIndex>=0){
       const kept=[...rows.values()].some(row=>row.el===active);
       const links=[...rows.values()].filter(row=>row.tag==='a').map(row=>row.el);
@@ -1890,7 +1893,7 @@
             for(const symbol of batch){
               const items=payload?.[symbol];
               metadata[symbol]=meta[symbol] || (Array.isArray(items)?{}:{error:'未返回此标的资讯',stale:true});
-              if(Array.isArray(items) && (items.length || !metadata[symbol].error))data[symbol]=items;
+              if(Array.isArray(items))data[symbol]=items;
             }
             distribute();
           }
@@ -1903,7 +1906,7 @@
       })();
       inFlight=entry;return entry.promise;
     }
-    return Object.freeze({renderNews,distribute,refreshNews,invalidate,cacheSize:()=>Object.keys(data).length});
+    return Object.freeze({renderNews,distribute,tick:distribute,refreshNews,invalidate,cacheSize:()=>Object.keys(data).length});
   };
   window.PANEL_NEWS_CONTROLLER=Object.freeze({createNewsController});
 })();
@@ -1985,7 +1988,7 @@
 
 ;/* public/modules/panel-macro-controller.js */
 (() => {
- const createMacroController=({document,network,client,box,filters,status,retry,isOpen=()=>true,onChange=()=>{}})=>{
+ const createMacroController=({document,network,client,box,filters,status,retry,isOpen=()=>true,onChange=()=>{},now=Date.now})=>{
   const {esc,fmtTime8}=window.PANEL_FORMAT;
   let all=[],filter='重点',inFlight=null,updatedAt=0,stale=false,error=null,sources={},refreshing=false,generation=0;
   let stream=null,streamState='connecting',lastPayload=null,lastEventAt=0,nextFallback=0,suspended=false;
@@ -1993,9 +1996,11 @@
   let followupTimer=null,followups=0;const filterNodes=new Map(),rows=new Map();let renderedNews='';
   const contextRoot=document.getElementById('macroFactors'),contextStatus=document.getElementById('macroContextStatus');
   const context=contextRoot&&contextStatus&&window.PANEL_MACRO_CONTEXT?window.PANEL_MACRO_CONTEXT.createMacroContext({document,network,root:contextRoot,status:contextStatus,isOpen}):null;
+  function pruneNews(){const clock=now(),before=all.length;all=all.filter(n=>Number.isFinite(n.t)&&n.t>0&&n.t<=clock&&n.t>=clock-7*864e5&&n.title&&n.src&&/^https?:\/\//i.test(n.link||'')&&client.safeURL(n.link)&&n.linkScope!=='feed'&&n.provenance?.link_scope!=='feed'&&(!Array.isArray(n.groupFragments)||n.groupFragments.every(f=>f&&typeof f==='object'&&Number.isFinite(f.t)&&f.t<=clock&&f.t>=clock-7*864e5)));return all.length!==before;}
   function renderStatus(loading=false){
+   pruneNews();
    status.dataset.state=loading?'loading':error||stale?(all.length?'stale':'error'):refreshing?'refreshing':all.length?'ready':'empty';
-   status.textContent=loading?(all.length?'正在更新，保留已有证据':'正在获取宏观资讯…'):error||stale?(all.length?'部分来源不可用 · 请核对每条发布时间':'宏观资讯暂不可用'):refreshing?'后台更新中 · 保留最近内容':all.length?'宏观证据已更新':'暂无宏观资讯';
+   status.textContent=loading?(all.length?'正在更新，保留已有证据':'正在获取宏观资讯…'):error||stale?(all.length?'部分来源不可用 · 请核对每条发布时间':'宏观资讯暂不可用'):refreshing?'后台更新中 · 保留最近内容':all.length?'近7天宏观资讯已更新':'近7天暂无可核验出处的宏观资讯';
    if(updatedAt)status.textContent+=' · 最近成功 '+fmtTime8(updatedAt);
    status.title=Object.entries(sources).map(([name,info])=>name+'：'+(info.error||info.stale?'缓存/不可用':'正常')).join('；');retry.hidden=!(error||stale);retry.disabled=loading;
   }
@@ -2020,7 +2025,7 @@
     <p class="evidence-note">${esc(a.horizon||'不作为交易指令')}。这里只读取标题或订阅摘要，并未阅读全文；报道中的“预期”未核验是否为发布前冻结共识。转载数量不等于独立确认。</p>${additional?'<p class="related-reports">相同报道入口：'+additional+'</p>':''}</details>`;
   }
   function renderList(){
-   const list=all.filter(chosen).sort((a,b)=>({focus:2,watch:1,background:0}[b.assessment?.importance]||0)-({focus:2,watch:1,background:0}[a.assessment?.importance]||0)||b.t-a.t),used=new Set(),scroll=box.scrollTop;
+   pruneNews();const list=all.filter(chosen).sort((a,b)=>({focus:2,watch:1,background:0}[b.assessment?.importance]||0)-({focus:2,watch:1,background:0}[a.assessment?.importance]||0)||b.t-a.t),used=new Set(),scroll=box.scrollTop;
    for(const [i,item]of list.entries()){
     const key=String(item.id||[item.link,item.title,item.t].join('|'));used.add(key);let row=rows.get(key);
     if(!row){const el=document.createElement('article');el.className='macro-event';row={el,sig:null};rows.set(key,row);}
@@ -2040,7 +2045,7 @@
     const response=await network.request('macro','/api/macro');if(!response.ok)throw new Error('HTTP '+response.status);
     const payload=await response.json();if(!Array.isArray(payload?.items))throw new Error('宏观数据格式错误');if(epoch!==generation)return false;
     sources=payload.sources||{};stale=payload.stale===true;error=payload.error||null;refreshing=payload.refreshing===true;
-    if(payload.items.length||!(stale||error))all=payload.items;if(Number(payload.updatedAt)>0)updatedAt=Number(payload.updatedAt);
+    all=payload.items;pruneNews();if(Number(payload.updatedAt)>0)updatedAt=Number(payload.updatedAt);
     renderFilters();renderList();renderStatus();onChange();
     if(isOpen()&&refreshing&&followups<6){followups++;followupTimer=setTimeout(()=>{followupTimer=null;void refreshLegacy({followup:true});},2000);}return !(stale||error);
    }catch(e){if(epoch!==generation)return false;refreshing=false;stale=all.length>0;error=e.message;renderFilters();renderList();renderStatus();return false;}finally{inFlight=null;}})();return inFlight;
@@ -2057,7 +2062,7 @@
     if(incomingEpoch<previousEpoch)return;
     if(incomingEpoch===previousEpoch&&Number.isSafeInteger(lastPayload.revision)&&Number.isSafeInteger(payload.revision)&&payload.revision<lastPayload.revision)return;
    }
-   lastPayload=payload;const n=payload.news;all=n.items;sources=n.sources||{};stale=!!n.stale;error=n.error||null;refreshing=!!n.refreshing;updatedAt=Number(n.updatedAt)||0;
+   lastPayload=payload;const n=payload.news;all=n.items;pruneNews();sources=n.sources||{};stale=!!n.stale;error=n.error||null;refreshing=!!n.refreshing;updatedAt=Number(n.updatedAt)||0;
    context?.apply(payload.context);renderMonitor();
    if(isOpen()&&!document.hidden){const signature=JSON.stringify(all.map(x=>[x.title,x.t,x.src,x.topic,{...x.assessment,assessedAt:0},x.reports]));if(signature!==renderedNews){renderedNews=signature;renderFilters();renderList();}renderStatus();}onChange();
   }
@@ -2085,6 +2090,7 @@
   connect();
   return Object.freeze({refreshMacro,tick(){
    if(suspended)return;
+   if(pruneNews()&&isOpen()&&!document.hidden){renderFilters();renderList();renderStatus();}
    if(lastPayload?.monitor?.enabled===false){context?.tick();return;}
    if(streamState==='live'&&Date.now()-lastEventAt>95000){streamState='retry';renderMonitor();}
    if(streamState!=='live'&&Date.now()>=nextFallback)void readSnapshot();
@@ -2456,7 +2462,7 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=94').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=95').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
         nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本','info',{label:'刷新页面',run:()=>location.reload()}); });
       });
@@ -2540,6 +2546,7 @@
   refreshModeButton.addEventListener('click',()=>setRefreshMode(refreshMode==='continuous'?'economy':'continuous'));updateRefreshModeLabel();
   function tickClock() {
     chartController.tickStatus?.();
+    newsController.tick?.();
     macroController.tick?.();
     if(!document.hidden&&!liveStore?.healthy())void refreshPreparedHistory();
     const d8=new Date(Date.now()+8*3600e3); const p2=n=>String(n).padStart(2,'0');   // 强制 UTC+8

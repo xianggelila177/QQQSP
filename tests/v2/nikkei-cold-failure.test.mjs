@@ -14,5 +14,5 @@ test('cold first failure becomes an explicit error with retry time and then reco
 test('non-batch source failure also stops claiming that the first request is still pending',async()=>{
  const now=Date.parse('2026-09-17T13:40:00Z');let attempted=false;
  const service=createSnapshotService({now:()=>now,env:{POLL_MS:1000},enrich:async()=>{attempted=true;throw Object.assign(Error('offline'),{retryAt:now+60000});}});
- try{service.start();service.getCachedQuote('7203.T');await until(()=>attempted);await pause(10);assert.equal(service.getCachedQuote('7203.T').pending,false);assert.ok(service.getCachedQuote('7203.T').retryAt>now);}finally{service.stop();}
+ try{service.start();service.getCachedQuote('VOD.L');await until(()=>attempted);await pause(10);assert.equal(service.getCachedQuote('VOD.L').pending,false);assert.ok(service.getCachedQuote('VOD.L').retryAt>now);}finally{service.stop();}
 });

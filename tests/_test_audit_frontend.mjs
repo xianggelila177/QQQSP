@@ -41,13 +41,13 @@ try {
   ok(env.countFetch('/api/market') === n + 1, 'Q14 concurrent refreshes issue one request');
   deferred.deferred.resolve(); await p1; await p2; await env.drain();
 
-  // Q24/Q33: dismissal invalidates a response and unsafe URLs become text.
+  // Q24/Q33: dismissal invalidates a response and unsafe URLs do not become news.
   const slow = env.fetch.push('search', { body: [{ symbol: 'OLD', name: 'old', market: '美股', exch: 'X' }], defer: true });
   env.byId('q').value = 'old'; const search = H().runSearch();
   env.byId('q').value = ''; env.byId('q')._handlers.input[0](); slow.resolve(); await search; await env.drain();
   ok(env.byId('sresults').hidden, 'Q24 clearing search hides and invalidates old results');
-  const nq = H().cardCache.get('QQQ'); H().renderNews(nq, [{ t: 1, title: 'bad', link: 'javascript:alert(1)', src: 'x' }]);
-  ok(nq.newslist.children.length===1&&!nq.newslist.children[0].href&&nq.newslist.children[0].innerHTML.includes('bad')&&!nq.newslist.children[0].innerHTML.includes('javascript:'), 'Q33 rejects unsafe news URL protocols and retains article text');
+  const nq = H().cardCache.get('QQQ'); H().renderNews(nq, [{ t: Date.now(), title: 'bad', link: 'javascript:alert(1)', src: 'x' }]);
+  ok(nq.newslist.children.length===1&&!nq.newslist.children[0].href&&!nq.newslist.children[0].innerHTML.includes('bad')&&!nq.newslist.children[0].innerHTML.includes('javascript:'), 'Q33 rejects unsafe news URL protocols and excludes unverifiable news');
 
   // Q26: failed manual refresh cannot report success.
   env.fetch.push('market', { status: 500, body: [] });

@@ -1,0 +1,454 @@
+{
+  "version": 1,
+  "scope": "Google News RSS source URL publisher admission; no independent fact checking",
+  "publishers": [
+    {
+      "id": "reuters",
+      "name": "Reuters",
+      "category": "newsroom",
+      "domains": [
+        "reuters.com"
+      ]
+    },
+    {
+      "id": "ap",
+      "name": "Associated Press",
+      "category": "newsroom",
+      "domains": [
+        "apnews.com"
+      ]
+    },
+    {
+      "id": "bloomberg",
+      "name": "Bloomberg",
+      "category": "newsroom",
+      "domains": [
+        "bloomberg.com"
+      ]
+    },
+    {
+      "id": "cnbc",
+      "name": "CNBC",
+      "category": "newsroom",
+      "domains": [
+        "cnbc.com"
+      ]
+    },
+    {
+      "id": "ft",
+      "name": "Financial Times",
+      "category": "newsroom",
+      "domains": [
+        "ft.com"
+      ]
+    },
+    {
+      "id": "wsj",
+      "name": "The Wall Street Journal",
+      "category": "newsroom",
+      "domains": [
+        "wsj.com"
+      ]
+    },
+    {
+      "id": "barrons",
+      "name": "Barrons",
+      "category": "newsroom",
+      "domains": [
+        "barrons.com"
+      ]
+    },
+    {
+      "id": "marketwatch",
+      "name": "MarketWatch",
+      "category": "newsroom",
+      "domains": [
+        "marketwatch.com"
+      ]
+    },
+    {
+      "id": "yahoo-finance",
+      "name": "Yahoo Finance",
+      "category": "newsroom",
+      "domains": [
+        "finance.yahoo.com"
+      ]
+    },
+    {
+      "id": "nasdaq",
+      "name": "Nasdaq",
+      "category": "newsroom",
+      "domains": [
+        "nasdaq.com"
+      ]
+    },
+    {
+      "id": "fortune",
+      "name": "Fortune",
+      "category": "newsroom",
+      "domains": [
+        "fortune.com"
+      ]
+    },
+    {
+      "id": "forbes",
+      "name": "Forbes",
+      "category": "newsroom",
+      "domains": [
+        "forbes.com"
+      ]
+    },
+    {
+      "id": "business-insider",
+      "name": "Business Insider",
+      "category": "newsroom",
+      "domains": [
+        "businessinsider.com"
+      ]
+    },
+    {
+      "id": "bbc",
+      "name": "BBC",
+      "category": "newsroom",
+      "domains": [
+        "bbc.com",
+        "bbc.co.uk"
+      ]
+    },
+    {
+      "id": "cnn",
+      "name": "CNN",
+      "category": "newsroom",
+      "domains": [
+        "cnn.com"
+      ]
+    },
+    {
+      "id": "guardian",
+      "name": "The Guardian",
+      "category": "newsroom",
+      "domains": [
+        "theguardian.com"
+      ]
+    },
+    {
+      "id": "nikkei",
+      "name": "Nikkei",
+      "category": "newsroom",
+      "domains": [
+        "nikkei.com",
+        "nikkei.co.jp"
+      ]
+    },
+    {
+      "id": "japan-times",
+      "name": "The Japan Times",
+      "category": "newsroom",
+      "domains": [
+        "japantimes.co.jp"
+      ]
+    },
+    {
+      "id": "nhk",
+      "name": "NHK",
+      "category": "newsroom",
+      "domains": [
+        "nhk.or.jp"
+      ]
+    },
+    {
+      "id": "yonhap",
+      "name": "Yonhap News Agency",
+      "category": "newsroom",
+      "domains": [
+        "yna.co.kr"
+      ]
+    },
+    {
+      "id": "korea-times",
+      "name": "The Korea Times",
+      "category": "newsroom",
+      "domains": [
+        "koreatimes.co.kr"
+      ]
+    },
+    {
+      "id": "scmp",
+      "name": "South China Morning Post",
+      "category": "newsroom",
+      "domains": [
+        "scmp.com"
+      ]
+    },
+    {
+      "id": "hk-et",
+      "name": "Hong Kong Economic Times",
+      "category": "newsroom",
+      "domains": [
+        "hket.com"
+      ]
+    },
+    {
+      "id": "benzinga",
+      "name": "Benzinga",
+      "category": "newsroom",
+      "domains": [
+        "benzinga.com"
+      ]
+    },
+    {
+      "id": "investing",
+      "name": "Investing.com",
+      "category": "newsroom",
+      "domains": [
+        "investing.com"
+      ]
+    },
+    {
+      "id": "sina",
+      "name": "新浪财经",
+      "category": "newsroom",
+      "domains": [
+        "finance.sina.com.cn",
+        "finance.sina.cn"
+      ]
+    },
+    {
+      "id": "wallstreetcn",
+      "name": "华尔街见闻",
+      "category": "newsroom",
+      "domains": [
+        "wallstreetcn.com"
+      ]
+    },
+    {
+      "id": "cls",
+      "name": "财联社",
+      "category": "newsroom",
+      "domains": [
+        "cls.cn"
+      ]
+    },
+    {
+      "id": "caixin",
+      "name": "财新",
+      "category": "newsroom",
+      "domains": [
+        "caixin.com"
+      ]
+    },
+    {
+      "id": "yicai",
+      "name": "第一财经",
+      "category": "newsroom",
+      "domains": [
+        "yicai.com"
+      ]
+    },
+    {
+      "id": "stcn",
+      "name": "证券时报",
+      "category": "newsroom",
+      "domains": [
+        "stcn.com"
+      ]
+    },
+    {
+      "id": "cnstock",
+      "name": "上海证券报",
+      "category": "newsroom",
+      "domains": [
+        "cnstock.com"
+      ]
+    },
+    {
+      "id": "cs",
+      "name": "中国证券报",
+      "category": "newsroom",
+      "domains": [
+        "cs.com.cn"
+      ]
+    },
+    {
+      "id": "21jingji",
+      "name": "21世纪经济报道",
+      "category": "newsroom",
+      "domains": [
+        "21jingji.com"
+      ]
+    },
+    {
+      "id": "jiemian",
+      "name": "界面新闻",
+      "category": "newsroom",
+      "domains": [
+        "jiemian.com"
+      ]
+    },
+    {
+      "id": "eastmoney",
+      "name": "东方财富资讯",
+      "category": "newsroom",
+      "domains": [
+        "finance.eastmoney.com",
+        "stock.eastmoney.com",
+        "global.eastmoney.com",
+        "emweb.eastmoney.com"
+      ]
+    },
+    {
+      "id": "xinhua",
+      "name": "新华社",
+      "category": "newsroom",
+      "domains": [
+        "news.cn",
+        "xinhuanet.com"
+      ]
+    },
+    {
+      "id": "cctv",
+      "name": "央视",
+      "category": "newsroom",
+      "domains": [
+        "cctv.com"
+      ]
+    },
+    {
+      "id": "ecns",
+      "name": "中国新闻网",
+      "category": "newsroom",
+      "domains": [
+        "chinanews.com.cn",
+        "ecns.cn"
+      ]
+    },
+    {
+      "id": "fed",
+      "name": "Federal Reserve",
+      "category": "official",
+      "domains": [
+        "federalreserve.gov"
+      ]
+    },
+    {
+      "id": "bls",
+      "name": "Bureau of Labor Statistics",
+      "category": "official",
+      "domains": [
+        "bls.gov"
+      ]
+    },
+    {
+      "id": "bea",
+      "name": "Bureau of Economic Analysis",
+      "category": "official",
+      "domains": [
+        "bea.gov"
+      ]
+    },
+    {
+      "id": "eia",
+      "name": "Energy Information Administration",
+      "category": "official",
+      "domains": [
+        "eia.gov"
+      ]
+    },
+    {
+      "id": "ecb",
+      "name": "European Central Bank",
+      "category": "official",
+      "domains": [
+        "ecb.europa.eu"
+      ]
+    },
+    {
+      "id": "boe",
+      "name": "Bank of England",
+      "category": "official",
+      "domains": [
+        "bankofengland.co.uk"
+      ]
+    },
+    {
+      "id": "boj",
+      "name": "Bank of Japan",
+      "category": "official",
+      "domains": [
+        "boj.or.jp"
+      ]
+    },
+    {
+      "id": "sec",
+      "name": "SEC",
+      "category": "official",
+      "domains": [
+        "sec.gov"
+      ]
+    },
+    {
+      "id": "treasury",
+      "name": "US Treasury",
+      "category": "official",
+      "domains": [
+        "treasury.gov"
+      ]
+    },
+    {
+      "id": "jpx",
+      "name": "Japan Exchange Group",
+      "category": "official",
+      "domains": [
+        "jpx.co.jp"
+      ]
+    },
+    {
+      "id": "hkex",
+      "name": "HKEX",
+      "category": "official",
+      "domains": [
+        "hkex.com.hk"
+      ]
+    },
+    {
+      "id": "nyse",
+      "name": "NYSE",
+      "category": "official",
+      "domains": [
+        "nyse.com"
+      ]
+    },
+    {
+      "id": "konami",
+      "name": "Konami Group",
+      "category": "official",
+      "domains": [
+        "konami.com"
+      ]
+    },
+    {
+      "id": "businesswire",
+      "name": "Business Wire",
+      "category": "press_release",
+      "domains": [
+        "businesswire.com"
+      ]
+    },
+    {
+      "id": "prnewswire",
+      "name": "PR Newswire",
+      "category": "press_release",
+      "domains": [
+        "prnewswire.com"
+      ]
+    },
+    {
+      "id": "globenewswire",
+      "name": "GlobeNewswire",
+      "category": "press_release",
+      "domains": [
+        "globenewswire.com"
+      ]
+    }
+  ]
+}

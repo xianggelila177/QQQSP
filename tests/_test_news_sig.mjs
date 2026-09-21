@@ -6,7 +6,7 @@ import { loadApp } from './_harness.mjs';
 let pass = 0; const fails = [];
 const ok = (cond, name) => { cond ? pass++ : fails.push(name); console.log((cond ? '  \u2713 ' : '  \u2717 ') + name); };
 
-const n = (title, t, extra = {}) => ({ title, t, link: '#' + t, src: 'S', sent: '中性', ...extra });
+const n = (title, t, extra = {}) => ({ title, t:Date.now()-10000+t, link: 'https://example.test/news#' + t, src: 'S', sent: '中性', ...extra });
 const now = Math.floor(Date.now() / 1000);
 const mkQuote = (sym) => ({
   symbol: sym, price: 100, change: 1, changePct: 1,
@@ -46,7 +46,7 @@ try {
 
   // 链接是可见交互的一部分：同标题链接更正也必须重建
   const priorTop=q.newslist.children.find(node=>node.href?.endsWith('#3000'));
-  env.hooks().renderNews(q, [n('突发新条目', 3000, { link: '#changed' }), n('头条一', 2000), n('头条二', 1000)]);
+  env.hooks().renderNews(q, [n('突发新条目', 3000, { link: 'https://example.test/news#changed' }), n('头条一', 2000), n('头条二', 1000)]);
   ok(q.newslist.children.some(node=>node.href?.endsWith('#changed'))&&!q.newslist.children.includes(priorTop), '仅链接变化更新对应行的目标');
 
   // 标题保留，但目标链接必须更新。

@@ -25,15 +25,17 @@
     try {
       const r = await panelNetwork.request('search', '/api/search?q=' + encodeURIComponent(v) + (more ? '&more=1' : ''), { replace: true, signal: searchController?.signal });
       if (!r.ok) throw new Error('HTTP ' + r.status);
+      const sourceStatus=r.headers?.get?.('X-Search-Status')||'available';
       const list = PANEL.normalizeList(await r.json());
       if (myId !== searchReqId) return;   // P1-U2: 已有更新的搜索, 本次过期响应直接丢弃
       srEl.innerHTML = (list && list.length)
         ? list.map((x, i) => '<div class="sitem" title="' + esc(x.matchNote || x.seriesNote || '') + '" role="option" tabindex="-1" id="sitem-' + i + '" data-sym="' + esc(x.symbol) + '" data-name="' + esc(x.name) + '"><span class="mkttag" data-mkt="' + esc(x.market) + '">' + esc(x.market) + '</span><b>' + esc(x.symbol) + '</b><span class="sname">' + esc(x.name) + '</span><span class="stype">' + ({INDEX:'指数',ETF:'ETF',EQUITY:'股票',FUTURE:'期货',MUTUALFUND:'基金',CURRENCY:'汇率'}[x.type] || '证券') + '</span><span class="sexch">' + esc(x.exch) + '</span>' + (x.matchNote ? '<small class="search-note">' + esc(x.matchNote) + '</small>' : '') + '</div>').join('')
-        : '<div class="sempty">无结果，可尝试完整代码或展开全球市场目录，如 富时100 / VOD.L / M&amp;M.NS</div>';
+        : sourceStatus==='unavailable'?'<div class="sempty">搜索来源暂不可用，未能确认是否存在匹配证券。<button type="button" data-search-retry="1">重新查询</button>；也可尝试完整代码，如 9766.T / VOD.L / M&amp;M.NS</div>':'<div class="sempty">无结果，可尝试公司英文名或完整代码，如 科乐美 / 9766.T / VOD.L / M&amp;M.NS</div>';
+      if(list.length&&sourceStatus==='partial')srEl.innerHTML+='<div class="sempty">部分搜索来源暂不可用，当前结果可能不完整。<button type="button" data-search-retry="1">重新查询</button></div>';
       srEl.innerHTML += more ? '<div class="sempty">已合并可用来源；目录可能不完整或限流，连续合约请核对来源。</div>' : '<div class="search-more" id="search-more-option" role="option" tabindex="0" data-search-more="1" aria-label="查询更多来源与具体合约">查询更多来源与具体合约</div>';
       srEl.hidden = false;
       qEl.setAttribute('aria-expanded', 'true'); searchIndex = -1;
-      status.textContent=list.length?'找到 '+list.length+' 个结果，可用上下方向键选择':'没有匹配结果';return list.length;
+      status.textContent=list.length?'找到 '+list.length+' 个结果'+(sourceStatus==='partial'?'，部分来源暂不可用':'')+'，可用上下方向键选择':sourceStatus==='unavailable'?'搜索来源暂不可用，可重新查询':'没有匹配结果';return list.length;
     } catch (e) { if (myId !== searchReqId) return 0; srEl.innerHTML = '<div class="sempty">搜索失败，<button type="button" data-search-retry="1">重新查询</button></div>'; srEl.hidden = false; qEl.setAttribute('aria-expanded', 'true');status.textContent='搜索失败，可重新查询';return 0; }finally{if(myId===searchReqId)busy(false);}
   }
   qEl.addEventListener('input', () => {
