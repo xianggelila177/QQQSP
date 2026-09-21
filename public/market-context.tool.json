@@ -11,7 +11,7 @@
           "minLength": 1,
           "maxLength": 64,
           "pattern": "^\\s*[A-Za-z0-9^][A-Za-z0-9.&=^-]{0,15}\\s*$",
-          "description": "One canonical site symbol, e.g. NVDA, SOXX, ^SOX, ^N225, 600519.SS. Trimmed and normalized to uppercase. Resolve names with GET /api/search."
+          "description": "One verified site symbol, e.g. NVDA, ^GSPC, ^SOX, ^N225, 600519.SS. Normalized with NFKC, trim and uppercase; SPX/^SPX resolve to ^GSPC in every returned identity. Unknown caret indices are rejected. Resolve names with GET /api/search."
         },
         "daily_bar_count": {
           "type": "integer",
@@ -82,12 +82,12 @@
             "minLength": 1,
             "maxLength": 64,
             "pattern": "^\\s*[A-Za-z0-9^][A-Za-z0-9.&=^-]{0,15}\\s*$",
-            "description": "One canonical site symbol, e.g. NVDA, SOXX, ^SOX, ^N225, 600519.SS. Trimmed and normalized to uppercase. Resolve names with GET /api/search."
+            "description": "One verified site symbol, e.g. NVDA, ^GSPC, ^SOX, ^N225, 600519.SS. Normalized with NFKC, trim and uppercase; SPX/^SPX resolve to ^GSPC in every returned identity. Unknown caret indices are rejected. Resolve names with GET /api/search."
           },
           "minItems": 1,
           "maxItems": 10,
           "uniqueItems": true,
-          "description": "最多10个规范代码，仅quote/fundamentals；按证券数量扣除滚动配额。"
+          "description": "最多10个股票或已核验指数代码，仅quote/fundamentals；按输入顺序返回规范代码，SPX/^SPX映射^GSPC，规范化后重复代码被拒绝；按证券数量扣除滚动配额。"
         },
         "adjustment": {
           "enum": [

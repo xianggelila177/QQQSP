@@ -5,13 +5,13 @@ const names=[...ALL_CONTEXT_SECTIONS];
 const str={type:'string'},nullableString={type:['string','null']},num={type:['number','null']},time={type:['number','null'],minimum:0,description:'UTC epoch milliseconds; null when unknown'},strings={type:'array',items:str};
 const object=(properties,required=Object.keys(properties),extra=false)=>({type:'object',properties,required,additionalProperties:extra});
 export const querySchema=object({
- symbol:{type:'string',minLength:1,maxLength:64,pattern:'^\\s*[A-Za-z0-9^][A-Za-z0-9.&=^-]{0,15}\\s*$',description:'One canonical site symbol, e.g. NVDA, SOXX, ^SOX, ^N225, 600519.SS. Trimmed and normalized to uppercase. Resolve names with GET /api/search.'},
+ symbol:{type:'string',minLength:1,maxLength:64,pattern:'^\\s*[A-Za-z0-9^][A-Za-z0-9.&=^-]{0,15}\\s*$',description:'One verified site symbol, e.g. NVDA, ^GSPC, ^SOX, ^N225, 600519.SS. Normalized with NFKC, trim and uppercase; SPX/^SPX resolve to ^GSPC in every returned identity. Unknown caret indices are rejected. Resolve names with GET /api/search.'},
  daily_bar_count:{type:'integer',minimum:1,maximum:500,default:252},sample_trading_days:{type:'integer',minimum:1,maximum:3,default:3},
  include:{type:'array',items:{enum:names},uniqueItems:true,minItems:1,maxItems:8,description:'省略时单代码沿用原七分区；批量仅quote和fundamentals。'},
  max_wait_ms:{type:'integer',minimum:0,maximum:15000,default:15000,description:'Total data budget including queue wait. Zero reads caches only.'},format:{type:'string',enum:['compact','csv'],default:'compact'},daily_before:{type:['string','null'],pattern:'^\\d{4}-\\d{2}-\\d{2}$',description:'Exclusive daily history cursor; use coverage.next_before.'},daily_series_id:{type:['string','null'],maxLength:128,description:'Use coverage.series_id when continuing; a changed source is rejected.'}
 },[]);
 Object.assign(querySchema.properties,{
- symbols:{type:'array',items:querySchema.properties.symbol,minItems:1,maxItems:10,uniqueItems:true,description:'最多10个规范代码，仅quote/fundamentals；按证券数量扣除滚动配额。'},
+ symbols:{type:'array',items:querySchema.properties.symbol,minItems:1,maxItems:10,uniqueItems:true,description:'最多10个股票或已核验指数代码，仅quote/fundamentals；按输入顺序返回规范代码，SPX/^SPX映射^GSPC，规范化后重复代码被拒绝；按证券数量扣除滚动配额。'},
  adjustment:{enum:['raw','split','split_dividend'],description:'仅daily。显式指定时必须取得供应商核验口径；无权限时不回退为未核验数据。'},
  daily_granularity:{enum:['daily','weekly','monthly'],description:'省略保留旧列布局；显式指定使用扩展列，日期为周期内最后实际交易日。'},
  intraday_date:{type:'string',pattern:'^\\d{4}-\\d{2}-\\d{2}$'},intraday_before:{type:'string',pattern:'^\\d{4}-\\d{2}-\\d{2}$',description:'排他日期游标，返回此前最近的已核验交易日。'},

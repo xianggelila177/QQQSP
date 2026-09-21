@@ -6,6 +6,9 @@ import {pathToFileURL} from 'node:url';
 const MAX_RESPONSE_BYTES=2*1024*1024;
 const API_PATH='/api/v1/market-context';
 const DEFAULT_BASE='https://quotes.example.com';
+// Keep this legacy client copyable as one file. Verified aliases mirror
+// lib/symbol-canonical.js; the standalone client regression checks agreement.
+const canonicalSymbol=value=>{const symbol=value.normalize('NFKC').trim().toUpperCase();return symbol==='SPX'||symbol==='^SPX'?'^GSPC':symbol;};
 class ClientError extends Error{
  constructor(code,extra={}){super(code);this.name='MarketContextClientError';this.code=code;Object.assign(this,extra);}
 }
@@ -27,6 +30,7 @@ async function queryData(query,{apiKey,baseUrl=DEFAULT_BASE,timeoutMs=20000,fetc
  if(typeof apiKey!=='string'||!/^[A-Za-z0-9_-]{32,256}$/.test(apiKey))throw error('API_KEY_REQUIRED');
  const url=endpoint(baseUrl,apiPath);
  if(!object(query)||typeof query.symbol!=='string')throw error('INVALID_QUERY');
+ query={...query,symbol:canonicalSymbol(query.symbol)};
  if(!Number.isInteger(timeoutMs)||timeoutMs<1||timeoutMs>120000)throw error('INVALID_TIMEOUT');
  let body;try{body=JSON.stringify(query);}catch{throw error('INVALID_QUERY');}
  if(Buffer.byteLength(body)>8192)throw error('REQUEST_TOO_LARGE');
@@ -48,7 +52,7 @@ async function queryData(query,{apiKey,baseUrl=DEFAULT_BASE,timeoutMs=20000,fetc
    // An unavailable context remains useful diagnostic data. Auth/rate/schema
    // error envelopes are different and are exposed only by their safe code.
    if(isContext(parsed,version)&&(response.ok||response.status===503&&parsed.status==='unavailable')){
-    if(parsed.instrument.symbol!==query.symbol.trim().toUpperCase())throw error('IDENTITY_MISMATCH');
+    if(parsed.instrument.symbol!==query.symbol)throw error('IDENTITY_MISMATCH');
     return parsed;
    }
    if(!response.ok){const retry=Number(response.headers.get('retry-after'));throw error(safeCode(parsed?.error?.code),{status:response.status,retry_after_seconds:Number.isFinite(retry)&&retry>0?retry:null});}

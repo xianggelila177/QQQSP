@@ -15,7 +15,7 @@
           "minLength": 1,
           "maxLength": 64,
           "pattern": "^\\s*[A-Za-z0-9^][A-Za-z0-9.&=^-]{0,15}\\s*$",
-          "description": "One canonical site symbol, e.g. NVDA, SOXX, ^SOX, ^N225, 600519.SS. Trimmed and normalized to uppercase. Resolve names with GET /api/search."
+          "description": "One verified site symbol, e.g. NVDA, ^GSPC, ^SOX, ^N225, 600519.SS. Normalized with NFKC, trim and uppercase; SPX/^SPX resolve to ^GSPC in every returned identity. Unknown caret indices are rejected. Resolve names with GET /api/search."
         },
         "profile": {
           "enum": [
