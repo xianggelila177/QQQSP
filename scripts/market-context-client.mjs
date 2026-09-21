@@ -14,18 +14,18 @@ const finite=value=>typeof value==='number'&&Number.isFinite(value);
 const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 const tradingDate=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)&&Number.isFinite(Date.parse(value+'T00:00:00Z'))&&new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;
 const safeCode=value=>typeof value==='string'&&/^[A-Z][A-Z0-9_]{0,79}$/.test(value)?value:'HTTP_ERROR';
-function endpoint(baseUrl){
+function endpoint(baseUrl,apiPath=API_PATH){
  let parsed;try{parsed=new URL(baseUrl);}catch{throw error('INVALID_BASE_URL');}
  const loopback=['127.0.0.1','localhost','[::1]'].includes(parsed.hostname);
  if(parsed.username||parsed.password||parsed.search||parsed.hash||!['','/'].includes(parsed.pathname)||parsed.protocol!=='https:'&&!(parsed.protocol==='http:'&&loopback))throw error('INVALID_BASE_URL');
- return new URL(API_PATH,parsed).href;
+ return new URL(apiPath,parsed).href;
 }
-function isContext(value){return object(value)&&value.schema_version===1&&['complete','partial','unavailable'].includes(value.status)&&object(value.instrument)&&typeof value.instrument.symbol==='string'&&object(value.sections);}
+function isContext(value,version=1){return object(value)&&value.schema_version===version&&['complete','partial','unavailable'].includes(value.status)&&object(value.instrument)&&typeof value.instrument.symbol==='string'&&object(value.sections);}
 
 /** Retrieve a complete response. Deliberately never follows redirects carrying credentials. */
-export async function queryMarketContext(query,{apiKey,baseUrl=DEFAULT_BASE,timeoutMs=20000,fetchImpl=fetch}={}){
+async function queryData(query,{apiKey,baseUrl=DEFAULT_BASE,timeoutMs=20000,fetchImpl=fetch}={},apiPath=API_PATH,version=1){
  if(typeof apiKey!=='string'||!/^[A-Za-z0-9_-]{32,256}$/.test(apiKey))throw error('API_KEY_REQUIRED');
- const url=endpoint(baseUrl);
+ const url=endpoint(baseUrl,apiPath);
  if(!object(query)||typeof query.symbol!=='string')throw error('INVALID_QUERY');
  if(!Number.isInteger(timeoutMs)||timeoutMs<1||timeoutMs>120000)throw error('INVALID_TIMEOUT');
  let body;try{body=JSON.stringify(query);}catch{throw error('INVALID_QUERY');}
@@ -47,7 +47,7 @@ export async function queryMarketContext(query,{apiKey,baseUrl=DEFAULT_BASE,time
    let parsed;try{parsed=JSON.parse(Buffer.concat(chunks,bytes).toString('utf8'));}catch{throw error('INVALID_JSON_RESPONSE');}
    // An unavailable context remains useful diagnostic data. Auth/rate/schema
    // error envelopes are different and are exposed only by their safe code.
-   if(isContext(parsed)&&(response.ok||response.status===503&&parsed.status==='unavailable')){
+   if(isContext(parsed,version)&&(response.ok||response.status===503&&parsed.status==='unavailable')){
     if(parsed.instrument.symbol!==query.symbol.trim().toUpperCase())throw error('IDENTITY_MISMATCH');
     return parsed;
    }
@@ -62,6 +62,9 @@ export async function queryMarketContext(query,{apiKey,baseUrl=DEFAULT_BASE,time
   else if(response?.body)void response.body.cancel().catch(()=>{});
  }
 }
+
+export function queryMarketContext(query,options){return queryData(query,options);}
+export function queryMarketDetail(query,options){return queryData(query,options,'/api/v2/market-detail',2);}
 
 function inspectSeries(section,required){
  if(section==null)return null;
@@ -141,12 +144,12 @@ function cliOptions(args){
  }
  return options;
 }
-function safeOutputPath(output){
+export function safeOutputPath(output){
  const name=path.basename(output);
  if(name.startsWith('.')||/(?:^|[._-])(?:env|pem|key|credentials|secrets?)(?:[._-]|$)/i.test(name)||path.extname(output).toLowerCase()!=='.json')throw error('UNSAFE_OUTPUT_PATH');
  return path.resolve(output);
 }
-async function saveNewFile(output,text){
+export async function saveNewFile(output,text){
  let file,created=false;
  try{
   file=await open(output,constants.O_WRONLY|constants.O_CREAT|constants.O_EXCL|(constants.O_NOFOLLOW||0),0o600);created=true;

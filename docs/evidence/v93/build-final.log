@@ -1,0 +1,11 @@
+{
+  "bundle": {
+    "inputs": 26,
+    "bytes": 209936,
+    "checked": false
+  },
+  "compression": {
+    "rawBytes": 251960,
+    "brotliBytes": 73169
+  }
+}

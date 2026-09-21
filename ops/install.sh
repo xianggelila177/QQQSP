@@ -29,8 +29,12 @@ flock -n 9 || { echo '另一个安装任务正在运行'; exit 1; }
 install -d -o qqqsp -g qqqsp -m 750 "$ROOT/shared/state" "$ROOT/shared/logs"
 if [[ ! -f "$ROOT/shared/.env" ]]; then
   # .env 仅作为数据交给 Node/systemd 读取，绝不 source 为 shell 脚本。
-  ENV_SOURCE="$SOURCE/.env.example"; [[ ! -f "$SOURCE/.env" ]] || ENV_SOURCE="$SOURCE/.env"
-  install -o root -g qqqsp -m 640 "$ENV_SOURCE" "$ROOT/shared/.env"
+  if [[ -f "$SOURCE/.env" ]]; then
+    install -o root -g qqqsp -m 640 "$SOURCE/.env" "$ROOT/shared/.env"
+  else
+    "$NODE_BIN" "$SOURCE/scripts/init-config.mjs" --output "$ROOT/shared/.env"
+    chown root:qqqsp "$ROOT/shared/.env"; chmod 640 "$ROOT/shared/.env"
+  fi
   # 首次安装的端口由参数指定；升级保留现有 .env。
   sed -i "s/^PORT=.*/PORT=$NEW_PORT/" "$ROOT/shared/.env"
 fi

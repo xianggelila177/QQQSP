@@ -1,0 +1,54 @@
+TAP version 13
+# {"ts":"2026-09-18T14:00:00.000Z","lv":"info","msg":"[topology]","mode":"single-user","delivery":"sse","macroBackground":false,"snapshots":false,"alpaca":false,"finnhub":false,"fx":"reference","recovery":false}
+# {"ts":"2026-09-18T14:00:00.000Z","lv":"info","msg":"Market panel on http://127.0.0.1:39013","symbols":["NVDA"],"version":"94"}
+# {"ts":"2026-09-18T14:00:00.000Z","lv":"info","msg":"[req]","m":"POST","p":"/api/v1/market-context","st":200,"ms":0}
+# {"ts":"2026-09-18T14:00:00.000Z","lv":"info","msg":"[req]","m":"POST","p":"/api/v2/market-detail","st":200,"ms":0}
+# Subtest: v94 production composition routes optional history/actions and v2 objects through the same services
+ok 1 - v94 production composition routes optional history/actions and v2 objects through the same services
+  ---
+  duration_ms: 56.386669
+  type: 'test'
+  ...
+# {"ts":"2026-09-18T14:00:00.000Z","lv":"info","msg":"[topology]","mode":"single-user","delivery":"sse","macroBackground":false,"snapshots":false,"alpaca":false,"finnhub":false,"fx":"reference","recovery":false}
+# {"ts":"2026-09-18T14:00:00.000Z","lv":"info","msg":"Market panel on http://127.0.0.1:45331","symbols":["NVDA"],"version":"94"}
+# {"ts":"2026-09-18T14:00:00.000Z","lv":"info","msg":"[req]","m":"POST","p":"/api/v1/market-context","st":200,"ms":0}
+# Subtest: v94 production batch keeps quote identities, weighted quota and no lasting membership
+ok 2 - v94 production batch keeps quote identities, weighted quota and no lasting membership
+  ---
+  duration_ms: 64.999502
+  type: 'test'
+  ...
+# {"ts":"2026-09-18T14:00:00.000Z","lv":"info","msg":"[topology]","mode":"single-user","delivery":"sse","macroBackground":false,"snapshots":false,"alpaca":false,"finnhub":false,"fx":"reference","recovery":false}
+# {"ts":"2026-09-18T14:00:00.000Z","lv":"info","msg":"Market panel on http://127.0.0.1:34787","symbols":["NVDA"],"version":"94"}
+# {"ts":"2026-09-18T14:00:00.000Z","lv":"info","msg":"[req]","m":"POST","p":"/api/admin/keys","st":200,"ms":0}
+# {"ts":"2026-09-18T14:00:00.000Z","lv":"info","msg":"[req]","m":"POST","p":"/api/v1/market-context","st":403,"ms":0}
+# {"ts":"2026-09-18T14:00:00.000Z","lv":"info","msg":"[req]","m":"GET","p":"/api/v1/trading-calendar","st":200,"ms":0}
+# {"ts":"2026-09-18T14:00:00.000Z","lv":"info","msg":"[req]","m":"POST","p":"/api/admin/keys","st":200,"ms":0}
+# {"ts":"2026-09-18T14:00:00.000Z","lv":"info","msg":"[req]","m":"POST","p":"/api/v1/market-context","st":401,"ms":0}
+# Subtest: v94 management-created scoped key works on real routes and family revocation persists
+ok 3 - v94 management-created scoped key works on real routes and family revocation persists
+  ---
+  duration_ms: 21.428183
+  type: 'test'
+  ...
+# {"ts":"2026-09-18T14:00:00.000Z","lv":"info","msg":"[topology]","mode":"single-user","delivery":"sse","macroBackground":false,"snapshots":false,"alpaca":false,"finnhub":false,"fx":"reference","recovery":false}
+# {"ts":"2026-09-18T14:00:00.000Z","lv":"info","msg":"Market panel on http://127.0.0.1:46689","symbols":["NVDA"],"version":"94"}
+# {"ts":"2026-09-18T14:00:00.000Z","lv":"info","msg":"[req]","m":"GET","p":"/api/v1/openapi.json","st":200,"ms":0}
+# {"ts":"2026-09-18T14:00:00.000Z","lv":"info","msg":"[req]","m":"GET","p":"/api/v1/capabilities","st":401,"ms":0}
+# {"ts":"2026-09-18T14:00:00.000Z","lv":"info","msg":"[req]","m":"GET","p":"/api-keys.html","st":200,"ms":0}
+# {"ts":"2026-09-18T14:00:00.000Z","lv":"info","msg":"[req]","m":"GET","p":"/api/admin/keys","st":403,"ms":0}
+# Subtest: v94 production document routes serve the new contract and auxiliary routes require auth
+ok 4 - v94 production document routes serve the new contract and auxiliary routes require auth
+  ---
+  duration_ms: 21.377699
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 317.447371

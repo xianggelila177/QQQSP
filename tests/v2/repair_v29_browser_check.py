@@ -65,7 +65,12 @@ try:
   page.set_viewport_size({'width':1440,'height':950});page.locator('#card-NVDA .chart-main').scroll_into_view_if_needed()
   wheel=page.evaluate("""()=>{const q=__app.cardCache.get('NVDA'),cv=q.cv,r=cv.getBoundingClientRect();const ordinary=new WheelEvent('wheel',{deltaY:-100,clientX:r.left+r.width/2,cancelable:true});const old=q.plot.vis;cv.dispatchEvent(ordinary);const plain=q.plot.vis;const zoom=new WheelEvent('wheel',{deltaY:-100,ctrlKey:true,clientX:r.left+r.width/2,cancelable:true});cv.dispatchEvent(zoom);return {ordinaryPrevented:ordinary.defaultPrevented,old,plain,zoomPrevented:zoom.defaultPrevented,zoom:q.plot.vis}}""")
   assert not wheel['ordinaryPrevented'] and wheel['old']==wheel['plain'] and wheel['zoomPrevented'] and wheel['zoom']<wheel['old'],wheel;check('R19 normal wheel versus modifier zoom',wheel)
-  page.evaluate("window.scrollTo(0,0)");box=page.locator('#card-NVDA .chart-main').bounding_box();page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2);page.mouse.wheel(0,450);page.wait_for_timeout(250);assert page.evaluate('scrollY')>0;check('R19 real wheel scrolls page over chart')
+  # Position the chart inside the viewport; a top-of-page assumption breaks
+  # when header/status height changes. Wait for observable scroll, not 250 ms.
+  page.locator('#card-NVDA .chart-main').scroll_into_view_if_needed();page.wait_for_timeout(150)
+  box=page.locator('#card-NVDA .chart-main').bounding_box();scroll_before=page.evaluate('scrollY')
+  page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2);page.mouse.wheel(0,450)
+  page.wait_for_function('before=>scrollY>before',arg=scroll_before,timeout=2000);check('R19 real wheel scrolls page over chart')
   history_payload=page.evaluate("__app.cardCache.get('NVDA').historyStore.getMeta('daily30').meta")
   # Remove while focus is in the card; the last deletion leads back to search.
   for symbol in ['NVDA','MRVL','LITE','AAOI']:

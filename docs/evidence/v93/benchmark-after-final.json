@@ -1,0 +1,29 @@
+{
+  "node": "22.16.0",
+  "mode": "offline deterministic projection + JSON serialization",
+  "rows": {
+    "intraday": 390,
+    "daily": 500,
+    "samples": 1170
+  },
+  "results": [
+    {
+      "name": "analysis",
+      "iterations": 20,
+      "p50_ms": 11.815,
+      "p95_ms": 14.4,
+      "max_ms": 14.497,
+      "response_bytes": 170552,
+      "cpu_ms": 318.712
+    },
+    {
+      "name": "snapshot",
+      "iterations": 20,
+      "p50_ms": 0.137,
+      "p95_ms": 0.334,
+      "max_ms": 0.655,
+      "response_bytes": 14255,
+      "cpu_ms": 6.656
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+TAP version 13
+# Subtest: statistics use actual closes and covered trading dates, preserving gaps and adjustment warnings
+ok 1 - statistics use actual closes and covered trading dates, preserving gaps and adjustment warnings
+  ---
+  duration_ms: 1.715474
+  type: 'test'
+  ...
+# Subtest: no data yields explicit null statistics and a single close has no return
+ok 2 - no data yields explicit null statistics and a single close has no return
+  ---
+  duration_ms: 0.628737
+  type: 'test'
+  ...
+# Subtest: index statistics retain points and reject mixed currency or malformed column contracts
+ok 3 - index statistics retain points and reject mixed currency or malformed column contracts
+  ---
+  duration_ms: 0.98909
+  type: 'test'
+  ...
+# Subtest: client posts one query with the key only in Authorization and refuses redirects
+ok 4 - client posts one query with the key only in Authorization and refuses redirects
+  ---
+  duration_ms: 4.722254
+  type: 'test'
+  ...
+# Subtest: credential and base URL validation happen before any fetch
+ok 5 - credential and base URL validation happen before any fetch
+  ---
+  duration_ms: 0.508716
+  type: 'test'
+  ...
+# Subtest: auth and provider errors are sanitized without echoing key, URL or response text
+ok 6 - auth and provider errors are sanitized without echoing key, URL or response text
+  ---
+  duration_ms: 1.660531
+  type: 'test'
+  ...
+# Subtest: client bounds decoded response bytes, validates JSON and cancels oversized streams
+ok 7 - client bounds decoded response bytes, validates JSON and cancels oversized streams
+  ---
+  duration_ms: 1.688764
+  type: 'test'
+  ...
+# Subtest: request timeout aborts fetch and body reading with sanitized errors
+ok 8 - request timeout aborts fetch and body reading with sanitized errors
+  ---
+  duration_ms: 20.346653
+  type: 'test'
+  ...
+# Subtest: metadata may be unknown for an empty unavailable series, but invalid populated dates fail closed
+ok 9 - metadata may be unknown for an empty unavailable series, but invalid populated dates fail closed
+  ---
+  duration_ms: 0.498872
+  type: 'test'
+  ...
+# Subtest: response rejected before body reading is still cancelled, and identity mismatches are rejected
+ok 10 - response rejected before body reading is still cancelled, and identity mismatches are rejected
+  ---
+  duration_ms: 1.139717
+  type: 'test'
+  ...
+# Subtest: CLI complete JSON round trip, separate stats and secure output refuse existing files and symlinks
+ok 11 - CLI complete JSON round trip, separate stats and secure output refuse existing files and symlinks
+  ---
+  duration_ms: 290.130236
+  type: 'test'
+  ...
+# Subtest: CLI keeps complete unavailable JSON while returning a retryable nonzero exit status
+ok 12 - CLI keeps complete unavailable JSON while returning a retryable nonzero exit status
+  ---
+  duration_ms: 84.19842
+  type: 'test'
+  ...
+# Subtest: statistics retain non-ready daily status and disclose any included unclosed period
+ok 13 - statistics retain non-ready daily status and disclose any included unclosed period
+  ---
+  duration_ms: 0.684451
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 475.324329

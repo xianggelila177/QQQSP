@@ -48,74 +48,89 @@
       "endOffset": 31474
     },
     {
+      "path": "public/modules/panel-watchlist-sync.js",
+      "startOffset": 31524,
+      "endOffset": 33767
+    },
+    {
+      "path": "public/modules/panel-admin.js",
+      "startOffset": 33808,
+      "endOffset": 36079
+    },
+    {
       "path": "public/modules/panel-state.js",
-      "startOffset": 31515,
-      "endOffset": 40056
+      "startOffset": 36120,
+      "endOffset": 44661
     },
     {
       "path": "public/modules/panel-utils.js",
-      "startOffset": 40097,
-      "endOffset": 40757
+      "startOffset": 44702,
+      "endOffset": 45362
     },
     {
       "path": "public/modules/panel-format.js",
-      "startOffset": 40799,
-      "endOffset": 43335
+      "startOffset": 45404,
+      "endOffset": 47940
     },
     {
       "path": "public/modules/panel-chart-controller.js",
-      "startOffset": 43387,
-      "endOffset": 69128
+      "startOffset": 47992,
+      "endOffset": 73733
     },
     {
       "path": "public/modules/panel-fundamentals.js",
-      "startOffset": 69176,
-      "endOffset": 83436
+      "startOffset": 73781,
+      "endOffset": 88103
+    },
+    {
+      "path": "public/modules/panel-detail.js",
+      "startOffset": 88145,
+      "endOffset": 98476
     },
     {
       "path": "public/modules/panel-card-view.js",
-      "startOffset": 83481,
-      "endOffset": 105647
+      "startOffset": 98521,
+      "endOffset": 120819
     },
     {
       "path": "public/modules/panel-search-controller.js",
-      "startOffset": 105700,
-      "endOffset": 111904
+      "startOffset": 120872,
+      "endOffset": 127076
     },
     {
       "path": "public/modules/panel-market-directory.js",
-      "startOffset": 111956,
-      "endOffset": 117971
+      "startOffset": 127128,
+      "endOffset": 133143
     },
     {
       "path": "public/modules/panel-news-controller.js",
-      "startOffset": 118022,
-      "endOffset": 123435
+      "startOffset": 133194,
+      "endOffset": 138607
     },
     {
       "path": "public/modules/panel-macro-context.js",
-      "startOffset": 123484,
-      "endOffset": 132354
+      "startOffset": 138656,
+      "endOffset": 147526
     },
     {
       "path": "public/modules/panel-macro-controller.js",
-      "startOffset": 132406,
-      "endOffset": 143491
+      "startOffset": 147578,
+      "endOffset": 158663
     },
     {
       "path": "public/modules/panel-market-store.js",
-      "startOffset": 143539,
-      "endOffset": 146251
+      "startOffset": 158711,
+      "endOffset": 161423
     },
     {
       "path": "public/modules/panel-live-store.js",
-      "startOffset": 146297,
-      "endOffset": 150421
+      "startOffset": 161469,
+      "endOffset": 165593
     },
     {
       "path": "public/app.js",
-      "startOffset": 150446,
-      "endOffset": 179033
+      "startOffset": 165618,
+      "endOffset": 193812
     }
   ]
 }

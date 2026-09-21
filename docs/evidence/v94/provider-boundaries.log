@@ -1,0 +1,124 @@
+TAP version 13
+# Subtest: v94 explicit adjustments use raw/split/split,dividend and never the broader all mode
+ok 1 - v94 explicit adjustments use raw/split/split,dividend and never the broader all mode
+  ---
+  duration_ms: 21.120434
+  type: 'test'
+  ...
+# Subtest: v94 corrected NVIDIA split oracle: 2024-06-10 is 10:1; prices are explicitly synthetic fixtures
+ok 2 - v94 corrected NVIDIA split oracle: 2024-06-10 is 10:1; prices are explicitly synthetic fixtures
+  ---
+  duration_ms: 3.027449
+  type: 'test'
+  ...
+# Subtest: v94 official daily pagination is followed, chronological OHLC aggregation matches daily rows
+ok 3 - v94 official daily pagination is followed, chronological OHLC aggregation matches daily rows
+  ---
+  duration_ms: 2.686568
+  type: 'test'
+  ...
+# Subtest: v94 monthly aggregation retains last actual trading date and unknown volume
+ok 4 - v94 monthly aggregation retains last actual trading date and unknown volume
+  ---
+  duration_ms: 4.677982
+  type: 'test'
+  ...
+# Subtest: v94 provider errors do not fall back into mislabeled adjusted history
+ok 5 - v94 provider errors do not fall back into mislabeled adjusted history
+  ---
+  duration_ms: 4.312413
+  type: 'test'
+  ...
+# Subtest: v94 cursor identity and source pagination loops are rejected
+ok 6 - v94 cursor identity and source pagination loops are rejected
+  ---
+  duration_ms: 1.832971
+  type: 'test'
+  ...
+# Subtest: v94 source cache is independent of include/max_wait and same-key requests coalesce
+ok 7 - v94 source cache is independent of include/max_wait and same-key requests coalesce
+  ---
+  duration_ms: 5.424882
+  type: 'test'
+  ...
+# Subtest: v94 requested historical intraday day is not replaced by latest source data
+ok 8 - v94 requested historical intraday day is not replaced by latest source data
+  ---
+  duration_ms: 1.890506
+  type: 'test'
+  ...
+# Subtest: v94 nontrading dates and public lookback limits have explicit reasons and no invented bars
+ok 9 - v94 nontrading dates and public lookback limits have explicit reasons and no invented bars
+  ---
+  duration_ms: 0.879526
+  type: 'test'
+  ...
+# Subtest: v94 public historical intraday identity, volume unit, and index points stay explicit
+ok 10 - v94 public historical intraday identity, volume unit, and index points stay explicit
+  ---
+  duration_ms: 1.386432
+  type: 'test'
+  ...
+# Subtest: v94 company actions follow process-date pagination; missing currency is never USD
+ok 11 - v94 company actions follow process-date pagination; missing currency is never USD
+  ---
+  duration_ms: 1.41196
+  type: 'test'
+  ...
+# Subtest: v94 corporate-action identity mismatches and malformed events are counted, not coerced
+ok 12 - v94 corporate-action identity mismatches and malformed events are counted, not coerced
+  ---
+  duration_ms: 0.239583
+  type: 'test'
+  ...
+# Subtest: v94 public action fallback preserves ex-date basis and unknown payable date
+ok 13 - v94 public action fallback preserves ex-date basis and unknown payable date
+  ---
+  duration_ms: 1.697451
+  type: 'test'
+  ...
+# Subtest: v94 movers use provider SIP universe, keep gains/losses/volume and separate timestamps
+ok 14 - v94 movers use provider SIP universe, keep gains/losses/volume and separate timestamps
+  ---
+  duration_ms: 0.758858
+  type: 'test'
+  ...
+# Subtest: v94 batch failures are isolated and temporary memberships are released
+ok 15 - v94 batch failures are isolated and temporary memberships are released
+  ---
+  duration_ms: 3.727281
+  type: 'test'
+  ...
+# Subtest: v94 historical lookup error cannot borrow current quote charts and says what failed
+ok 16 - v94 historical lookup error cannot borrow current quote charts and says what failed
+  ---
+  duration_ms: 1.540679
+  type: 'test'
+  ...
+# Subtest: v94 invalid upstream cursor and excessive page rows fail explicitly
+ok 17 - v94 invalid upstream cursor and excessive page rows fail explicitly
+  ---
+  duration_ms: 3.245902
+  type: 'test'
+  ...
+# Subtest: v94 repeated identical corporate events across pages do not conflict on retrieval clock
+ok 18 - v94 repeated identical corporate events across pages do not conflict on retrieval clock
+  ---
+  duration_ms: 0.665891
+  type: 'test'
+  ...
+# Subtest: v94 movers never silently filter malformed or excessive source ranks
+ok 19 - v94 movers never silently filter malformed or excessive source ranks
+  ---
+  duration_ms: 0.532665
+  type: 'test'
+  ...
+1..19
+# tests 19
+# suites 0
+# pass 19
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 138.52405

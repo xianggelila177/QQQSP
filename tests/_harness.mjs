@@ -217,7 +217,7 @@ export async function loadApp({ hidden = false, fakeWorker = false, watchlist = 
   sandbox.globalThis = sandbox;
   sandbox.queueMicrotask=queueMicrotask;win.localStorage=sandbox.localStorage;
   const searchWrap=makeEl('.searchwrap');searchWrap.ownerDocument=doc;searchWrap.appendChild(byId('q'));searchWrap.appendChild(byId('sr'));
-  for (const mod of ['panel-client.js', 'panel-currency.js', 'panel-chart.js', 'panel-chart-engine.js', 'panel-scheduler.js', 'panel-network.js', 'panel-state.js', 'panel-utils.js', 'panel-format.js', 'panel-chart-controller.js', 'panel-fundamentals.js', 'panel-card-view.js', 'panel-search-controller.js', 'panel-market-directory.js', 'panel-news-controller.js', 'panel-macro-controller.js', 'panel-market-store.js','panel-live-store.js']) {
+  for (const mod of ['panel-client.js', 'panel-currency.js', 'panel-chart.js', 'panel-chart-engine.js', 'panel-scheduler.js', 'panel-network.js', 'panel-watchlist-sync.js', 'panel-admin.js', 'panel-state.js', 'panel-utils.js', 'panel-format.js', 'panel-chart-controller.js', 'panel-fundamentals.js', 'panel-detail.js', 'panel-card-view.js', 'panel-search-controller.js', 'panel-market-directory.js', 'panel-news-controller.js', 'panel-macro-controller.js', 'panel-market-store.js','panel-live-store.js']) {
     vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'public', 'modules', mod), 'utf8'), sandbox, { filename: path.join(ROOT,'public','modules',mod) });
   }
   vm.runInNewContext(fs.readFileSync(APP_SRC, 'utf8'), sandbox, { filename: APP_SRC });

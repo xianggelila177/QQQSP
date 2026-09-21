@@ -1,0 +1,68 @@
+{
+  "applicationVersion": "2.14.0",
+  "assetVersion": 94,
+  "baselineVersion": "2.13.0",
+  "inputFilesEnumerated": 585,
+  "core": {
+    "tests": 526,
+    "pass": 526,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "newTests": 78
+  },
+  "retainedRegression": {
+    "files": 91,
+    "passedFiles": 91,
+    "failedFiles": 0,
+    "retiredFilesExcluded": 43
+  },
+  "fullTestRun": {
+    "exit_code": 0,
+    "duration_seconds": 92.302
+  },
+  "staticCheck": {
+    "scripts": 467,
+    "passed": true
+  },
+  "secretScan": {
+    "findings": 0
+  },
+  "browser": {
+    "keyManagement": [
+      1440,
+      375
+    ],
+    "marketDetailRegression": [
+      1440,
+      375
+    ],
+    "passed": true,
+    "nativeBrowserTransportValidated": false,
+    "runtimeCspValidated": false
+  },
+  "releaseCandidateBoot": {
+    "passed": true,
+    "node": "v22.16.0",
+    "withoutNodeModules": true,
+    "providerFixtures": false,
+    "restartKeyState": true
+  },
+  "initialFailures": {
+    "retainedFiles": 1,
+    "coreCases": 1,
+    "resolved": [
+      "文档生成器不必要加载运行期市场数据目录",
+      "同批缓存边界取时不一致造成逐只请求"
+    ],
+    "reproduction": "batch-clock-before.log demonstrates a failing deterministic reproduction; after repair passes without relaxing assertions"
+  },
+  "notValidated": [
+    "真实商业行情账户授权",
+    "目标生产主机切换",
+    "原生浏览器TLS/CSP和SSE代理链路",
+    "容器镜像构建",
+    "长期生产负载"
+  ],
+  "completionScope": "纠正后的计划条目1～14及其依赖；条目15按原文不做服务端技术指标；不保证未知项目缺陷全部消除"
+}

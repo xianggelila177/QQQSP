@@ -1,0 +1,223 @@
+TAP version 13
+# Subtest: v93 administrator authorization rejects forwarding, aliases and duplicate headers
+ok 1 - v93 administrator authorization rejects forwarding, aliases and duplicate headers
+  ---
+  duration_ms: 1.365327
+  type: 'test'
+  ...
+# Subtest: v93 watchlist writes require an administrator key; read-only key cannot write
+not ok 2 - v93 watchlist writes require an administrator key; read-only key cannot write
+  ---
+  duration_ms: 46.655977
+  type: 'test'
+  location: '/mnt/data/work/QQQSP-main/tests/v2/v93-http-client.test.mjs:30:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+    + []
+    - [
+    -   'NVDA'
+    - ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0: 'NVDA'
+  actual:
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///mnt/data/work/QQQSP-main/tests/v2/v93-http-client.test.mjs:35:199)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: v93 browser details are cache-only and the Agent endpoint is authenticated
+ok 3 - v93 browser details are cache-only and the Agent endpoint is authenticated
+  ---
+  duration_ms: 93.209228
+  type: 'test'
+  ...
+# Subtest: v93 v1 and v2 share one token bucket instead of doubling provider demand
+ok 4 - v93 v1 and v2 share one token bucket instead of doubling provider demand
+  ---
+  duration_ms: 16.056669
+  type: 'test'
+  ...
+# Subtest: v93 public provider diagnostics do not leak watched security identities or arbitrary metadata
+ok 5 - v93 public provider diagnostics do not leak watched security identities or arbitrary metadata
+  ---
+  duration_ms: 0.434634
+  type: 'test'
+  ...
+# Subtest: v93 published v2 schema validates records, compact rows, empty fields and negative assertions
+not ok 6 - v93 published v2 schema validates records, compact rows, empty fields and negative assertions
+  ---
+  duration_ms: 1823.512786
+  type: 'test'
+  location: '/mnt/data/work/QQQSP-main/tests/v2/v93-http-client.test.mjs:54:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Install npm dev dependencies (Ajv), or Python jsonschema for offline tests: Traceback (most recent call last):
+      File "<string>", line 1, in <module>
+        import json,sys; from jsonschema import Draft202012Validator; x=json.load(sys.stdin); Draft202012Validator.check_schema(x["schema"]); print(json.dumps([{"message":e.message,"instancePath":"/"+"/".join(map(str,e.path))} for e in Draft202012Validator(x["schema"]).iter_errors(x["data"])]))
+                                                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+      File "/opt/pyvenv/lib/python3.13/site-packages/jsonschema/validators.py", line 316, in check_schema
+        raise exceptions.SchemaError.create_from(error)
+    jsonschema.exceptions.SchemaError: ['value', 'status', 'unit', 'currency', 'source_id', 'as_of_ms', 'source_checked_at_ms', 'financial_period', 'basis', 'stale', 'calculated', 'estimated', 'formula', 'missing_reason', 'denominator', 'share_source_id', 'share_as_of_ms', 'quote_reference_at_ms', 'depth', 'historical', 'backup', 'inputs', 'attempts', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description', 'key', 'label', 'group', 'description'] has non-unique elements
+    
+    Failed validating 'uniqueItems' in metaschema['allOf'][1]['properties']['properties']['additionalProperties']['$dynamicRef']['allOf'][1]['properties']['properties']['additionalProperties']['$dynamicRef']['allOf'][1]['properties']['properties']['additionalProperties']['$dynamicRef']['allOf'][1]['properties']['properties']['additionalProperties']['$dynamicRef']['allOf'][1]['properties']['properties']['additionalProperties']['$dynamicRef']['allOf'][3]['properties']['required']:
+        {'type': 'array',
+         'items': {'type': 'string'},
+         'uniqueItems': True,
+         'default': []}
+    
+    On schema['properties']['sections']['properties']['fundamentals']['properties']['data']['properties']['fields']['properties']['priceToBook']['required']:
+        ['value',
+         'status',
+         'unit',
+         'currency',
+         'source_id',
+         'as_of_ms',
+         'source_checked_at_ms',
+         'financial_period',
+         'basis',
+         'stale',
+         'calculated',
+         'estimated',
+         'formula',
+         'missing_reason',
+         'denominator',
+         'share_source_id',
+         'share_as_of_ms',
+         'quote_reference_at_ms',
+         'depth',
+         'historical',
+         'backup',
+         'inputs',
+         'attempts',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description',
+         'key',
+         'label',
+         'group',
+         'description']
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    validate (file:///mnt/data/work/QQQSP-main/tests/support/schema-validator.mjs:14:54)
+    TestContext.<anonymous> (file:///mnt/data/work/QQQSP-main/tests/v2/v93-http-client.test.mjs:59:13)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: v93 new client preserves safe transport, wrong identity and version failures
+ok 7 - v93 new client preserves safe transport, wrong identity and version failures
+  ---
+  duration_ms: 2.964015
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 5
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2158.859995

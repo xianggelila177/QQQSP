@@ -1,0 +1,15 @@
+
+> qqqsp-v2@2.14.0 build
+> node scripts/build.mjs
+
+{
+  "bundle": {
+    "inputs": 26,
+    "bytes": 209936,
+    "checked": false
+  },
+  "compression": {
+    "rawBytes": 252061,
+    "brotliBytes": 73423
+  }
+}

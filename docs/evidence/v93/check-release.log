@@ -1,0 +1,5 @@
+
+> qqqsp-v2@2.13.0 check
+> node scripts/verify.mjs
+
+CHECK PASS：444 个脚本语法，版本/构建/预压缩/配置一致，零运行时依赖，无默认服务单例。

@@ -1,0 +1,1496 @@
+{
+  "scope": "production source modules excluding generated bundles; static ES imports only, not dynamic or window dependency analysis",
+  "files": 145,
+  "lines": 11150,
+  "bytes": 870144,
+  "staticImportCycles": [],
+  "entries": [
+    {
+      "path": "app.js",
+      "lines": 149,
+      "bytes": 17815,
+      "sha256": "289c3365d8d4553066e273cf01dc775e59bb0fbae4f4f5c9704f5ada2aca095d",
+      "imports": [
+        "./lib/market-context-service.js",
+        "./lib/providers/financial-sources.js",
+        "./lib/fundamentals-service.js",
+        "./lib/stream-policy.js",
+        "./lib/macro-monitor.js",
+        "./lib/macro-notify.js",
+        "./lib/providers/macro-quotes.js",
+        "./lib/providers/macro-public-quotes.js",
+        "./lib/providers/futures.js",
+        "./lib/futures-instruments.js",
+        "./log.mjs",
+        "./lib/transport.js",
+        "./lib/cache.js",
+        "./lib/sessions.js",
+        "./lib/providers/tx.js",
+        "./lib/providers/nasdaq.js",
+        "./lib/providers/sina.js",
+        "./lib/providers/em.js",
+        "./lib/providers/fast-polling.js",
+        "./lib/providers/naver-index.js",
+        "./lib/providers/naver-history.js",
+        "./lib/providers/korean-search.js",
+        "./lib/chart-enricher.js",
+        "./lib/providers/batch-snapshot.js",
+        "./lib/yahoo.js",
+        "./lib/yahoo-auth.js",
+        "./lib/host-gate.js",
+        "./lib/quote-engine.js",
+        "./config.js",
+        "./lib/yahoo-news.js",
+        "./lib/quote.js",
+        "./lib/quote-cache.js",
+        "./lib/snapshot-service.js",
+        "./lib/news.js",
+        "./lib/providers/macro-calendar.js",
+        "./lib/macro-context.js",
+        "./lib/macro.js",
+        "./lib/search.js",
+        "./lib/instruments.js",
+        "./mkt.mjs",
+        "./lib/http.js",
+        "./lib/providers/reference-fx.js",
+        "./lib/providers/official-feeds.js",
+        "./lib/fx-service.js",
+        "./lib/recovery-store.js",
+        "./lib/redundancy.js",
+        "./lib/providers/public-history.js",
+        "./lib/history-source.js",
+        "./lib/history-service.js",
+        "./lib/history-prewarm.js",
+        "./lib/providers/alpaca-stream.js",
+        "./lib/providers/finnhub-stream.js",
+        "./lib/stream-pair.js",
+        "./lib/realtime-quote-service.js",
+        "./lib/quote-samples.js"
+      ]
+    },
+    {
+      "path": "config.js",
+      "lines": 59,
+      "bytes": 6540,
+      "sha256": "8be044a447e07f767dd989c7e83d7282d1932519111a532e5a4d55c7624e37af",
+      "imports": [
+        "./lib/watchlist-limits.js"
+      ]
+    },
+    {
+      "path": "lib/atomic-file.js",
+      "lines": 23,
+      "bytes": 1392,
+      "sha256": "2af5b204c9832e3ead02cd7927f44ad63fe6a1f03ec735769b216cbd5018dc83",
+      "imports": [
+        "node:fs/promises",
+        "node:path",
+        "node:crypto"
+      ]
+    },
+    {
+      "path": "lib/bounded-writer.js",
+      "lines": 16,
+      "bytes": 989,
+      "sha256": "d3f43b4ef5c5be5037a4cc6d488e82832a5a66b5cdbcd228c626ecad8936b21e",
+      "imports": []
+    },
+    {
+      "path": "lib/cache.js",
+      "lines": 4,
+      "bytes": 149,
+      "sha256": "ac5394d4811d02df200acc1549704a361c69b0d0dd83a3845a0e06ccdb6a5c20",
+      "imports": []
+    },
+    {
+      "path": "lib/cached-resource.js",
+      "lines": 37,
+      "bytes": 2209,
+      "sha256": "3eef85367346b82d27d94b02029ea1f96b01636f48a50bbd8bf24f06aa0b064f",
+      "imports": [
+        "./shared-task.js"
+      ]
+    },
+    {
+      "path": "lib/catalog-search.js",
+      "lines": 22,
+      "bytes": 1629,
+      "sha256": "2c7e7781f3ad1395cbe807a1df7ecbfd23a1bfcc2d70ef1748e0daa141048cd1",
+      "imports": [
+        "./market-registry.js",
+        "./futures-instruments.js"
+      ]
+    },
+    {
+      "path": "lib/chart-bars.js",
+      "lines": 20,
+      "bytes": 838,
+      "sha256": "4243e4b7c98bd5b2fdd93c1d0a21b0664f5182984713e1719ad68384a9c525d0",
+      "imports": [
+        "./quote-contract.js"
+      ]
+    },
+    {
+      "path": "lib/chart-enricher.js",
+      "lines": 38,
+      "bytes": 3399,
+      "sha256": "b4e969b152920bc06dffd6783175d7af2777c921ff60c3fdc3112aacfcad5114",
+      "imports": [
+        "./watchlist-limits.js",
+        "./quote-contract.js",
+        "./instruments.js"
+      ]
+    },
+    {
+      "path": "lib/chart-revision.js",
+      "lines": 11,
+      "bytes": 574,
+      "sha256": "ec43ba1ec18837d0f44a7e1f2439dd617d4a5d6c358d28d6278abe07b7fc98fb",
+      "imports": [
+        "node:crypto"
+      ]
+    },
+    {
+      "path": "lib/context-financials.js",
+      "lines": 34,
+      "bytes": 3209,
+      "sha256": "659be3a87967fdb2ecee96025a9cb0c5a1010e077f6863e482bbdc9ee9723fe7",
+      "imports": [
+        "./financial-candidates.js",
+        "./metric-catalog.js",
+        "./context-values.js"
+      ]
+    },
+    {
+      "path": "lib/context-values.js",
+      "lines": 41,
+      "bytes": 3138,
+      "sha256": "9ff64429e76b4d71735879fe175399d7fd17a2f375664c70dc6d29e4509ace43",
+      "imports": []
+    },
+    {
+      "path": "lib/currency.js",
+      "lines": 21,
+      "bytes": 1262,
+      "sha256": "7fb21b00be6cc09f479ef4f20b6e9d95707bffcb34b4b53edebfd7c45d2105bf",
+      "imports": []
+    },
+    {
+      "path": "lib/financial-candidates.js",
+      "lines": 64,
+      "bytes": 6998,
+      "sha256": "32d2e74ac9e8967d85e741cd89ba011b63a60fdf1359abad7b163f095101baa1",
+      "imports": [
+        "./fundamentals.js",
+        "./currency.js"
+      ]
+    },
+    {
+      "path": "lib/financial-values.js",
+      "lines": 13,
+      "bytes": 509,
+      "sha256": "5ac832e6ceab903e0c637366133d827025d17da4ea15a7497dd782ee7ecfd401",
+      "imports": []
+    },
+    {
+      "path": "lib/fundamentals-multi.js",
+      "lines": 83,
+      "bytes": 9767,
+      "sha256": "efe85a16b9edbe7ede4a912d6d1b0ba9e65654d5a1bc918424b100f2762d1933",
+      "imports": [
+        "./order-book.js",
+        "./task-queue.js",
+        "./fundamentals.js",
+        "./financial-candidates.js",
+        "./trading-statistics.js"
+      ]
+    },
+    {
+      "path": "lib/fundamentals-service.js",
+      "lines": 47,
+      "bytes": 3711,
+      "sha256": "68adb379acae689ab4bf46f1d97d31f085a8a79b4e4a34d83f16dce869e67c29",
+      "imports": [
+        "./cached-resource.js",
+        "./task-queue.js",
+        "./fundamentals.js",
+        "./fundamentals-multi.js"
+      ]
+    },
+    {
+      "path": "lib/fundamentals.js",
+      "lines": 69,
+      "bytes": 7205,
+      "sha256": "74f0e7a2ba16edb94801df6614054c3c8de4d62fbbbdf21210f406bf14fd3319",
+      "imports": [
+        "./currency.js",
+        "./financial-values.js",
+        "./regular-statistics.js"
+      ]
+    },
+    {
+      "path": "lib/futures-instruments.js",
+      "lines": 31,
+      "bytes": 2632,
+      "sha256": "8d2e794ec5b98285ccc12d2b12f87f225d690bf9a35ef54866fc3dedd4ee8e78",
+      "imports": [
+        "node:fs"
+      ]
+    },
+    {
+      "path": "lib/fx-service.js",
+      "lines": 57,
+      "bytes": 4262,
+      "sha256": "cd7bd0b393c12291f8c7c624509506d114cd13f20b56b2b09c295915f58a665a",
+      "imports": [
+        "./currency.js"
+      ]
+    },
+    {
+      "path": "lib/history-aggregate.js",
+      "lines": 81,
+      "bytes": 5441,
+      "sha256": "cf09d87ebcf661bb014bca861cf4d5d2318c9dfe731d47bc24479d0c5a717859",
+      "imports": [
+        "./history-contract.js",
+        "../mkt.mjs"
+      ]
+    },
+    {
+      "path": "lib/history-contract.js",
+      "lines": 38,
+      "bytes": 2809,
+      "sha256": "c9c2170cea44a8551d80b69a12792b0aa031cd818b929308b9262176edf2b1f4",
+      "imports": [
+        "node:crypto",
+        "./symbol-validation.js"
+      ]
+    },
+    {
+      "path": "lib/history-prewarm.js",
+      "lines": 90,
+      "bytes": 7403,
+      "sha256": "43c5a04a3b7358414026a49f3661e5ed40692c84bc1b6f3cf051cc26215531bd",
+      "imports": [
+        "./watchlist-limits.js",
+        "node:fs/promises",
+        "./atomic-file.js",
+        "./history-contract.js"
+      ]
+    },
+    {
+      "path": "lib/history-service.js",
+      "lines": 221,
+      "bytes": 19425,
+      "sha256": "96d94b92584e605f337e80cfced904eba6637b69400d3cdd74dfa16c95468ae8",
+      "imports": [
+        "./task-queue.js",
+        "./futures-instruments.js",
+        "./history-aggregate.js",
+        "./history-contract.js",
+        "../mkt.mjs",
+        "./instruments.js",
+        "./currency.js"
+      ]
+    },
+    {
+      "path": "lib/history-source.js",
+      "lines": 44,
+      "bytes": 3176,
+      "sha256": "e604b263e7d362a11173c181f8a778bf70e985734fc51d48bc952a1c57879165",
+      "imports": [
+        "./instruments.js",
+        "./history-contract.js"
+      ]
+    },
+    {
+      "path": "lib/host-gate.js",
+      "lines": 55,
+      "bytes": 3608,
+      "sha256": "79ab536351702a1570a71552ba0b43fa42926188d8677bd569bb6d90eb9517b1",
+      "imports": [
+        "./task-queue.js",
+        "node:timers/promises",
+        "./providers/provider-retry.js",
+        "./source-registry.js"
+      ]
+    },
+    {
+      "path": "lib/http-admission.js",
+      "lines": 79,
+      "bytes": 3648,
+      "sha256": "38cf1d348afcfa3c1027fb629edcbc92017eafa36219d501a5f0daccb1a968c4",
+      "imports": [
+        "node:net",
+        "./task-queue.js"
+      ]
+    },
+    {
+      "path": "lib/http-auth.js",
+      "lines": 16,
+      "bytes": 1023,
+      "sha256": "8ba7ea8f1fca9963b64f76c949011cbdfa2cfc1134ea8b1284d90ab7905a6594",
+      "imports": [
+        "node:crypto"
+      ]
+    },
+    {
+      "path": "lib/http-capacity.js",
+      "lines": 10,
+      "bytes": 610,
+      "sha256": "5c9de52f3b7c52bef26f92545795425c62c874cf1114428a431400e1e0ef23ab",
+      "imports": []
+    },
+    {
+      "path": "lib/http-charts.js",
+      "lines": 28,
+      "bytes": 1326,
+      "sha256": "bb1317aed6eb0960f30a25c17d6deab0e80f0cc334524007326be37553a49773",
+      "imports": [
+        "./watchlist-limits.js",
+        "./chart-revision.js"
+      ]
+    },
+    {
+      "path": "lib/http-diagnostics.js",
+      "lines": 60,
+      "bytes": 3608,
+      "sha256": "5e2f79bff33db5faae9eef5f2403c7a78930ec7e46016cfcdf43a4138bf1f19b",
+      "imports": [
+        "node:fs",
+        "node:path",
+        "./http-admission.js",
+        "./http-capacity.js",
+        "../mkt.mjs",
+        "./source-registry.js"
+      ]
+    },
+    {
+      "path": "lib/http-response.js",
+      "lines": 53,
+      "bytes": 3712,
+      "sha256": "7d6090af23cdd942f8cf6f610a519d23b38f69cb8459ca336e4786189cc7350f",
+      "imports": [
+        "node:fs",
+        "node:zlib"
+      ]
+    },
+    {
+      "path": "lib/http.js",
+      "lines": 306,
+      "bytes": 25708,
+      "sha256": "35995c8904040558dbb65e0438483d4dd8afe6b1be8b2c1a0516347e2627a762",
+      "imports": [
+        "./http-auth.js",
+        "./source-health-public.js",
+        "./market-detail.js",
+        "./market-context-format.js",
+        "./metric-catalog.js",
+        "./market-context-http.js",
+        "./watchlist-limits.js",
+        "node:http",
+        "node:fs",
+        "node:path",
+        "node:url",
+        "./instruments.js",
+        "./catalog-search.js",
+        "./futures-instruments.js",
+        "./market-registry.js",
+        "./symbol-validation.js",
+        "./history-contract.js",
+        "./search.js",
+        "../log.mjs",
+        "./stream-budget.js",
+        "./sse.js",
+        "./macro-sse.js",
+        "./http-admission.js",
+        "./http-response.js",
+        "./http-charts.js",
+        "./http-diagnostics.js"
+      ]
+    },
+    {
+      "path": "lib/instruments.js",
+      "lines": 80,
+      "bytes": 5442,
+      "sha256": "12d5b734f1d7d383113ad0229ac7fd6e3d3fc614ea58b7c5f829a3011d0948e0",
+      "imports": [
+        "./futures-instruments.js",
+        "./market-registry.js"
+      ]
+    },
+    {
+      "path": "lib/intraday-freshness.js",
+      "lines": 48,
+      "bytes": 3321,
+      "sha256": "9669aac8980e0a47b51411372eeb4e23474849d3e5af79bc7300b24414f4a4e8",
+      "imports": [
+        "../mkt.mjs"
+      ]
+    },
+    {
+      "path": "lib/macro-analysis.js",
+      "lines": 132,
+      "bytes": 14707,
+      "sha256": "a4fb17dd6bdaf3a61c31778a90989b08d01dd09e41e8e995790db9456afc0533",
+      "imports": [
+        "./macro-transmission.js",
+        "./macro-semantics.js"
+      ]
+    },
+    {
+      "path": "lib/macro-context.js",
+      "lines": 132,
+      "bytes": 12717,
+      "sha256": "d8b757255faa05b3db202099d7c7c03b48614e572237392b5fd5caeefd91ff1b",
+      "imports": []
+    },
+    {
+      "path": "lib/macro-monitor.js",
+      "lines": 63,
+      "bytes": 8282,
+      "sha256": "4a9bb47bae011589b93d9543508564d21f1a1f384fc79bacef9eeb048536b3eb",
+      "imports": [
+        "node:fs/promises",
+        "./atomic-file.js",
+        "node:crypto",
+        "./macro-analysis.js"
+      ]
+    },
+    {
+      "path": "lib/macro-notify.js",
+      "lines": 9,
+      "bytes": 836,
+      "sha256": "0411e75d6ed32383f4c2fad42ae3212ca2c589187ad9ae92b091fec87f2c8652",
+      "imports": [
+        "./providers/provider-retry.js"
+      ]
+    },
+    {
+      "path": "lib/macro-semantics.js",
+      "lines": 22,
+      "bytes": 2268,
+      "sha256": "3be47a73417c113adbdb7864d039e54c4331a9b6c8a32b6f58d3c55df00e4380",
+      "imports": []
+    },
+    {
+      "path": "lib/macro-sse.js",
+      "lines": 17,
+      "bytes": 1419,
+      "sha256": "fcbaee4db3c9b17269714b4f620780fd3c8dff87c0c5d342f8cc58cf854872b8",
+      "imports": [
+        "./stream-budget.js"
+      ]
+    },
+    {
+      "path": "lib/macro-transmission.js",
+      "lines": 95,
+      "bytes": 11013,
+      "sha256": "a6070340dbe9871b1bd3c371bde18c8b600878eadb412edf3016a8fb25365958",
+      "imports": []
+    },
+    {
+      "path": "lib/macro.js",
+      "lines": 99,
+      "bytes": 6909,
+      "sha256": "a85325cddc7cbc57cf4e5735c4afb47b8322440bb9aefd2fd30c4f5cddcf91a1",
+      "imports": [
+        "../log.mjs",
+        "./macro-analysis.js",
+        "./news.js",
+        "./cache.js"
+      ]
+    },
+    {
+      "path": "lib/market-context-format.js",
+      "lines": 121,
+      "bytes": 17421,
+      "sha256": "8dd743aba5d60d6facd3d01dae7041a773b8ef825ae282378dab9dd7f9c59853",
+      "imports": [
+        "./instruments.js",
+        "./futures-instruments.js",
+        "../mkt.mjs",
+        "./sessions.js",
+        "./context-values.js",
+        "./context-financials.js",
+        "./order-book.js"
+      ]
+    },
+    {
+      "path": "lib/market-context-http.js",
+      "lines": 55,
+      "bytes": 5389,
+      "sha256": "1a95514e7af2ec0e360b43c0343e580aa16161039992f859fa89a59ddf55e57b",
+      "imports": [
+        "node:crypto",
+        "node:perf_hooks",
+        "./http-response.js",
+        "./market-context-service.js"
+      ]
+    },
+    {
+      "path": "lib/market-context-service.js",
+      "lines": 104,
+      "bytes": 7783,
+      "sha256": "e66a335eabe346b9c15d0e8a5cf68d6018feb194ff3961481ef9c0fbb18794a7",
+      "imports": [
+        "node:crypto",
+        "node:perf_hooks",
+        "./task-queue.js",
+        "./symbol-validation.js",
+        "./instruments.js",
+        "./history-contract.js",
+        "./market-context-format.js"
+      ]
+    },
+    {
+      "path": "lib/market-detail.js",
+      "lines": 61,
+      "bytes": 4973,
+      "sha256": "4ff412e5bed9b513793618d9e3e5506ca3ce5e5e83451c2fd8584e9ff6cdcb1a",
+      "imports": [
+        "./market-context-service.js",
+        "./metric-catalog.js"
+      ]
+    },
+    {
+      "path": "lib/market-registry.js",
+      "lines": 60,
+      "bytes": 5667,
+      "sha256": "44d81efde56db27b7f83eac795a01227790ffbaf4b0d818b03fcbcb8e668b163",
+      "imports": [
+        "node:fs",
+        "./futures-instruments.js"
+      ]
+    },
+    {
+      "path": "lib/metric-catalog.js",
+      "lines": 34,
+      "bytes": 3627,
+      "sha256": "9956939a19ad34d27ebc8b91fc7130a865f49b5308fc0666d0b7513c08bfc3a0",
+      "imports": []
+    },
+    {
+      "path": "lib/news.js",
+      "lines": 105,
+      "bytes": 6874,
+      "sha256": "d5e4261b61ffc9e4c81ef6575810e5fb33e23dc9c428a0ca5794cf8e51ccaf9a",
+      "imports": [
+        "./search.js",
+        "../sent.mjs",
+        "../log.mjs",
+        "./cache.js"
+      ]
+    },
+    {
+      "path": "lib/order-book.js",
+      "lines": 39,
+      "bytes": 2966,
+      "sha256": "fb8158f2ee3d9353d766b42aba7a7e2f8ac8482a4feb34d70cfedd6614a1580e",
+      "imports": [
+        "./context-values.js"
+      ]
+    },
+    {
+      "path": "lib/providers/alpaca-book.js",
+      "lines": 12,
+      "bytes": 690,
+      "sha256": "6d17603280fb13d89496d57c4afc74fe7b9231ae38a73f1119284633c4ebc138",
+      "imports": [
+        "./provider-timestamp.js",
+        "../order-book.js"
+      ]
+    },
+    {
+      "path": "lib/providers/alpaca-stream.js",
+      "lines": 245,
+      "bytes": 15092,
+      "sha256": "21461f4be33e716ffc6c4d8b80d9c6d2ed634f951b557a38ee75595750a751a4",
+      "imports": [
+        "../instruments.js",
+        "./provider-retry.js",
+        "./provider-timestamp.js",
+        "./alpaca-book.js"
+      ]
+    },
+    {
+      "path": "lib/providers/batch-snapshot.js",
+      "lines": 195,
+      "bytes": 15543,
+      "sha256": "f997799f7ddf20285996bc3d1d0edf71a4ebfb306dcbf5ff670a27f27b6e88c3",
+      "imports": [
+        "../order-book.js",
+        "./provider-retry.js",
+        "../quote-contract.js",
+        "../sessions.js",
+        "./tx.js",
+        "../../mkt.mjs",
+        "../instruments.js",
+        "../market-registry.js",
+        "./quote-financials.js",
+        "../trading-statistics.js"
+      ]
+    },
+    {
+      "path": "lib/providers/em.js",
+      "lines": 50,
+      "bytes": 3052,
+      "sha256": "0a9a6c6a622b5cf963cb5a017867f9b9706435596ff91149efee5d50fb05cca5",
+      "imports": [
+        "../../log.mjs"
+      ]
+    },
+    {
+      "path": "lib/providers/fast-polling.js",
+      "lines": 82,
+      "bytes": 4684,
+      "sha256": "3cfd071d063b85abe35a6ebe1810beed78247499356ac972226e906212c6ce61",
+      "imports": [
+        "./sina-quotes.js",
+        "../../mkt.mjs",
+        "../trading-statistics.js"
+      ]
+    },
+    {
+      "path": "lib/providers/financial-details.js",
+      "lines": 116,
+      "bytes": 12453,
+      "sha256": "b074c8a28ee3a70ba6c0cc15551917fadc0351783998e2d0ee6478852e6d9b13",
+      "imports": [
+        "../fundamentals.js",
+        "./public-fundamentals.js"
+      ]
+    },
+    {
+      "path": "lib/providers/financial-sources.js",
+      "lines": 61,
+      "bytes": 7445,
+      "sha256": "0566cce86109868ac19b136e5ef1f80278798e10380b0a91c67e42c533eef4bd",
+      "imports": [
+        "./financial-details.js",
+        "./fundamentals.js",
+        "../instruments.js",
+        "../trading-statistics.js",
+        "./provider-retry.js",
+        "../fundamentals.js",
+        "../shared-task.js"
+      ]
+    },
+    {
+      "path": "lib/providers/finnhub-stream.js",
+      "lines": 36,
+      "bytes": 4196,
+      "sha256": "469352de265e3732f8fac3af1151b1e3e76841dadb232836d8272be437be7a35",
+      "imports": [
+        "../instruments.js"
+      ]
+    },
+    {
+      "path": "lib/providers/fundamentals.js",
+      "lines": 66,
+      "bytes": 5999,
+      "sha256": "7f7a1a4ed170c93b140a12668434603ec09d5e4642a9aeccc5feb4a4130a2bdd",
+      "imports": [
+        "../fundamentals.js",
+        "./provider-retry.js"
+      ]
+    },
+    {
+      "path": "lib/providers/futures.js",
+      "lines": 119,
+      "bytes": 10171,
+      "sha256": "2a9efe256af14bd2bd8d9cb65f403b79822b8ffab50d0479ce225d69ad989ddc",
+      "imports": [
+        "../cached-resource.js",
+        "../futures-instruments.js",
+        "./provider-retry.js",
+        "../quote-contract.js",
+        "../../mkt.mjs"
+      ]
+    },
+    {
+      "path": "lib/providers/korean-search.js",
+      "lines": 16,
+      "bytes": 1329,
+      "sha256": "9326fb450554d6d39f8af1a14c392007f70f8043a80a32cef19652d705e8eff2",
+      "imports": [
+        "../cached-resource.js"
+      ]
+    },
+    {
+      "path": "lib/providers/macro-calendar.js",
+      "lines": 53,
+      "bytes": 5737,
+      "sha256": "928ae91bda9adb7c0998fc83ff002cd2de29c9d8c7d5f9a1e136169e94fac93a",
+      "imports": [
+        "./provider-retry.js"
+      ]
+    },
+    {
+      "path": "lib/providers/macro-daily.js",
+      "lines": 28,
+      "bytes": 2485,
+      "sha256": "1b3ddbc2557d2ee0237704a94848cb2f3032abc60c2ba0e702ffb882952c3e9c",
+      "imports": []
+    },
+    {
+      "path": "lib/providers/macro-public-quotes.js",
+      "lines": 71,
+      "bytes": 7006,
+      "sha256": "c91918e6aefbfdc4db34e9238ab237624f534eeed73ed2826a6b847618071f21",
+      "imports": [
+        "../cached-resource.js",
+        "./provider-retry.js"
+      ]
+    },
+    {
+      "path": "lib/providers/macro-quotes.js",
+      "lines": 128,
+      "bytes": 11474,
+      "sha256": "b32215425745d857d4d9e5b2e9ee9c275bfa984303f32373f4a061d3742dfb18",
+      "imports": [
+        "../cached-resource.js",
+        "../macro-context.js",
+        "./provider-retry.js",
+        "./tx.js",
+        "./macro-daily.js"
+      ]
+    },
+    {
+      "path": "lib/providers/nasdaq-time.js",
+      "lines": 65,
+      "bytes": 4066,
+      "sha256": "6e69f8a13813d8f0a73f22b567708b26ce40cb0d8d5bb7ee19540818bb1ee3c2",
+      "imports": []
+    },
+    {
+      "path": "lib/providers/nasdaq.js",
+      "lines": 56,
+      "bytes": 4979,
+      "sha256": "5ab1da14dd15cad8d4424389e2a75e0e17b7c3d7c4ad6584c7fac9ea96dee273",
+      "imports": [
+        "../quote-contract.js",
+        "../instruments.js",
+        "../../log.mjs",
+        "../cache.js"
+      ]
+    },
+    {
+      "path": "lib/providers/naver-history.js",
+      "lines": 43,
+      "bytes": 3790,
+      "sha256": "fa41706baccfa24950efbc6501b6cc73ffeb38f5d24e967506af576109575538",
+      "imports": [
+        "../watchlist-limits.js",
+        "./provider-retry.js",
+        "../instruments.js"
+      ]
+    },
+    {
+      "path": "lib/providers/naver-index.js",
+      "lines": 161,
+      "bytes": 12068,
+      "sha256": "5832f7c444566855f376945d8147455348600a54728d17e8cd05c1f79d85c231",
+      "imports": [
+        "./provider-retry.js",
+        "../quote-contract.js",
+        "../../mkt.mjs",
+        "../history-contract.js"
+      ]
+    },
+    {
+      "path": "lib/providers/official-feeds.js",
+      "lines": 96,
+      "bytes": 8611,
+      "sha256": "49fd0e760f44e7601a6020a2808e4d99d883ab89bcb4c40a455c2f54e4ca5c5d",
+      "imports": [
+        "../xml-structure.js"
+      ]
+    },
+    {
+      "path": "lib/providers/provider-retry.js",
+      "lines": 12,
+      "bytes": 735,
+      "sha256": "a86d1976ffa1faedf19b86453d84bf5b350dce45b2bc3645a078d75a8d02c916",
+      "imports": []
+    },
+    {
+      "path": "lib/providers/provider-timestamp.js",
+      "lines": 11,
+      "bytes": 627,
+      "sha256": "5709e97ee0a535dc16536e1d2f50f07224706920650b6706c1ec2ccb1678575c",
+      "imports": []
+    },
+    {
+      "path": "lib/providers/public-fundamentals.js",
+      "lines": 56,
+      "bytes": 3723,
+      "sha256": "cb40f39f99a142487602845ab5b83b48d634bca4c9b6996edb7f972a131ad727",
+      "imports": [
+        "../fundamentals.js",
+        "../instruments.js",
+        "./provider-retry.js"
+      ]
+    },
+    {
+      "path": "lib/providers/public-history.js",
+      "lines": 127,
+      "bytes": 9845,
+      "sha256": "21db333d8410ef1bce13f9dfcc9c540a6c0b193d538cb1d735bf04f63b9efdf0",
+      "imports": [
+        "../watchlist-limits.js",
+        "./nasdaq-time.js",
+        "../futures-instruments.js",
+        "../instruments.js",
+        "../history-contract.js",
+        "./provider-retry.js"
+      ]
+    },
+    {
+      "path": "lib/providers/quote-financials.js",
+      "lines": 41,
+      "bytes": 2255,
+      "sha256": "9ed3519008d6701ed85a3169fd8fa134d6abfa2ee28b132c64f89d70b807d353",
+      "imports": [
+        "../fundamentals.js"
+      ]
+    },
+    {
+      "path": "lib/providers/reference-fx.js",
+      "lines": 81,
+      "bytes": 5560,
+      "sha256": "3656e5b9e08d223681bef95fa0b38dd79f7f0695b0ad263acbb7f4def0633433",
+      "imports": [
+        "../xml-structure.js",
+        "../currency.js"
+      ]
+    },
+    {
+      "path": "lib/providers/sina-quotes.js",
+      "lines": 69,
+      "bytes": 4871,
+      "sha256": "3a67ea9a576464f50962a16e83b94ef4d4bf2e5c4a5ee138bfaffc1b2b81787c",
+      "imports": [
+        "../quote-contract.js",
+        "../instruments.js",
+        "../../mkt.mjs",
+        "../sessions.js",
+        "./tx.js",
+        "./provider-retry.js"
+      ]
+    },
+    {
+      "path": "lib/providers/sina.js",
+      "lines": 46,
+      "bytes": 2715,
+      "sha256": "9e70b28ab5ddd5b823e32ab89f72235996a03f0d2f6fcee0dfacc11aaa1b81b8",
+      "imports": [
+        "../quote-contract.js",
+        "../../log.mjs",
+        "../cache.js"
+      ]
+    },
+    {
+      "path": "lib/providers/tx.js",
+      "lines": 165,
+      "bytes": 10803,
+      "sha256": "9ad795db507b70312be856beb552730190f9b2fa8c98951fbac3f76bd178957a",
+      "imports": [
+        "../quote-contract.js",
+        "../../log.mjs",
+        "../../mkt.mjs",
+        "../sessions.js",
+        "../instruments.js",
+        "../cache.js"
+      ]
+    },
+    {
+      "path": "lib/providers/yahoo-delay.js",
+      "lines": 11,
+      "bytes": 890,
+      "sha256": "d4c72656035aa3aca36de4bfa7a913904a8caa1f4789a73b21566903db642728",
+      "imports": [
+        "node:fs",
+        "../market-registry.js"
+      ]
+    },
+    {
+      "path": "lib/quote-cache.js",
+      "lines": 23,
+      "bytes": 1396,
+      "sha256": "e39ce32d1415ecf9bd577dd6f186dbbc11908c4a20f8b4a0538cb86b05f0bcfd",
+      "imports": [
+        "./watchlist-limits.js",
+        "./quote-contract.js",
+        "./cached-resource.js"
+      ]
+    },
+    {
+      "path": "lib/quote-contract.js",
+      "lines": 42,
+      "bytes": 2174,
+      "sha256": "b0c63c21ae6271d71c6d308a07c5ebc8622cb7f315a4ae7c4035effd934005ab",
+      "imports": []
+    },
+    {
+      "path": "lib/quote-engine.js",
+      "lines": 66,
+      "bytes": 4601,
+      "sha256": "b113a7a5a94a19306b14f3591debeb7212dab65c9d47b2ffa662ab7ca24a8c8c",
+      "imports": [
+        "./order-book.js",
+        "./chart-revision.js",
+        "./quote-history-merge.js"
+      ]
+    },
+    {
+      "path": "lib/quote-history-merge.js",
+      "lines": 23,
+      "bytes": 1544,
+      "sha256": "9651bfa31a65f84238abd94dae415ced6d34b0e2194cb33b90208e8eaf0fd4fd",
+      "imports": [
+        "./quote-contract.js",
+        "./chart-revision.js"
+      ]
+    },
+    {
+      "path": "lib/quote-samples.js",
+      "lines": 57,
+      "bytes": 3483,
+      "sha256": "1db21c2af0164f65c32973e97e5cf32e8bd760e313e94b551afb9dd38a52aa5e",
+      "imports": [
+        "./watchlist-limits.js",
+        "./sample-store.js",
+        "./symbol-validation.js"
+      ]
+    },
+    {
+      "path": "lib/quote.js",
+      "lines": 248,
+      "bytes": 18541,
+      "sha256": "e3545e7f30d1b0109a085804928529a4190a0753d2ca74a749a77a8349be68f5",
+      "imports": [
+        "./chart-bars.js",
+        "./quote-contract.js",
+        "./currency.js",
+        "./providers/yahoo-delay.js",
+        "./sessions.js",
+        "./instruments.js",
+        "./instruments.js",
+        "../mkt.mjs",
+        "../log.mjs",
+        "./cache.js"
+      ]
+    },
+    {
+      "path": "lib/realtime-quote-service.js",
+      "lines": 96,
+      "bytes": 7093,
+      "sha256": "04165437eeffd1b7709611e9085bbe0929bba7f9b617b4c190d2a66687ca6971",
+      "imports": [
+        "./order-book.js",
+        "./providers/alpaca-book.js",
+        "./stream-policy.js",
+        "./quote-contract.js",
+        "./instruments.js",
+        "./sessions.js",
+        "../mkt.mjs",
+        "./providers/alpaca-stream.js"
+      ]
+    },
+    {
+      "path": "lib/recovery-store.js",
+      "lines": 548,
+      "bytes": 23131,
+      "sha256": "3dca7f4e38803a54b3d1f73cf7773decae31728fbc758f77f915975bf332cf58",
+      "imports": [
+        "./watchlist-limits.js",
+        "./quote-contract.js",
+        "./quote-history-merge.js",
+        "./atomic-file.js",
+        "node:fs",
+        "node:fs/promises",
+        "node:path",
+        "node:crypto"
+      ]
+    },
+    {
+      "path": "lib/redundancy.js",
+      "lines": 79,
+      "bytes": 4938,
+      "sha256": "fd2ad42640b08c5f605f6aa70163e553e4147d2d707074acec18e3ec3c30a1dd",
+      "imports": [
+        "../mkt.mjs",
+        "./quote-contract.js",
+        "./currency.js"
+      ]
+    },
+    {
+      "path": "lib/regular-statistics.js",
+      "lines": 12,
+      "bytes": 922,
+      "sha256": "45a8aa30aa728dadf606c981d81a4dda62d868e89ec39ba2bfcca45f039e7c45",
+      "imports": [
+        "./financial-values.js"
+      ]
+    },
+    {
+      "path": "lib/sample-calendar.js",
+      "lines": 38,
+      "bytes": 2281,
+      "sha256": "1bc28fca7cf23eb2d531dc964b1d8e6317b5d312413ec9cfbd8633a505e19770",
+      "imports": [
+        "../mkt.mjs",
+        "./futures-instruments.js",
+        "./history-contract.js"
+      ]
+    },
+    {
+      "path": "lib/sample-store.js",
+      "lines": 136,
+      "bytes": 11297,
+      "sha256": "5e897fd503987eff9299ab013da2e81e11e8a27d06f9abca7276106908ae0439",
+      "imports": [
+        "./watchlist-limits.js",
+        "node:fs/promises",
+        "node:path",
+        "./atomic-file.js",
+        "./symbol-validation.js",
+        "./sample-calendar.js"
+      ]
+    },
+    {
+      "path": "lib/search.js",
+      "lines": 124,
+      "bytes": 7948,
+      "sha256": "a8e0e3b71ae9d189abe7764e0c250e59aeab3f10328c1fe3178b1ca6df05483a",
+      "imports": [
+        "./shared-task.js",
+        "./cached-resource.js",
+        "./providers/tx.js",
+        "./instruments.js",
+        "../log.mjs",
+        "./market-registry.js"
+      ]
+    },
+    {
+      "path": "lib/session-policy.js",
+      "lines": 38,
+      "bytes": 1931,
+      "sha256": "c06d68a6952089ad310426ef92562138872503b4d2f3436238b32310b9a5187b",
+      "imports": [
+        "./instruments.js",
+        "../mkt.mjs"
+      ]
+    },
+    {
+      "path": "lib/sessions.js",
+      "lines": 48,
+      "bytes": 3217,
+      "sha256": "dd9b56fdc394fecc919f3b4437b60b038960fac50b2cb252cc906d3a71944eb9",
+      "imports": [
+        "./quote-contract.js",
+        "../mkt.mjs"
+      ]
+    },
+    {
+      "path": "lib/shared-task.js",
+      "lines": 28,
+      "bytes": 1348,
+      "sha256": "d097c8e22241ba53b77cbd03ffce24b21db64ec997b65bba33edd4ae8fac57a0",
+      "imports": []
+    },
+    {
+      "path": "lib/slowcache.js",
+      "lines": 1,
+      "bytes": 32,
+      "sha256": "86536819cdaeaf0a8ee53fdcd37ae4e5fb3b534f3c9c85df369fce044f1c57bc",
+      "imports": []
+    },
+    {
+      "path": "lib/snapshot-service.js",
+      "lines": 364,
+      "bytes": 24763,
+      "sha256": "b3cf08990b4ce7d6e8025e5c4196d6bdb70723cd03bf79a51f403cf0b1489fd8",
+      "imports": [
+        "./instruments.js",
+        "./quote-contract.js",
+        "./http-admission.js",
+        "./session-policy.js",
+        "./intraday-freshness.js",
+        "./trading-statistics.js"
+      ]
+    },
+    {
+      "path": "lib/source-health-public.js",
+      "lines": 11,
+      "bytes": 1270,
+      "sha256": "f8aacaeb00bdda7cfa8fe187bbd223324cd9088aba84a67f5c3f54746c17ad2c",
+      "imports": []
+    },
+    {
+      "path": "lib/source-registry.js",
+      "lines": 27,
+      "bytes": 3415,
+      "sha256": "0c0d7e3ae8003c0eca1ca5507bfab15759159854e6b74663e4e8de03370dad9f",
+      "imports": []
+    },
+    {
+      "path": "lib/sse.js",
+      "lines": 49,
+      "bytes": 4401,
+      "sha256": "26220553aa653e3063287023d928f90c53ad2a52f34f002ccfa22ac3884461fb",
+      "imports": [
+        "./http-charts.js",
+        "./stream-budget.js"
+      ]
+    },
+    {
+      "path": "lib/stream-budget.js",
+      "lines": 12,
+      "bytes": 1137,
+      "sha256": "7f05b1ce6d63adfce2f0ef9cdf2d4924dad9f4d272015ebe0c00646caa0251de",
+      "imports": []
+    },
+    {
+      "path": "lib/stream-pair.js",
+      "lines": 12,
+      "bytes": 973,
+      "sha256": "534e7f6033122245426406732ad46c842fc714651d553151213ec5ab0dd999f6",
+      "imports": [
+        "./stream-policy.js"
+      ]
+    },
+    {
+      "path": "lib/stream-policy.js",
+      "lines": 25,
+      "bytes": 1632,
+      "sha256": "b06e4c35387b09795b001474b808491e68f3e53e17dfc2bb837497065257b8b5",
+      "imports": [
+        "../mkt.mjs"
+      ]
+    },
+    {
+      "path": "lib/symbol-validation.js",
+      "lines": 9,
+      "bytes": 461,
+      "sha256": "21108d7bb34609e0b567caa03255eee5461b9944fb591d6e9a7ba5b686643836",
+      "imports": [
+        "./market-registry.js"
+      ]
+    },
+    {
+      "path": "lib/task-queue.js",
+      "lines": 42,
+      "bytes": 2849,
+      "sha256": "12f84071904281dc2bf345d2ef51ab65c869289d09e2b95e5817d7cf120108a0",
+      "imports": []
+    },
+    {
+      "path": "lib/trading-statistics.js",
+      "lines": 24,
+      "bytes": 2236,
+      "sha256": "e261e3d3b6b038d30db21759c86121940acb09451865bd7c0a19bcdb08825f24",
+      "imports": [
+        "./regular-statistics.js",
+        "./financial-values.js",
+        "../mkt.mjs"
+      ]
+    },
+    {
+      "path": "lib/transport.js",
+      "lines": 92,
+      "bytes": 5215,
+      "sha256": "ac621e66a4dbe59c5882fe4a0df5ca31d865ef228476ee0ef6e23615fe8ea3ae",
+      "imports": [
+        "node:http",
+        "node:https",
+        "node:zlib",
+        "../log.mjs"
+      ]
+    },
+    {
+      "path": "lib/watchlist-limits.js",
+      "lines": 4,
+      "bytes": 269,
+      "sha256": "7ee4132e56c9e5e1f9b73a5f9103c2020063e1c51dc57a4cd316f5a43d12b4e2",
+      "imports": []
+    },
+    {
+      "path": "lib/xml-structure.js",
+      "lines": 110,
+      "bytes": 5180,
+      "sha256": "c7d713d60a2f637f942d103a48bad2e76b84d42f8c205ae5de702835ed0d8b2d",
+      "imports": []
+    },
+    {
+      "path": "lib/yahoo-auth.js",
+      "lines": 39,
+      "bytes": 2980,
+      "sha256": "99acf2addcbb17148da52fdf96db2a3375657b6681dbac1863f01e1f310992ad",
+      "imports": []
+    },
+    {
+      "path": "lib/yahoo-breaker.js",
+      "lines": 15,
+      "bytes": 1244,
+      "sha256": "d183c72a016373c39547a35d616c88962648ff70c0ade315a0c379769056af1e",
+      "imports": [
+        "../log.mjs"
+      ]
+    },
+    {
+      "path": "lib/yahoo-news.js",
+      "lines": 13,
+      "bytes": 897,
+      "sha256": "d810615eb2c9f18e0932d42fdd6ffed9b752ad766c4ae0e07a2887c62bc18ef1",
+      "imports": [
+        "./news.js"
+      ]
+    },
+    {
+      "path": "lib/yahoo.js",
+      "lines": 208,
+      "bytes": 12762,
+      "sha256": "adfde0588336a4960d9e53297268f52464237ccd363971391573d0a23c9b6aa7",
+      "imports": [
+        "./chart-bars.js",
+        "./chart-bars.js",
+        "./quote-contract.js",
+        "./currency.js",
+        "./transport.js",
+        "../log.mjs",
+        "../mkt.mjs",
+        "./cache.js"
+      ]
+    },
+    {
+      "path": "log.mjs",
+      "lines": 103,
+      "bytes": 7544,
+      "sha256": "5ecf3e6015df2677e03b8e64a0b0cbb913c79a60c80fcdadc998f2ffe300ee50",
+      "imports": [
+        "node:fs",
+        "node:path",
+        "node:url",
+        "node:stream/promises",
+        "node:perf_hooks",
+        "./lib/bounded-writer.js"
+      ]
+    },
+    {
+      "path": "mkt.mjs",
+      "lines": 126,
+      "bytes": 9325,
+      "sha256": "b7aab31a311ea8a93e7323cb0a8c4b44e7019c9d02870e6d095e56a49de931a0",
+      "imports": [
+        "./lib/futures-instruments.js",
+        "node:fs",
+        "./lib/instruments.js",
+        "./lib/market-registry.js"
+      ]
+    },
+    {
+      "path": "public/app.js",
+      "lines": 429,
+      "bytes": 30669,
+      "sha256": "6bc6255aeb70f5a33c7a942f54fe7076160edc0dc12a87f0b97d4f64a868b392",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-admin.js",
+      "lines": 23,
+      "bytes": 2693,
+      "sha256": "a5e8153b13ecc3190580c0c59226cb9d2743aa0813a43d3734259892399f9a5c",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-card-view.js",
+      "lines": 309,
+      "bytes": 24567,
+      "sha256": "79cb79817e3de5e405efc1761a0867f6eeb239d3b81d4ecd1a10d89df3020852",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-chart-controller.js",
+      "lines": 331,
+      "bytes": 26912,
+      "sha256": "749720fc1999ca607877bfc6f3e5acb3dfca8557628c2fe545db7ebb370a9b85",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-chart-engine.js",
+      "lines": 218,
+      "bytes": 15035,
+      "sha256": "9e369c825f3db002cfd0ba481b219d3dfc4e1310aff02a2eab6c6ee26f024eed",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-chart.js",
+      "lines": 13,
+      "bytes": 483,
+      "sha256": "267bc16ed18e75c11f9673d259ae357eb9bbac2d898469ce1738665b7be75aff",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-client.js",
+      "lines": 18,
+      "bytes": 1009,
+      "sha256": "779b5dfc973617dc917cf8bb9fed4f50070f5fba7b47b93229ca0dc5d1513c1b",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-currency.js",
+      "lines": 24,
+      "bytes": 1420,
+      "sha256": "be2148198796d31cebecbe7aa958ff58f626c4ae64d5c3c12c35bff603b3e283",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-detail.js",
+      "lines": 92,
+      "bytes": 11960,
+      "sha256": "ccbe308da9740921597a4f2cc85ce7fca937c2336b6fe4260d4b5c041daad196",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-format.js",
+      "lines": 24,
+      "bytes": 2561,
+      "sha256": "43e06e56136445bd39a3ae741a2754bdef67469bfefac1d606b84d08602b6092",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-fundamentals.js",
+      "lines": 145,
+      "bytes": 18133,
+      "sha256": "9f7a757a9cff3c1f0f4ba9673dc27e42eb93614bcec1a454386268cfb2db8d4b",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-history-store.js",
+      "lines": 68,
+      "bytes": 5680,
+      "sha256": "8d56f18dec3fbb8a6c1d52dcfd8cd76a90c5b65e388f6ace769200143ade5bef",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-live-store.js",
+      "lines": 67,
+      "bytes": 4124,
+      "sha256": "35bb49d8654333e36b6db9b7ef1a7207c77d20de2beb06da745f66f6d8d23af1",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-macro-context.js",
+      "lines": 69,
+      "bytes": 10084,
+      "sha256": "fe6bb7e6070b67750b1bba95d299abebd299fef10fe313ca65103494d4e9b950",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-macro-controller.js",
+      "lines": 108,
+      "bytes": 12044,
+      "sha256": "3b3cd6760c7958d3cb88ec8cd5cac504e4ab46c43a83e915b4db717860e2b3c1",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-market-directory.js",
+      "lines": 93,
+      "bytes": 6291,
+      "sha256": "ff3bda3eebcbdcd66032cc9f4a97f3d483e18558d6f556631800ea34fe45f798",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-market-store.js",
+      "lines": 52,
+      "bytes": 3154,
+      "sha256": "d9ff590d015aa75007adf67199ee0b22cb771f2b6f4f3b619ffd2d57ba406653",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-network.js",
+      "lines": 55,
+      "bytes": 3229,
+      "sha256": "12d413d2e15a2868adf782aa835aa54999a66cd27564307376fe302d8133ff98",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-news-controller.js",
+      "lines": 89,
+      "bytes": 5590,
+      "sha256": "f7190a1b0553d98c71e28e00ce30fadb87a9d2a40a4e36dd2fd6e5044bd4f7bc",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-sample-store.js",
+      "lines": 43,
+      "bytes": 2766,
+      "sha256": "82b619639506013809812feafad4163f6d10d0fe973bb7aa298767637c9e7628",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-scheduler.js",
+      "lines": 23,
+      "bytes": 1182,
+      "sha256": "30caedcb47b2dc52b8e2646856f82c42b865f0c43c219432392be62d3b94f850",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-search-controller.js",
+      "lines": 83,
+      "bytes": 6674,
+      "sha256": "4403b62d0b8be6b5db131354cbd60bc5149852a208081f967c8de7bf6a6e5e77",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-state.js",
+      "lines": 120,
+      "bytes": 8677,
+      "sha256": "00821b4a48e044f1f7af44430722f1600e92f2959baee4b200ebecbcc613c8cb",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-timeframes.js",
+      "lines": 11,
+      "bytes": 844,
+      "sha256": "5d7ed4936f802858808e659e0ada4f143dd40d8e3811f8d48d66cc1c18092a56",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-utils.js",
+      "lines": 8,
+      "bytes": 660,
+      "sha256": "c71e7a0b101cfc5ab0ebd28003a0860b9f3ee5e8d391c02c7d1d0c8076532ed4",
+      "imports": []
+    },
+    {
+      "path": "public/modules/panel-watchlist-sync.js",
+      "lines": 36,
+      "bytes": 2243,
+      "sha256": "7a847a961d7da25ecef5c942c9d5414f2bc6bdf7343e8911aa316f1161850b80",
+      "imports": []
+    },
+    {
+      "path": "sent.mjs",
+      "lines": 175,
+      "bytes": 11716,
+      "sha256": "212f32df1d12a4e2093efdeeccf95baba3f0c414a3c9d48c7cd2a858663c523d",
+      "imports": [
+        ", "
+      ]
+    },
+    {
+      "path": "server.js",
+      "lines": 18,
+      "bytes": 1082,
+      "sha256": "f0dd48d32a17b61ee49a7cef2b6e33a9afb19b8d19bc06333b1ca003b1ced43f",
+      "imports": [
+        "node:url",
+        "node:fs",
+        "./app.js"
+      ]
+    }
+  ]
+}

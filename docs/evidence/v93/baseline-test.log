@@ -1,0 +1,2689 @@
+
+> qqqsp-v2@2.12.0 test
+> node tests/run.mjs
+
+保留回归：91 文件；显式退役：43 文件（不计为通过，见 tests/retired-v72.json）。
+PASS _test_audit_frontend.mjs
+PASS _test_batch_enrichment_recovery.mjs
+PASS _test_batch_snapshot.mjs
+PASS _test_capacity_check.mjs
+PASS _test_chart_conditional.mjs
+PASS _test_chart_empty_text.mjs
+PASS _test_cleanup.mjs
+PASS _test_color.mjs
+PASS _test_contrast.mjs
+PASS _test_enrichment_failure.mjs
+PASS _test_error_card.mjs
+PASS _test_flash.mjs
+PASS _test_flash_close.mjs
+PASS _test_frontend_boundaries_parent.mjs
+PASS _test_frontend_controllers.mjs
+PASS _test_fx_hint.mjs
+PASS _test_global_calendar_data.mjs
+PASS _test_global_frontend.mjs
+PASS _test_global_fx.mjs
+PASS _test_global_quote.mjs
+PASS _test_global_registry.mjs
+PASS _test_global_sessions.mjs
+PASS _test_global_smoke.mjs
+PASS _test_history_aggregate.mjs
+PASS _test_history_chart.mjs
+PASS _test_history_contract.mjs
+PASS _test_history_service.mjs
+PASS _test_history_store.mjs
+PASS _test_hoist.mjs
+PASS _test_honest_realtime.mjs
+PASS _test_http_factories.mjs
+PASS _test_intraday_empty_window.mjs
+PASS _test_log_rotate.mjs
+PASS _test_logging.mjs
+PASS _test_magic.mjs
+PASS _test_market_field_front.mjs
+PASS _test_news_sig.mjs
+PASS _test_official_feeds.mjs
+PASS _test_official_macro.mjs
+PASS _test_ops.sh
+PASS _test_parent_final_contracts.mjs
+PASS _test_parent_fx_contract.mjs
+PASS _test_phase2_age.mjs
+PASS _test_pkill.sh
+PASS _test_pointer_drag.mjs
+PASS _test_provider_card_contract.mjs
+PASS _test_recovery_store.mjs
+PASS _test_redundancy.mjs
+PASS _test_reference_chart_key.mjs
+PASS _test_reference_fx.mjs
+PASS _test_refresh_cadence.mjs
+PASS _test_relay.sh
+PASS _test_release_frontend.mjs
+PASS _test_remediation_domain.mjs
+PASS _test_scratch.sh
+PASS _test_search_race.mjs
+PASS _test_sent_compile.mjs
+PASS _test_sent_v3.mjs
+PASS _test_session_const.mjs
+PASS _test_snapshot_cadence.mjs
+PASS _test_snapshot_service.mjs
+PASS _test_stale_display.mjs
+PASS _test_stale_tiers.mjs
+PASS _test_sw_match.mjs
+PASS _test_tunnel_health.sh
+PASS _test_uncaught_exit.mjs
+PASS _test_untrusted_numbers.mjs
+PASS _test_v62_capacity_history.mjs
+PASS _test_v62_domain_policy.mjs
+PASS _test_v62_frontend_charts.mjs
+PASS _test_v62_frontend_news.mjs
+PASS _test_v62_frontend_state.mjs
+PASS _test_v62_recovery_rebuild.mjs
+PASS _test_v62_session_transitions.mjs
+PASS _test_v62_static_bundle.mjs
+PASS _test_v63_chart_smoke.mjs
+PASS _test_v63_enrichment_recovery.mjs
+PASS _test_v63_retained_history.mjs
+PASS _test_v64_frontend_polish.mjs
+PASS _test_v67_backend_freshness.mjs
+PASS _test_v67_backend_live_point.mjs
+PASS _test_v67_frontend_livepoint.mjs
+PASS _test_v67_intraday_smoke.mjs
+PASS _test_v72_age_and_storage.mjs
+PASS _test_v72_alpaca.mjs
+PASS _test_v72_history_failure_cache.mjs
+PASS _test_v72_http_and_sw_bounds.mjs
+PASS _test_v72_realtime_merge.mjs
+PASS _test_version.mjs
+PASS _test_volume_contract.mjs
+PASS _test_wl_truncate.mjs
+REGRESSION_PASS_FILES=91 REGRESSION_FAIL_FILES=0 RETIRED_FILES=43
+TAP version 13
+# Subtest: authenticated is not subscribed; each symbol needs an acknowledgement
+ok 1 - authenticated is not subscribed; each symbol needs an acknowledgement
+  ---
+  duration_ms: 17.711986
+  type: 'test'
+  ...
+# Subtest: one batch per second for healthy US siblings; neither Tencent nor Yahoo is polled unnecessarily
+ok 2 - one batch per second for healthy US siblings; neither Tencent nor Yahoo is polled unnecessarily
+  ---
+  duration_ms: 22.115901
+  type: 'test'
+  ...
+# Subtest: primary 429 falls back; no repeated primary request during Retry-After
+ok 3 - primary 429 falls back; no repeated primary request during Retry-After
+  ---
+  duration_ms: 5.690804
+  type: 'test'
+  ...
+# Subtest: Korean upstream polling hint survives; US adapter is never used for Korean ordinary shares
+ok 4 - Korean upstream polling hint survives; US adapter is never used for Korean ordinary shares
+  ---
+  duration_ms: 0.271839
+  type: 'test'
+  ...
+# Subtest: a slow unsupported sibling does not block healthy primary batch responses
+ok 5 - a slow unsupported sibling does not block healthy primary batch responses
+  ---
+  duration_ms: 1.945951
+  type: 'test'
+  ...
+# Subtest: REGRESSION: Yahoo 429 cannot disable US daily/weekly/monthly/yearly at the real HTTP boundary
+ok 6 - REGRESSION: Yahoo 429 cannot disable US daily/weekly/monthly/yearly at the real HTTP boundary
+  ---
+  duration_ms: 2250.736945
+  type: 'test'
+  ...
+# Subtest: REGRESSION: HTTP 200 with empty chart is not a successful source when a usable alternative exists
+ok 7 - REGRESSION: HTTP 200 with empty chart is not a successful source when a usable alternative exists
+  ---
+  duration_ms: 0.365801
+  type: 'test'
+  ...
+# Subtest: REGRESSION: intraday OHLC provider payload must still render as a line, never accidental candles
+ok 8 - REGRESSION: intraday OHLC provider payload must still render as a line, never accidental candles
+  ---
+  duration_ms: 2.092132
+  type: 'test'
+  ...
+# Subtest: REGRESSION: exhausted older history page must not erase already displayed candles
+ok 9 - REGRESSION: exhausted older history page must not erase already displayed candles
+  ---
+  duration_ms: 2.583813
+  type: 'test'
+  ...
+# Subtest: REGRESSION: historical 429 carries retry metadata to a usable frontend error state
+ok 10 - REGRESSION: historical 429 carries retry metadata to a usable frontend error state
+  ---
+  duration_ms: 1.144474
+  type: 'test'
+  ...
+# Subtest: REGRESSION old Nasdaq recovered line is invalidated without deleting prices or daily candles
+ok 11 - REGRESSION old Nasdaq recovered line is invalidated without deleting prices or daily candles
+  ---
+  duration_ms: 9.688196
+  type: 'test'
+  ...
+# Subtest: CONTROL newly normalized Nasdaq chart can be recovered after restart
+ok 12 - CONTROL newly normalized Nasdaq chart can be recovered after restart
+  ---
+  duration_ms: 2.927321
+  type: 'test'
+  ...
+# Subtest: CONTROL Yahoo/other epoch history is not shifted or deleted on upgrade
+ok 13 - CONTROL Yahoo/other epoch history is not shifted or deleted on upgrade
+  ---
+  duration_ms: 2.985368
+  type: 'test'
+  ...
+# Subtest: deployment time diagnostics separate legitimate stale history from a timezone contract failure
+ok 14 - deployment time diagnostics separate legitimate stale history from a timezone contract failure
+  ---
+  duration_ms: 19.544296
+  type: 'test'
+  ...
+# Subtest: REGRESSION screenshot: 10:16 ET is 22:16 UTC+8, never 18:16
+ok 15 - REGRESSION screenshot: 10:16 ET is 22:16 UTC+8, never 18:16
+  ---
+  duration_ms: 2.483992
+  type: 'test'
+  ...
+# Subtest: REGRESSION winter: Eastern standard time must use five hours, not fixed four
+ok 16 - REGRESSION winter: Eastern standard time must use five hours, not fixed four
+  ---
+  duration_ms: 0.466543
+  type: 'test'
+  ...
+# Subtest: REGRESSION time-only label with synthetic x preserves the historical date, not today
+ok 17 - REGRESSION time-only label with synthetic x preserves the historical date, not today
+  ---
+  duration_ms: 0.268054
+  type: 'test'
+  ...
+# Subtest: CONTROL genuine UTC x with agreeing Eastern label is not shifted twice
+ok 18 - CONTROL genuine UTC x with agreeing Eastern label is not shifted twice
+  ---
+  duration_ms: 0.198249
+  type: 'test'
+  ...
+# Subtest: CONTROL time-only label on a genuine UTC timestamp handles after-hours midnight UTC
+ok 19 - CONTROL time-only label on a genuine UTC timestamp handles after-hours midnight UTC
+  ---
+  duration_ms: 0.267202
+  type: 'test'
+  ...
+# Subtest: REGRESSION premarket across Chinese midnight stays on the correct exchange session date
+ok 20 - REGRESSION premarket across Chinese midnight stays on the correct exchange session date
+  ---
+  duration_ms: 0.19903
+  type: 'test'
+  ...
+# Subtest: REGRESSION explicit ISO offset and seconds override the chart coordinate
+ok 21 - REGRESSION explicit ISO offset and seconds override the chart coordinate
+  ---
+  duration_ms: 0.482847
+  type: 'test'
+  ...
+# Subtest: REGRESSION source future labels and invalid dates must not be accepted using a stale x
+ok 22 - REGRESSION source future labels and invalid dates must not be accepted using a stale x
+  ---
+  duration_ms: 0.461175
+  type: 'test'
+  ...
+# Subtest: CONTROL numeric-only old payload keeps epoch semantics and remains visibly unverified
+ok 23 - CONTROL numeric-only old payload keeps epoch semantics and remains visibly unverified
+  ---
+  duration_ms: 0.414905
+  type: 'test'
+  ...
+# Subtest: REGRESSION March and November stock sessions use date-specific offsets
+ok 24 - REGRESSION March and November stock sessions use date-specific offsets
+  ---
+  duration_ms: 0.744782
+  type: 'test'
+  ...
+# Subtest: REGRESSION host timezone cannot change upstream timestamp interpretation
+ok 25 - REGRESSION host timezone cannot change upstream timestamp interpretation
+  ---
+  duration_ms: 154.878281
+  type: 'test'
+  ...
+# Subtest: CONTROL daily K stays a trading-date bar and must not receive an hourly shift
+ok 26 - CONTROL daily K stays a trading-date bar and must not receive an hourly shift
+  ---
+  duration_ms: 0.482157
+  type: 'test'
+  ...
+# Subtest: REGRESSION normalized upstream time reaches chart enrichment and frontend formatter unchanged
+ok 27 - REGRESSION normalized upstream time reaches chart enrichment and frontend formatter unchanged
+  ---
+  duration_ms: 1.869156
+  type: 'test'
+  ...
+# Subtest: REGRESSION normalization marker survives enrichment for persisted-cache migration
+ok 28 - REGRESSION normalization marker survives enrichment for persisted-cache migration
+  ---
+  duration_ms: 0.35862
+  type: 'test'
+  ...
+# Subtest: REGRESSION source time remains genuinely stale when timestamp conversion is correct
+ok 29 - REGRESSION source time remains genuinely stale when timestamp conversion is correct
+  ---
+  duration_ms: 0.748368
+  type: 'test'
+  ...
+# Subtest: REGRESSION DST impossible or ambiguous local hour is rejected; explicit EDT/EST disambiguates
+ok 30 - REGRESSION DST impossible or ambiguous local hour is rejected; explicit EDT/EST disambiguates
+  ---
+  duration_ms: 0.364599
+  type: 'test'
+  ...
+# Subtest: REGRESSION time-only label with seconds and no numeric anchor cannot borrow server date
+ok 31 - REGRESSION time-only label with seconds and no numeric anchor cannot borrow server date
+  ---
+  duration_ms: 0.21196
+  type: 'test'
+  ...
+# Subtest: REGRESSION rightmost visible intraday time tick includes the actual endpoint
+ok 32 - REGRESSION rightmost visible intraday time tick includes the actual endpoint
+  ---
+  duration_ms: 2.538705
+  type: 'test'
+  ...
+# Subtest: empty history remains selected and browser quotes never accumulate samples
+ok 33 - empty history remains selected and browser quotes never accumulate samples
+  ---
+  duration_ms: 1.073097
+  type: 'test'
+  ...
+# Subtest: previous-day history remains selected with an explicit date; samples require a server payload
+ok 34 - previous-day history remains selected with an explicit date; samples require a server payload
+  ---
+  duration_ms: 0.332632
+  type: 'test'
+  ...
+# Subtest: real current historical series remains authoritative; invalid quotes create no made-up point
+ok 35 - real current historical series remains authoritative; invalid quotes create no made-up point
+  ---
+  duration_ms: 1.065385
+  type: 'test'
+  ...
+# Subtest: history enrichment is cached separately; failed refresh retains real bars and successful time
+ok 36 - history enrichment is cached separately; failed refresh retains real bars and successful time
+  ---
+  duration_ms: 0.944523
+  type: 'test'
+  ...
+# Subtest: a US ADR cannot receive Korean-won history by name similarity
+ok 37 - a US ADR cannot receive Korean-won history by name similarity
+  ---
+  duration_ms: 0.256356
+  type: 'test'
+  ...
+# Subtest: optional second stream accepts only subscribed, nonfuture trades; ping never resets age
+ok 38 - optional second stream accepts only subscribed, nonfuture trades; ping never resets age
+  ---
+  duration_ms: 16.64645
+  type: 'test'
+  ...
+# Subtest: configuration validates enable switch and financial TTL/retention boundaries
+ok 39 - configuration validates enable switch and financial TTL/retention boundaries
+  ---
+  duration_ms: 1.348061
+  type: 'test'
+  ...
+# Subtest: late source tick cannot downgrade price, timestamps or derived financial fields
+ok 40 - late source tick cannot downgrade price, timestamps or derived financial fields
+  ---
+  duration_ms: 144.368335
+  type: 'test'
+  ...
+# Subtest: Yahoo financial endpoint uses shared auth and cancellation, and honors source cooldown
+ok 41 - Yahoo financial endpoint uses shared auth and cancellation, and honors source cooldown
+  ---
+  duration_ms: 1.959542
+  type: 'test'
+  ...
+# Subtest: real HTTP and SSE receive independent financial updates without refreshing the quote clock
+ok 42 - real HTTP and SSE receive independent financial updates without refreshing the quote clock
+  ---
+  duration_ms: 96.067557
+  type: 'test'
+  ...
+# Subtest: Sina cumulative trade amount uses the native CN/HK amount column, not last price times volume
+ok 43 - Sina cumulative trade amount uses the native CN/HK amount column, not last price times volume
+  ---
+  duration_ms: 3.137447
+  type: 'test'
+  ...
+# Subtest: live Naver responses retain exact regular-session turnover money and currency
+ok 44 - live Naver responses retain exact regular-session turnover money and currency
+  ---
+  duration_ms: 18.799223
+  type: 'test'
+  ...
+# Subtest: Tencent mainland lots become shares; exact amount and LOF identity reach metrics without Yahoo
+ok 45 - Tencent mainland lots become shares; exact amount and LOF identity reach metrics without Yahoo
+  ---
+  duration_ms: 3.663479
+  type: 'test'
+  ...
+# Subtest: Tencent US equity financial fields survive even with no Yahoo record
+ok 46 - Tencent US equity financial fields survive even with no Yahoo record
+  ---
+  duration_ms: 2.547458
+  type: 'test'
+  ...
+# Subtest: public financial source works during Yahoo rate limiting without waiting on Yahoo
+ok 47 - public financial source works during Yahoo rate limiting without waiting on Yahoo
+  ---
+  duration_ms: 0.256136
+  type: 'test'
+  ...
+# Subtest: snapshot financial facts refresh after a minute rather than the six-hour statement TTL
+ok 48 - snapshot financial facts refresh after a minute rather than the six-hour statement TTL
+  ---
+  duration_ms: 11.087125
+  type: 'test'
+  ...
+# Subtest: Korean PBR and issued share count are read from explicit provider fields
+ok 49 - Korean PBR and issued share count are read from explicit provider fields
+  ---
+  duration_ms: 1.405247
+  type: 'test'
+  ...
+# Subtest: provider identity and malformed/missing values fail closed
+ok 50 - provider identity and malformed/missing values fail closed
+  ---
+  duration_ms: 0.947678
+  type: 'test'
+  ...
+# Subtest: Korean public requests merge independent sources and preserve useful partial results
+ok 51 - Korean public requests merge independent sources and preserve useful partial results
+  ---
+  duration_ms: 2.029578
+  type: 'test'
+  ...
+# Subtest: Tencent public adapter uses the exact validated symbol and supports cancellation
+ok 52 - Tencent public adapter uses the exact validated symbol and supports cancellation
+  ---
+  duration_ms: 1.322483
+  type: 'test'
+  ...
+# Subtest: real adapters -> financial service -> HTTP/SSE -> UI formatter refresh all three metrics
+ok 53 - real adapters -> financial service -> HTTP/SSE -> UI formatter refresh all three metrics
+  ---
+  duration_ms: 2126.64672
+  type: 'test'
+  ...
+# Subtest: quotes are decorated synchronously while one financial fetch runs in background
+ok 54 - quotes are decorated synchronously while one financial fetch runs in background
+  ---
+  duration_ms: 15.06706
+  type: 'test'
+  ...
+# Subtest: failed refresh retains dated facts until max age, respects cooldown and replaces fields atomically
+ok 55 - failed refresh retains dated facts until max age, respects cooldown and replaces fields atomically
+  ---
+  duration_ms: 16.97183
+  type: 'test'
+  ...
+# Subtest: disabled, pending, errors and nonsecurity quotes never request financial sources
+ok 56 - disabled, pending, errors and nonsecurity quotes never request financial sources
+  ---
+  duration_ms: 21.112077
+  type: 'test'
+  ...
+# Subtest: single active financial task, membership cancellation, stop and reopen are bounded
+ok 57 - single active financial task, membership cancellation, stop and reopen are bounded
+  ---
+  duration_ms: 13.023301
+  type: 'test'
+  ...
+# (node:4765) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: financial identity mismatch is rejected and cooled down without quote mutation
+ok 58 - financial identity mismatch is rejected and cooled down without quote mutation
+  ---
+  duration_ms: 6.151558
+  type: 'test'
+  ...
+# Subtest: queued securities get their own request deadline after earlier work completes
+ok 59 - queued securities get their own request deadline after earlier work completes
+  ---
+  duration_ms: 3.007391
+  type: 'test'
+  ...
+# Subtest: explicit provider 52-week metadata survives chart enrichment without calculating from chart bars
+ok 60 - explicit provider 52-week metadata survives chart enrichment without calculating from chart bars
+  ---
+  duration_ms: 1.389784
+  type: 'test'
+  ...
+# Subtest: candidate validation preserves semantic loss but rejects malformed values and wrong identity
+ok 61 - candidate validation preserves semantic loss but rejects malformed values and wrong identity
+  ---
+  duration_ms: 1.888295
+  type: 'test'
+  ...
+# Subtest: fresh fallback beats stale primary and invalid, future or mixed-range records cannot win
+ok 62 - fresh fallback beats stale primary and invalid, future or mixed-range records cannot win
+  ---
+  duration_ms: 0.842209
+  type: 'test'
+  ...
+# Subtest: ratios use compatible currencies, actual EPS and explicit formulas, preserving valid direct values
+ok 63 - ratios use compatible currencies, actual EPS and explicit formulas, preserving valid direct values
+  ---
+  duration_ms: 0.717381
+  type: 'test'
+  ...
+# Subtest: statistics reject bad identity/time/range, future totals, negative volume and wrong units
+ok 64 - statistics reject bad identity/time/range, future totals, negative volume and wrong units
+  ---
+  duration_ms: 13.697547
+  type: 'test'
+  ...
+# Subtest: partial primary and quote-embedded facts never suppress supplemental fields
+ok 65 - partial primary and quote-embedded facts never suppress supplemental fields
+  ---
+  duration_ms: 15.212259
+  type: 'test'
+  ...
+# Subtest: independent source TTL, partial refresh, rate limit retention and recovery
+ok 66 - independent source TTL, partial refresh, rate limit retention and recovery
+  ---
+  duration_ms: 23.451852
+  type: 'test'
+  ...
+# Subtest: a stalled slow source does not block public sources and total concurrency stays bounded
+ok 67 - a stalled slow source does not block public sources and total concurrency stays bounded
+  ---
+  duration_ms: 11.466324
+  type: 'test'
+  ...
+# Subtest: wrong-symbol, nonpositive shares and expired candidates cannot become valid values
+ok 68 - wrong-symbol, nonpositive shares and expired candidates cannot become valid values
+  ---
+  duration_ms: 6.598142
+  type: 'test'
+  ...
+# Subtest: real ETF basic responses expose shares and 52-week pairs without company valuations
+ok 69 - real ETF basic responses expose shares and 52-week pairs without company valuations
+  ---
+  duration_ms: 2.55541
+  type: 'test'
+  ...
+# Subtest: identity, currency, malformed ratios and incomplete ranges are rejected or omitted
+ok 70 - identity, currency, malformed ratios and incomplete ranges are rejected or omitted
+  ---
+  duration_ms: 0.806955
+  type: 'test'
+  ...
+# Subtest: Naver actual four-quarter EPS and revenue permit explicitly identified TTM calculations
+ok 71 - Naver actual four-quarter EPS and revenue permit explicitly identified TTM calculations
+  ---
+  duration_ms: 1.615004
+  type: 'test'
+  ...
+# Subtest: Nasdaq summary keeps named 52-week values but not annualized dividends under a TTM label
+ok 72 - Nasdaq summary keeps named 52-week values but not annualized dividends under a TTM label
+  ---
+  duration_ms: 0.482407
+  type: 'test'
+  ...
+# Subtest: actual cash payments in the trailing year exclude future payments and require complete history
+ok 73 - actual cash payments in the trailing year exclude future payments and require complete history
+  ---
+  duration_ms: 2.174946
+  type: 'test'
+  ...
+# Subtest: Nasdaq explicitly identified common-shareholder income supports TTM and annual calculations in USD
+ok 74 - Nasdaq explicitly identified common-shareholder income supports TTM and annual calculations in USD
+  ---
+  duration_ms: 0.996121
+  type: 'test'
+  ...
+# Subtest: old unknown payment dates do not erase an explicitly dated last payment outside the trailing year
+ok 75 - old unknown payment dates do not erase an explicitly dated last payment outside the trailing year
+  ---
+  duration_ms: 0.553884
+  type: 'test'
+  ...
+# Subtest: partial and invalid statement observations never fabricate earnings or future periods
+ok 76 - partial and invalid statement observations never fabricate earnings or future periods
+  ---
+  duration_ms: 1.503766
+  type: 'test'
+  ...
+# Subtest: Korean company actual fiscal EPS is separate from estimates and the declared TTM header
+ok 77 - Korean company actual fiscal EPS is separate from estimates and the declared TTM header
+  ---
+  duration_ms: 1.343264
+  type: 'test'
+  ...
+# Subtest: production source descriptors fetch their own fields, scopes and TTLs
+ok 78 - production source descriptors fetch their own fields, scopes and TTLs
+  ---
+  duration_ms: 25.025513
+  type: 'test'
+  ...
+# Subtest: HTTP rate-limit, unsupported identifier, identity mismatch and cancellation stay distinct
+ok 79 - HTTP rate-limit, unsupported identifier, identity mismatch and cancellation stay distinct
+  ---
+  duration_ms: 1.822997
+  type: 'test'
+  ...
+# Subtest: a missing quarterly table does not suppress the independently returned annual PER
+ok 80 - a missing quarterly table does not suppress the independently returned annual PER
+  ---
+  duration_ms: 0.831432
+  type: 'test'
+  ...
+# Subtest: new-day blanks retain the last complete regular statistics without mixing previous close
+ok 81 - new-day blanks retain the last complete regular statistics without mixing previous close
+  ---
+  duration_ms: 14.398182
+  type: 'test'
+  ...
+# Subtest: a valid new trading day switches the whole group; an isolated empty field cannot blend days
+ok 82 - a valid new trading day switches the whole group; an isolated empty field cannot blend days
+  ---
+  duration_ms: 0.63701
+  type: 'test'
+  ...
+# Subtest: same-session backup may fill money but wrong symbol, currency and old day cannot
+ok 83 - same-session backup may fill money but wrong symbol, currency and old day cannot
+  ---
+  duration_ms: 0.543068
+  type: 'test'
+  ...
+# Subtest: real Naver day-rollover housekeeping is not a new trade timestamp
+ok 84 - real Naver day-rollover housekeeping is not a new trade timestamp
+  ---
+  duration_ms: 1.35403
+  type: 'test'
+  ...
+# Subtest: Tencent official mainland mapping supplies 52-week prices, correct share columns and five-level imbalance
+ok 85 - Tencent official mainland mapping supplies 52-week prices, correct share columns and five-level imbalance
+  ---
+  duration_ms: 3.671722
+  type: 'test'
+  ...
+# Subtest: financial values distinguish null, zero, numeric strings and invalid input
+ok 86 - financial values distinguish null, zero, numeric strings and invalid input
+  ---
+  duration_ms: 1.099807
+  type: 'test'
+  ...
+# Subtest: Yahoo maps explicit trailing fields, percentage units and unknown financial dates
+ok 87 - Yahoo maps explicit trailing fields, percentage units and unknown financial dates
+  ---
+  duration_ms: 0.638011
+  type: 'test'
+  ...
+# Subtest: Yahoo rejects mismatched symbols and never replaces annual PE with forward PE
+ok 88 - Yahoo rejects mismatched symbols and never replaces annual PE with forward PE
+  ---
+  duration_ms: 0.830511
+  type: 'test'
+  ...
+# Subtest: negative earnings and nonpositive book value are distinct from missing values
+ok 89 - negative earnings and nonpositive book value are distinct from missing values
+  ---
+  duration_ms: 0.874057
+  type: 'test'
+  ...
+# Subtest: turnover uses float shares, amplitude uses regular range and quote remains immutable
+ok 90 - turnover uses float shares, amplitude uses regular range and quote remains immutable
+  ---
+  duration_ms: 0.463768
+  type: 'test'
+  ...
+# Subtest: total shares fallback is explicit; float above total disables related calculations
+ok 91 - total shares fallback is explicit; float above total disables related calculations
+  ---
+  duration_ms: 0.815909
+  type: 'test'
+  ...
+# Subtest: zero volume is valid; lot-based or nonregular volume never becomes share turnover
+ok 92 - zero volume is valid; lot-based or nonregular volume never becomes share turnover
+  ---
+  duration_ms: 0.786084
+  type: 'test'
+  ...
+# Subtest: turnover amount, volume ratio, order imbalance and lot size are never fabricated
+ok 93 - turnover amount, volume ratio, order imbalance and lot size are never fabricated
+  ---
+  duration_ms: 0.397349
+  type: 'test'
+  ...
+# Subtest: regular statistics retain their own timestamp during extended hours
+ok 94 - regular statistics retain their own timestamp during extended hours
+  ---
+  duration_ms: 0.293222
+  type: 'test'
+  ...
+# Subtest: funds and indices do not inherit company valuations; inferred identity can be refined
+ok 95 - funds and indices do not inherit company valuations; inferred identity can be refined
+  ---
+  duration_ms: 0.500334
+  type: 'test'
+  ...
+# Subtest: expired or mismatched records disappear, stale fields remain explicitly flagged
+ok 96 - expired or mismatched records disappear, stale fields remain explicitly flagged
+  ---
+  duration_ms: 0.291099
+  type: 'test'
+  ...
+# Subtest: pence quotes produce base-currency float capitalization without a hundredfold error
+ok 97 - pence quotes produce base-currency float capitalization without a hundredfold error
+  ---
+  duration_ms: 0.162886
+  type: 'test'
+  ...
+# Subtest: Finnhub uses explicit fiscal, trailing and book metrics only
+ok 98 - Finnhub uses explicit fiscal, trailing and book metrics only
+  ---
+  duration_ms: 0.220452
+  type: 'test'
+  ...
+# Subtest: optional financial fallback requires a private token and preserves primary values
+ok 99 - optional financial fallback requires a private token and preserves primary values
+  ---
+  duration_ms: 0.468797
+  type: 'test'
+  ...
+# Subtest: rate limits preserve retry-after and cancellation never triggers fallback
+ok 100 - rate limits preserve retry-after and cancellation never triggers fallback
+  ---
+  duration_ms: 0.460714
+  type: 'test'
+  ...
+# Subtest: real UI definitions have stable 16/24 cells and total-share fallback label
+ok 101 - real UI definitions have stable 16/24 cells and total-share fallback label
+  ---
+  duration_ms: 14.020774
+  type: 'test'
+  ...
+# {"ts":"2026-09-11T12:00:00.000Z","lv":"info","msg":"[topology]","mode":"single-user","delivery":"sse","macroBackground":false,"snapshots":false,"alpaca":false,"finnhub":false,"fx":"reference","recovery":false}
+# {"ts":"2026-09-11T12:00:00.000Z","lv":"info","msg":"Market panel on http://127.0.0.1:38773","symbols":["QQQ","SPY"],"version":"92"}
+# Subtest: Eastmoney future uses quote timestamp, correct point values and a non-stock change baseline
+ok 102 - Eastmoney future uses quote timestamp, correct point values and a non-stock change baseline
+  ---
+  duration_ms: 2.470702
+  type: 'test'
+  ...
+# Subtest: cached quotes keep trade time; failures respect Retry-After without attempting alternate rate-limit endpoints
+ok 103 - cached quotes keep trade time; failures respect Retry-After without attempting alternate rate-limit endpoints
+  ---
+  duration_ms: 1.804419
+  type: 'test'
+  ...
+# Subtest: Yahoo futures do not inherit stock-session OHLC or wrong symbol values
+ok 104 - Yahoo futures do not inherit stock-session OHLC or wrong symbol values
+  ---
+  duration_ms: 0.306131
+  type: 'test'
+  ...
+# Subtest: remote contract search validates known roots and preserves expiry; paged list is cached rather than exhaustively crawled
+ok 105 - remote contract search validates known roots and preserves expiry; paged list is cached rather than exhaustively crawled
+  ---
+  duration_ms: 1.349964
+  type: 'test'
+  ...
+# Subtest: literal Eastmoney futures history never leaks into Yahoo or US stock endpoints
+ok 106 - literal Eastmoney futures history never leaks into Yahoo or US stock endpoints
+  ---
+  duration_ms: 1.859972
+  type: 'test'
+  ...
+# Subtest: point futures display point values and disable currency conversion, without changing instrument type
+ok 107 - point futures display point values and disable currency conversion, without changing instrument type
+  ---
+  duration_ms: 6.582216
+  type: 'test'
+  ...
+# {"ts":"2026-09-11T12:00:00.000Z","lv":"info","msg":"[req]","m":"GET","p":"/api/search","st":200,"ms":0}
+# {"ts":"2026-09-11T12:00:00.000Z","lv":"info","msg":"[req]","m":"GET","p":"/api/history","st":200,"ms":0}
+# {"ts":"2026-09-11T12:00:00.000Z","lv":"info","msg":"[topology]","mode":"single-user","delivery":"sse","macroBackground":false,"snapshots":false,"alpaca":false,"finnhub":false,"fx":"reference","recovery":false}
+# {"ts":"2026-09-11T12:00:00.000Z","lv":"info","msg":"Market panel on http://127.0.0.1:39023","symbols":["QQQ","SPY"],"version":"92"}
+# Subtest: real HTTP: typo discovery works offline and adding the selected symbol reaches futures quote/history paths
+ok 108 - real HTTP: typo discovery works offline and adding the selected symbol reaches futures quote/history paths
+  ---
+  duration_ms: 139.442579
+  type: 'test'
+  ...
+# Subtest: Yahoo display type Futures cannot be mistaken for an equity or filtered out of futures discovery
+ok 109 - Yahoo display type Futures cannot be mistaken for an equity or filtered out of futures discovery
+  ---
+  duration_ms: 0.73055
+  type: 'test'
+  ...
+# {"ts":"2026-09-11T12:00:00.000Z","lv":"info","msg":"[req]","m":"GET","p":"/api/search","st":200,"ms":0}
+# Subtest: expanded search keeps supported futures and cash results, not orphan futures without a quote/history identity
+ok 110 - expanded search keeps supported futures and cash results, not orphan futures without a quote/history identity
+  ---
+  duration_ms: 11.289789
+  type: 'test'
+  ...
+# Subtest: futures without source history remain in history mode and do not fabricate local samples
+ok 111 - futures without source history remain in history mode and do not fabricate local samples
+  ---
+  duration_ms: 1.343024
+  type: 'test'
+  ...
+# Subtest: catalogue polls at its own cadence and retries the primary after the bounded preference window
+ok 112 - catalogue polls at its own cadence and retries the primary after the bounded preference window
+  ---
+  duration_ms: 1.357555
+  type: 'test'
+  ...
+# Subtest: futures identifiers survive HTTP/history validation without accepting arbitrary equals expressions
+ok 113 - futures identifiers survive HTTP/history validation without accepting arbitrary equals expressions
+  ---
+  duration_ms: 0.806475
+  type: 'test'
+  ...
+# Subtest: NQ0W produces labelled related futures, not a fabricated cash-index alias
+ok 114 - NQ0W produces labelled related futures, not a fabricated cash-index alias
+  ---
+  duration_ms: 0.524451
+  type: 'test'
+  ...
+# Subtest: Google code and Chinese night-session query resolve distinct provider series
+ok 115 - Google code and Chinese night-session query resolve distinct provider series
+  ---
+  duration_ms: 1.459007
+  type: 'test'
+  ...
+# Subtest: futures never inherit US cash hours or Tencent stock mapping
+ok 116 - futures never inherit US cash hours or Tencent stock mapping
+  ---
+  duration_ms: 0.886365
+  type: 'test'
+  ...
+# Subtest: directory contains futures, with original equity markets retained
+ok 117 - directory contains futures, with original equity markets retained
+  ---
+  duration_ms: 0.459322
+  type: 'test'
+  ...
+# Subtest: futures daily source can aggregate into all K-line periods without changing identity or point scale
+ok 118 - futures daily source can aggregate into all K-line periods without changing identity or point scale
+  ---
+  duration_ms: 15.981958
+  type: 'test'
+  ...
+# Subtest: historical aggregation reused; optional source identity changes produce 409
+ok 119 - historical aggregation reused; optional source identity changes produce 409
+  ---
+  duration_ms: 26.394877
+  type: 'test'
+  ...
+# Subtest: A-share history can fall back to Sina without pretending full historical coverage
+ok 120 - A-share history can fall back to Sina without pretending full historical coverage
+  ---
+  duration_ms: 0.808828
+  type: 'test'
+  ...
+# Subtest: Nasdaq dates are exchange dates, not UTC midnight shifted to the previous NY session
+ok 121 - Nasdaq dates are exchange dates, not UTC midnight shifted to the previous NY session
+  ---
+  duration_ms: 2.934752
+  type: 'test'
+  ...
+# Subtest: Eastmoney codes and namespaces are verified; OHLC field order cannot invert high/low/close
+ok 122 - Eastmoney codes and namespaces are verified; OHLC field order cannot invert high/low/close
+  ---
+  duration_ms: 1.116672
+  type: 'test'
+  ...
+# Subtest: Nasdaq intraday accepts source epoch, keeps latest NY date and never fabricates volume
+ok 123 - Nasdaq intraday accepts source epoch, keeps latest NY date and never fabricates volume
+  ---
+  duration_ms: 0.507425
+  type: 'test'
+  ...
+# Subtest: empty Nasdaq table uses Eastmoney, then identical requests use the shared cached result
+ok 124 - empty Nasdaq table uses Eastmoney, then identical requests use the shared cached result
+  ---
+  duration_ms: 1.425147
+  type: 'test'
+  ...
+# Subtest: daily to yearly while source request is in flight fetches the wider range once, not undersized cache
+ok 125 - daily to yearly while source request is in flight fetches the wider range once, not undersized cache
+  ---
+  duration_ms: 0.731873
+  type: 'test'
+  ...
+# Subtest: history timeout starts when a queued job executes; queueing cards cannot expire healthy work
+ok 126 - history timeout starts when a queued job executes; queueing cards cannot expire healthy work
+  ---
+  duration_ms: 186.437167
+  type: 'test'
+  ...
+# Subtest: a late wider history demand is fulfilled even after the first source request has already started
+ok 127 - a late wider history demand is fulfilled even after the first source request has already started
+  ---
+  duration_ms: 26.17781
+  type: 'test'
+  ...
+# Subtest: first cold failure includes the same retryAt as subsequent suppressed reads
+ok 128 - first cold failure includes the same retryAt as subsequent suppressed reads
+  ---
+  duration_ms: 0.84255
+  type: 'test'
+  ...
+# Subtest: 429 on the Eastmoney host does not probe another namespace during cooldown
+ok 129 - 429 on the Eastmoney host does not probe another namespace during cooldown
+  ---
+  duration_ms: 0.944032
+  type: 'test'
+  ...
+# Subtest: malformed successful history payload triggers a backup without weakening source identity checks
+ok 130 - malformed successful history payload triggers a backup without weakening source identity checks
+  ---
+  duration_ms: 0.754447
+  type: 'test'
+  ...
+# Subtest: same-day lagging source history stays visible; samples/history are explicit user choices
+ok 131 - same-day lagging source history stays visible; samples/history are explicit user choices
+  ---
+  duration_ms: 1.490235
+  type: 'test'
+  ...
+# Subtest: production lazy history enrichment fetches only intraday; daily/weekly use the history API on demand
+ok 132 - production lazy history enrichment fetches only intraday; daily/weekly use the history API on demand
+  ---
+  duration_ms: 1.127979
+  type: 'test'
+  ...
+# Subtest: deployment history acceptance checks all four periods and actual candles, not service readiness
+ok 133 - deployment history acceptance checks all four periods and actual candles, not service readiness
+  ---
+  duration_ms: 2.036148
+  type: 'test'
+  ...
+# Subtest: deployment acceptance fails on empty or cooling history without repeatedly polling a failed symbol
+ok 134 - deployment acceptance fails on empty or cooling history without repeatedly polling a failed symbol
+  ---
+  duration_ms: 0.377498
+  type: 'test'
+  ...
+# Subtest: legitimate pre-1970 daily dates are not rejected as invalid Unix timestamps
+ok 135 - legitimate pre-1970 daily dates are not rejected as invalid Unix timestamps
+  ---
+  duration_ms: 0.992586
+  type: 'test'
+  ...
+# Subtest: background warms without browser; disconnect is not a stop and reselect updates membership
+ok 136 - background warms without browser; disconnect is not a stop and reselect updates membership
+  ---
+  duration_ms: 971.873214
+  type: 'test'
+  ...
+# Subtest: persist raw daily data and watchlist; restart serves four periods while network fails
+ok 137 - persist raw daily data and watchlist; restart serves four periods while network fails
+  ---
+  duration_ms: 2004.147788
+  type: 'test'
+  ...
+# Subtest: one worker does not overlap cycles or bypass 429 cooldown
+ok 138 - one worker does not overlap cycles or bypass 429 cooldown
+  ---
+  duration_ms: 30.808961
+  type: 'test'
+  ...
+# Subtest: real HTTP cache bundle and four tab endpoints return without upstream on warm path
+ok 139 - real HTTP cache bundle and four tab endpoints return without upstream on warm path
+  ---
+  duration_ms: 210.581263
+  type: 'test'
+  ...
+# Subtest: SSE publishes history without a dedicated history stream or clicking tabs
+ok 140 - SSE publishes history without a dedicated history stream or clicking tabs
+  ---
+  duration_ms: 125.86981
+  type: 'test'
+  ...
+# Subtest: prepared four periods share one raw read; hydration reuses arrays and rejects an older source snapshot
+ok 141 - prepared four periods share one raw read; hydration reuses arrays and rejects an older source snapshot
+  ---
+  duration_ms: 159.901584
+  type: 'test'
+  ...
+# Subtest: stopping a never-started service does not overwrite an existing checkpoint
+ok 142 - stopping a never-started service does not overwrite an existing checkpoint
+  ---
+  duration_ms: 2.761911
+  type: 'test'
+  ...
+# Subtest: serial worker chooses the oldest due entry, so one slow symbol cannot starve later symbols
+ok 143 - serial worker chooses the oldest due entry, so one slow symbol cannot starve later symbols
+  ---
+  duration_ms: 1.238837
+  type: 'test'
+  ...
+# Subtest: explicitly clearing the last watchlist survives a restart and does not resurrect old symbols
+ok 144 - explicitly clearing the last watchlist survives a restart and does not resurrect old symbols
+  ---
+  duration_ms: 127.49151
+  type: 'test'
+  ...
+# Subtest: Yahoo sibling hosts share a cooldown; no early half-open request
+ok 145 - Yahoo sibling hosts share a cooldown; no early half-open request
+  ---
+  duration_ms: 5.605154
+  type: 'test'
+  ...
+# Subtest: a source error does not stop an unrelated source
+ok 146 - a source error does not stop an unrelated source
+  ---
+  duration_ms: 0.345461
+  type: 'test'
+  ...
+# Subtest: all queued requests are checked again after the first 429
+ok 147 - all queued requests are checked again after the first 429
+  ---
+  duration_ms: 0.615999
+  type: 'test'
+  ...
+# Subtest: Retry-After date and reset timestamp are lower bounds, never capped early
+ok 148 - Retry-After date and reset timestamp are lower bounds, never capped early
+  ---
+  duration_ms: 0.163596
+  type: 'test'
+  ...
+# Subtest: real HTTP serves readiness without source polling; SSE propagates cached changes and cv deltas
+ok 149 - real HTTP serves readiness without source polling; SSE propagates cached changes and cv deltas
+  ---
+  duration_ms: 384.661783
+  type: 'test'
+  ...
+# Subtest: server construction/import and two lifecycle cycles own no global network instance
+ok 150 - server construction/import and two lifecycle cycles own no global network instance
+  ---
+  duration_ms: 4.914865
+  type: 'test'
+  ...
+# Subtest: Hynix aliases return both listings; Korean code and US ADR remain distinct
+ok 151 - Hynix aliases return both listings; Korean code and US ADR remain distinct
+  ---
+  duration_ms: 2.779728
+  type: 'test'
+  ...
+# Subtest: HTTP exact company alias works when every remote search is unavailable
+ok 152 - HTTP exact company alias works when every remote search is unavailable
+  ---
+  duration_ms: 25.913781
+  type: 'test'
+  ...
+# Subtest: unknown Korean numeric code requires exact provider identity and exchange confirmation
+ok 153 - unknown Korean numeric code requires exact provider identity and exchange confirmation
+  ---
+  duration_ms: 1.110132
+  type: 'test'
+  ...
+# Subtest: Korean minute XML uses close and cumulative volume differences; daily XML retains real OHLC
+ok 154 - Korean minute XML uses close and cumulative volume differences; daily XML retains real OHLC
+  ---
+  duration_ms: 1.739361
+  type: 'test'
+  ...
+# Subtest: Korean minute history is deduplicated, cached for 60s and never requested for the ADR
+ok 155 - Korean minute history is deduplicated, cached for 60s and never requested for the ADR
+  ---
+  duration_ms: 0.771813
+  type: 'test'
+  ...
+# Subtest: shared history router tries Naver for Korea, keeps ADR on US route; daily fallback never leaks into intraday
+ok 156 - shared history router tries Naver for Korea, keeps ADR on US route; daily fallback never leaks into intraday
+  ---
+  duration_ms: 0.719915
+  type: 'test'
+  ...
+# Subtest: remove watchlist evicts all snapshot state, not only membership
+ok 157 - remove watchlist evicts all snapshot state, not only membership
+  ---
+  duration_ms: 182.11764
+  type: 'test'
+  ...
+# Subtest: stream enrichment retries a pending snapshot in one second rather than one minute
+ok 158 - stream enrichment retries a pending snapshot in one second rather than one minute
+  ---
+  duration_ms: 2.456842
+  type: 'test'
+  ...
+# Subtest: news has no autonomous poller and changing watchlist cannot exhaust client slots
+ok 159 - news has no autonomous poller and changing watchlist cannot exhaust client slots
+  ---
+  duration_ms: 0.972375
+  type: 'test'
+  ...
+# Subtest: no calendar credentials means zero external calls
+ok 160 - no calendar credentials means zero external calls
+  ---
+  duration_ms: 0.857402
+  type: 'test'
+  ...
+# Subtest: consensus is captured before scheduled release and never overwritten by the model or a post-release revision
+ok 161 - consensus is captured before scheduled release and never overwritten by the model or a post-release revision
+  ---
+  duration_ms: 1.582695
+  type: 'test'
+  ...
+# Subtest: missing consensus never falls back to model forecast; late start never claims a pre-release snapshot
+ok 162 - missing consensus never falls back to model forecast; late start never claims a pre-release snapshot
+  ---
+  duration_ms: 0.224769
+  type: 'test'
+  ...
+# Subtest: estimated time, missing reference, or foreign country cannot yield a confirmed comparable release
+ok 163 - estimated time, missing reference, or foreign country cannot yield a confirmed comparable release
+  ---
+  duration_ms: 0.354114
+  type: 'test'
+  ...
+# Subtest: unauthorized keys stop repeated calls until restart; error does not expose secrets
+ok 164 - unauthorized keys stop repeated calls until restart; error does not expose secrets
+  ---
+  duration_ms: 0.410278
+  type: 'test'
+  ...
+# Subtest: context construction and snapshot are reads; the application monitor owns scheduling; concurrent calls share a batch
+ok 165 - context construction and snapshot are reads; the application monitor owns scheduling; concurrent calls share a batch
+  ---
+  duration_ms: 3.161833
+  type: 'test'
+  ...
+# Subtest: startup waits for a real same-window anchor, never synthesizes day returns
+ok 166 - startup waits for a real same-window anchor, never synthesizes day returns
+  ---
+  duration_ms: 0.848518
+  type: 'test'
+  ...
+# Subtest: no source trade time or old source time cannot be refreshed by an HTTP success
+ok 167 - no source trade time or old source time cannot be refreshed by an HTTP success
+  ---
+  duration_ms: 1.557847
+  type: 'test'
+  ...
+# Subtest: source identity changes reset samples rather than splice series
+ok 168 - source identity changes reset samples rather than splice series
+  ---
+  duration_ms: 0.441635
+  type: 'test'
+  ...
+# Subtest: 429 respects retryAt and cached quote remains old, with an error
+ok 169 - 429 respects retryAt and cached quote remains old, with an error
+  ---
+  duration_ms: 0.712814
+  type: 'test'
+  ...
+# Subtest: closing stops reads and restart restores normal service
+ok 170 - closing stops reads and restart restores normal service
+  ---
+  duration_ms: 0.595598
+  type: 'test'
+  ...
+# Subtest: index quotes preserve exact identity and raw units, reject mismatched and missing prices
+ok 171 - index quotes preserve exact identity and raw units, reject mismatched and missing prices
+  ---
+  duration_ms: 0.379552
+  type: 'test'
+  ...
+# Subtest: declared delayed feed cannot enter synchronous comparisons just because it reports a recent timestamp
+ok 172 - declared delayed feed cannot enter synchronous comparisons just because it reports a recent timestamp
+  ---
+  duration_ms: 1.053197
+  type: 'test'
+  ...
+# Subtest: CPI surprise requires matching actual and consensus, not previous
+ok 173 - CPI surprise requires matching actual and consensus, not previous
+  ---
+  duration_ms: 6.064106
+  type: 'test'
+  ...
+# Subtest: headline/core and YoY/MoM cannot be mixed into one surprise
+ok 174 - headline/core and YoY/MoM cannot be mixed into one surprise
+  ---
+  duration_ms: 0.517029
+  type: 'test'
+  ...
+# Subtest: forecast, non-US, unrecognised units and missing reference month cannot become release surprises
+ok 175 - forecast, non-US, unrecognised units and missing reference month cannot become release surprises
+  ---
+  duration_ms: 0.494054
+  type: 'test'
+  ...
+# Subtest: English explicit US CPI release is parsed; predicted values remain pending
+ok 176 - English explicit US CPI release is parsed; predicted values remain pending
+  ---
+  duration_ms: 1.113267
+  type: 'test'
+  ...
+# Subtest: oil supply loss means conditional oil support and Nasdaq pressure, not universal good news
+ok 177 - oil supply loss means conditional oil support and Nasdaq pressure, not universal good news
+  ---
+  duration_ms: 0.598282
+  type: 'test'
+  ...
+# Subtest: oil supply recovery and demand destruction have different Nasdaq interpretation
+ok 178 - oil supply recovery and demand destruction have different Nasdaq interpretation
+  ---
+  duration_ms: 1.221029
+  type: 'test'
+  ...
+# Subtest: oil price alone and profit-taking narrative cannot establish capital rotation
+ok 179 - oil price alone and profit-taking narrative cannot establish capital rotation
+  ---
+  duration_ms: 0.220061
+  type: 'test'
+  ...
+# Subtest: negation and rumours cannot become factual supply shock
+ok 180 - negation and rumours cannot become factual supply shock
+  ---
+  duration_ms: 0.521066
+  type: 'test'
+  ...
+# Subtest: old official announcements are background, official status is not a trading confidence score
+ok 181 - old official announcements are background, official status is not a trading confidence score
+  ---
+  duration_ms: 0.300213
+  type: 'test'
+  ...
+# Subtest: a source name cannot impersonate an official source
+ok 182 - a source name cannot impersonate an official source
+  ---
+  duration_ms: 0.453202
+  type: 'test'
+  ...
+# Subtest: duplicate links and identical syndicated titles count as one event, not independent confirmations
+ok 183 - duplicate links and identical syndicated titles count as one event, not independent confirmations
+  ---
+  duration_ms: 0.575286
+  type: 'test'
+  ...
+# Subtest: evidence records the source text scope without claiming to read full articles
+ok 184 - evidence records the source text scope without claiming to read full articles
+  ---
+  duration_ms: 0.440093
+  type: 'test'
+  ...
+# Subtest: different flashes with the same feed landing URL are not collapsed
+ok 185 - different flashes with the same feed landing URL are not collapsed
+  ---
+  duration_ms: 0.144158
+  type: 'test'
+  ...
+# Subtest: production HTTP reads server-owned macro snapshots; real parsers, separate factor collection and consensus capture
+ok 186 - production HTTP reads server-owned macro snapshots; real parsers, separate factor collection and consensus capture
+  ---
+  duration_ms: 8087.542778
+  type: 'test'
+  ...
+# Subtest: release smoke commands read the local VERSION; macro check reads monitor cache, not additional macro sources
+ok 187 - release smoke commands read the local VERSION; macro check reads monitor cache, not additional macro sources
+  ---
+  duration_ms: 290.672822
+  type: 'test'
+  ...
+# Subtest: 真实定时器：没有任何HTTP/SSE客户端时后台仍定时执行
+ok 188 - 真实定时器：没有任何HTTP/SSE客户端时后台仍定时执行
+  ---
+  duration_ms: 87.296418
+  type: 'test'
+  ...
+# Subtest: 重入与订阅退订不产生另一套采集；停止后不再读取
+ok 189 - 重入与订阅退订不产生另一套采集；停止后不再读取
+  ---
+  duration_ms: 25.022367
+  type: 'test'
+  ...
+# Subtest: 持久化恢复来源采样和新闻，重启不是重新等15分钟
+ok 190 - 持久化恢复来源采样和新闻，重启不是重新等15分钟
+  ---
+  duration_ms: 22.286471
+  type: 'test'
+  ...
+# Subtest: 损坏状态可启动但明确记录恢复失败，不制造历史采样
+ok 191 - 损坏状态可启动但明确记录恢复失败，不制造历史采样
+  ---
+  duration_ms: 10.289582
+  type: 'test'
+  ...
+# Subtest: 全部因子429时仍独立更新新闻，不把失败采集标成成功
+ok 192 - 全部因子429时仍独立更新新闻，不把失败采集标成成功
+  ---
+  duration_ms: 1.802926
+  type: 'test'
+  ...
+# Subtest: 发布前共识跨重启保留，发布后当前预期不覆盖真实捕获值
+ok 193 - 发布前共识跨重启保留，发布后当前预期不覆盖真实捕获值
+  ---
+  duration_ms: 1.786021
+  type: 'test'
+  ...
+# Subtest: 外部通知只发送新增重点事件，重试遵守429且不重复发送
+ok 194 - 外部通知只发送新增重点事件，重试遵守429且不重复发送
+  ---
+  duration_ms: 54.411665
+  type: 'test'
+  ...
+# Subtest: 可选Webhook只接受HTTPS，权限只出现在服务端请求头
+ok 195 - 可选Webhook只接受HTTPS，权限只出现在服务端请求头
+  ---
+  duration_ms: 3.324359
+  type: 'test'
+  ...
+# Subtest: 生产HTTP：零页面启动采集、SSE快照、断线后台继续、重新连接拿新快照
+ok 196 - 生产HTTP：零页面启动采集、SSE快照、断线后台继续、重新连接拿新快照
+  ---
+  duration_ms: 8107.890174
+  type: 'test'
+  ...
+# Subtest: 截图复现：英国民调不是美国CPI实际发布，也不应贴纳指标签
+ok 197 - 截图复现：英国民调不是美国CPI实际发布，也不应贴纳指标签
+  ---
+  duration_ms: 2.612276
+  type: 'test'
+  ...
+# Subtest: 截图复现：同次民调不同期限归组，保留每个期限而非三条重复占位
+ok 198 - 截图复现：同次民调不同期限归组，保留每个期限而非三条重复占位
+  ---
+  duration_ms: 1.53957
+  type: 'test'
+  ...
+# Subtest: 否定复现：未减产、并未恢复供应不能变成已发生供给冲击
+ok 199 - 否定复现：未减产、并未恢复供应不能变成已发生供给冲击
+  ---
+  duration_ms: 1.677177
+  type: 'test'
+  ...
+# Subtest: 采样复现：来源缺成交时点，应分别提供观察时间和采样进度而非永久提示等15分钟
+ok 200 - 采样复现：来源缺成交时点，应分别提供观察时间和采样进度而非永久提示等15分钟
+  ---
+  duration_ms: 2.007445
+  type: 'test'
+  ...
+# Subtest: 生命周期复现：宏观后台有显式服务，不依赖HTTP展开请求
+ok 201 - 生命周期复现：宏观后台有显式服务，不依赖HTTP展开请求
+  ---
+  duration_ms: 8.23711
+  type: 'test'
+  ...
+# Subtest: macro initial HTTP snapshot preserves analysisVersion before slow upstream completes
+ok 202 - macro initial HTTP snapshot preserves analysisVersion before slow upstream completes
+  ---
+  duration_ms: 0.911053
+  type: 'test'
+  ...
+# Subtest: stale news cache is retained without advancing the last successful source collection
+ok 203 - stale news cache is retained without advancing the last successful source collection
+  ---
+  duration_ms: 5.146374
+  type: 'test'
+  ...
+# Subtest: failed webhook is abandoned after five attempts and cannot be silently re-enqueued each news cycle
+ok 204 - failed webhook is abandoned after five attempts and cannot be silently re-enqueued each news cycle
+  ---
+  duration_ms: 14.075195
+  type: 'test'
+  ...
+# Subtest: 新浪四项一次文本批量解析，未知时区绝不编造成交时间
+ok 205 - 新浪四项一次文本批量解析，未知时区绝不编造成交时间
+  ---
+  duration_ms: 1.312347
+  type: 'test'
+  ...
+# Subtest: 美元时间/价格字段错位、空响应和脚本不能形成伪报价
+ok 206 - 美元时间/价格字段错位、空响应和脚本不能形成伪报价
+  ---
+  duration_ms: 0.198088
+  type: 'test'
+  ...
+# Subtest: 收益率仅取近期日线收盘并标记%，拒绝古老/未来/错字段数据
+ok 207 - 收益率仅取近期日线收盘并标记%，拒绝古老/未来/错字段数据
+  ---
+  duration_ms: 0.651412
+  type: 'test'
+  ...
+# Subtest: 五项并行读取共享一次新浪批量；无Yahoo时四项备用+日债源可用
+ok 208 - 五项并行读取共享一次新浪批量；无Yahoo时四项备用+日债源可用
+  ---
+  duration_ms: 3.310828
+  type: 'test'
+  ...
+# Subtest: 429源与备源均失败时冷却，点击不重试；服务端Retry-After优先
+ok 209 - 429源与备源均失败时冷却，点击不重试；服务端Retry-After优先
+  ---
+  duration_ms: 1.372778
+  type: 'test'
+  ...
+# Subtest: 日度收益率可以展示但不产生分钟利率反应
+ok 210 - 日度收益率可以展示但不产生分钟利率反应
+  ---
+  duration_ms: 2.377412
+  type: 'test'
+  ...
+# Subtest: 重复后台合并同次民调是幂等的，不无限增长摘要和期限计数
+ok 211 - 重复后台合并同次民调是幂等的，不无限增长摘要和期限计数
+  ---
+  duration_ms: 1.963969
+  type: 'test'
+  ...
+# Subtest: 英国CPI本土数据不套美国缺失提示，混合地区不猜单国
+ok 212 - 英国CPI本土数据不套美国缺失提示，混合地区不猜单国
+  ---
+  duration_ms: 1.06163
+  type: 'test'
+  ...
+# Subtest: HTTP and background: blocked Yahoo/Sina, partial catalogue and daily references, followed by recovery
+ok 213 - HTTP and background: blocked Yahoo/Sina, partial catalogue and daily references, followed by recovery
+  ---
+  duration_ms: 10094.34898
+  type: 'test'
+  ...
+# Subtest: FRED daily parser validates series ID/date/unit, tolerates missing points, never uses latest CPI as a price
+ok 214 - FRED daily parser validates series ID/date/unit, tolerates missing points, never uses latest CPI as a price
+  ---
+  duration_ms: 0.597891
+  type: 'test'
+  ...
+# Subtest: Sina GBK still works after adding UTF-8 support; no JavaScript execution
+ok 215 - Sina GBK still works after adding UTF-8 support; no JavaScript execution
+  ---
+  duration_ms: 0.460023
+  type: 'test'
+  ...
+# Subtest: slow shared candidate is bounded and never duplicated while unresolved
+ok 216 - slow shared candidate is bounded and never duplicated while unresolved
+  ---
+  duration_ms: 42.601558
+  type: 'test'
+  ...
+# Subtest: public daily fallback is cached once for concurrent factor requests; does not increase requested-symbol coverage
+ok 217 - public daily fallback is cached once for concurrent factor requests; does not increase requested-symbol coverage
+  ---
+  duration_ms: 2.430963
+  type: 'test'
+  ...
+# Subtest: Brotli decoding and decompressed-size bound work through a real local HTTP socket
+ok 218 - Brotli decoding and decompressed-size bound work through a real local HTTP socket
+  ---
+  duration_ms: 9.457309
+  type: 'test'
+  ...
+# Subtest: expired persisted daily data becomes stale and cannot pass as available daily context
+ok 219 - expired persisted daily data becomes stale and cannot pass as available daily context
+  ---
+  duration_ms: 0.738653
+  type: 'test'
+  ...
+# Subtest: daily CSV rejects impossible calendar dates rather than accepting normalized dates
+ok 220 - daily CSV rejects impossible calendar dates rather than accepting normalized dates
+  ---
+  duration_ms: 0.305951
+  type: 'test'
+  ...
+# Subtest: R26-01: transport decodes gzip before provider text parsing
+ok 221 - R26-01: transport decodes gzip before provider text parsing
+  ---
+  duration_ms: 19.307068
+  type: 'test'
+  ...
+# Subtest: R26-02: Sina macro uses the canonical query-list endpoint
+ok 222 - R26-02: Sina macro uses the canonical query-list endpoint
+  ---
+  duration_ms: 1.952331
+  type: 'test'
+  ...
+# Subtest: R26-03: all realtime routes failing can expose named daily references, not blank or fake futures
+ok 223 - R26-03: all realtime routes failing can expose named daily references, not blank or fake futures
+  ---
+  duration_ms: 2.508028
+  type: 'test'
+  ...
+# Subtest: R26-04: a daily fallback is not pinned ahead of a recovered intraday source
+ok 224 - R26-04: a daily fallback is not pinned ahead of a recovered intraday source
+  ---
+  duration_ms: 1.795025
+  type: 'test'
+  ...
+# Subtest: R26-05: factor cadence uses request start instead of adding network delay to 30 seconds
+ok 225 - R26-05: factor cadence uses request start instead of adding network delay to 30 seconds
+  ---
+  duration_ms: 2.080094
+  type: 'test'
+  ...
+# Subtest: R26-06: publish a ready factor while another provider is still pending
+ok 226 - R26-06: publish a ready factor while another provider is still pending
+  ---
+  duration_ms: 11.339784
+  type: 'test'
+  ...
+# Subtest: R26-07: a fresh observation window can compare event-timestamped and untimestamped feeds without relabelling event time
+ok 227 - R26-07: a fresh observation window can compare event-timestamped and untimestamped feeds without relabelling event time
+  ---
+  duration_ms: 1.019426
+  type: 'test'
+  ...
+# Subtest: R26-08: diagnostics survive a total failure even with no previous successful quote
+ok 228 - R26-08: diagnostics survive a total failure even with no previous successful quote
+  ---
+  duration_ms: 0.440493
+  type: 'test'
+  ...
+# Subtest: R26-09: unavailable factor never says wait-for-window in frontend
+ok 229 - R26-09: unavailable factor never says wait-for-window in frontend
+  ---
+  duration_ms: 1.851289
+  type: 'test'
+  ...
+# Subtest: R26-10: a lower-quality stale result must not overwrite the last good observation
+ok 230 - R26-10: a lower-quality stale result must not overwrite the last good observation
+  ---
+  duration_ms: 0.615747
+  type: 'test'
+  ...
+# Subtest: R26-11: UTF-8 returned through latin1 transport must not silently remove the dollar index
+ok 231 - R26-11: UTF-8 returned through latin1 transport must not silently remove the dollar index
+  ---
+  duration_ms: 0.35176
+  type: 'test'
+  ...
+# Subtest: v28 screenshot: 美国核心通胀数据高于预期，交易员加大对美联储加息的押注，利率互换显示下周加息概率升至90%。
+ok 232 - v28 screenshot: 美国核心通胀数据高于预期，交易员加大对美联储加息的押注，利率互换显示下周加息概率升至90%。
+  ---
+  duration_ms: 5.034775
+  type: 'test'
+  ...
+# Subtest: v28 screenshot: U.S. Stocks Rise, Treasury Yields Slip Despite Stubborn Inflation
+ok 233 - v28 screenshot: U.S. Stocks Rise, Treasury Yields Slip Despite Stubborn Inflation
+  ---
+  duration_ms: 1.405738
+  type: 'test'
+  ...
+# Subtest: v28 screenshot: Treasury yields soar to almost 5% on inflation fears
+ok 234 - v28 screenshot: Treasury yields soar to almost 5% on inflation fears
+  ---
+  duration_ms: 1.005926
+  type: 'test'
+  ...
+# Subtest: v28 screenshot: Crude Oil Raises Inflation Concerns as Treasury Yields Weigh on Stocks
+ok 235 - v28 screenshot: Crude Oil Raises Inflation Concerns as Treasury Yields Weigh on Stocks
+  ---
+  duration_ms: 0.476528
+  type: 'test'
+  ...
+# Subtest: v28 screenshot: US inflation continues to rise as Fed considers rate hike following August price surge
+ok 236 - v28 screenshot: US inflation continues to rise as Fed considers rate hike following August price surge
+  ---
+  duration_ms: 0.254263
+  type: 'test'
+  ...
+# Subtest: v28 screenshot: August inflation data demands rate hikes from the Fed
+ok 237 - v28 screenshot: August inflation data demands rate hikes from the Fed
+  ---
+  duration_ms: 0.339601
+  type: 'test'
+  ...
+# Subtest: v28 screenshot: Inflation stayed hot in August with annual pace of 3.4%, raising the odds of a Fed hike
+ok 238 - v28 screenshot: Inflation stayed hot in August with annual pace of 3.4%, raising the odds of a Fed hike
+  ---
+  duration_ms: 0.157027
+  type: 'test'
+  ...
+# Subtest: v28 screenshot: Gold Rebounds as US Inflation Data Cools Record-High Real Rates
+ok 239 - v28 screenshot: Gold Rebounds as US Inflation Data Cools Record-High Real Rates
+  ---
+  duration_ms: 0.297548
+  type: 'test'
+  ...
+# Subtest: v28 screenshot: Oil Soars Past $100 as Saudi Output Crashes to Lowest Since 1990
+ok 240 - v28 screenshot: Oil Soars Past $100 as Saudi Output Crashes to Lowest Since 1990
+  ---
+  duration_ms: 0.520604
+  type: 'test'
+  ...
+# Subtest: v28 screenshot: 美国国债收益率下降，美元走弱
+ok 241 - v28 screenshot: 美国国债收益率下降，美元走弱
+  ---
+  duration_ms: 1.57371
+  type: 'test'
+  ...
+# Subtest: v28 screenshot: Fed hike odds fell to 20% after US data
+ok 242 - v28 screenshot: Fed hike odds fell to 20% after US data
+  ---
+  duration_ms: 0.284999
+  type: 'test'
+  ...
+# Subtest: v28 screenshot: 市场调低美联储降息概率，美元走强
+ok 243 - v28 screenshot: 市场调低美联储降息概率，美元走强
+  ---
+  duration_ms: 0.120432
+  type: 'test'
+  ...
+# Subtest: forecast and rate commentary stay conditional, never a completed decision or 90% return chance
+ok 244 - forecast and rate commentary stay conditional, never a completed decision or 90% return chance
+  ---
+  duration_ms: 0.22583
+  type: 'test'
+  ...
+# Subtest: gold technical headline and ahead-CPI preview are not generic Nasdaq inflation releases
+ok 245 - gold technical headline and ahead-CPI preview are not generic Nasdaq inflation releases
+  ---
+  duration_ms: 0.359091
+  type: 'test'
+  ...
+# Subtest: plain CPI level without consensus remains unknown, not invented surprise
+ok 246 - plain CPI level without consensus remains unknown, not invented surprise
+  ---
+  duration_ms: 0.229496
+  type: 'test'
+  ...
+# Subtest: generic official ECB publication is regional, not Nasdaq
+ok 247 - generic official ECB publication is regional, not Nasdaq
+  ---
+  duration_ms: 0.231198
+  type: 'test'
+  ...
+# Subtest: negated yield and supply events cannot create a directional shock
+ok 248 - negated yield and supply events cannot create a directional shock
+  ---
+  duration_ms: 0.567125
+  type: 'test'
+  ...
+# Subtest: conflicting channels produce mixed impact without summing made-up probabilities
+ok 249 - conflicting channels produce mixed impact without summing made-up probabilities
+  ---
+  duration_ms: 0.554105
+  type: 'test'
+  ...
+# Subtest: diesel refining proposal is not actual crude production growth
+ok 250 - diesel refining proposal is not actual crude production growth
+  ---
+  duration_ms: 0.25218
+  type: 'test'
+  ...
+# Subtest: explicit comparable US inflation release retains priority
+ok 251 - explicit comparable US inflation release retains priority
+  ---
+  duration_ms: 0.580144
+  type: 'test'
+  ...
+# Subtest: old HTTP/SSE snapshots cannot replace newer macro prices, but a restarted process can publish
+ok 252 - old HTTP/SSE snapshots cannot replace newer macro prices, but a restarted process can publish
+  ---
+  duration_ms: 3.105549
+  type: 'test'
+  ...
+# Subtest: Naver preserves the oil contract, USD/barrel unit, explicit offset and ten-minute delay
+ok 253 - Naver preserves the oil contract, USD/barrel unit, explicit offset and ten-minute delay
+  ---
+  duration_ms: 2.207506
+  type: 'test'
+  ...
+# Subtest: CNBC uses yield rather than bond price; time-only values never become fabricated trade dates
+ok 254 - CNBC uses yield rather than bond price; time-only values never become fabricated trade dates
+  ---
+  duration_ms: 0.858123
+  type: 'test'
+  ...
+# Subtest: one shared request per provider supplies independent macro factors and refreshes after TTL
+ok 255 - one shared request per provider supplies independent macro factors and refreshes after TTL
+  ---
+  duration_ms: 1.636916
+  type: 'test'
+  ...
+# Subtest: blocked legacy sources can refresh from public fallback without relabelling delayed oil as live
+ok 256 - blocked legacy sources can refresh from public fallback without relabelling delayed oil as live
+  ---
+  duration_ms: 3.939635
+  type: 'test'
+  ...
+# Subtest: public adapters reject malformed identities, dates, prices and response shapes
+ok 257 - public adapters reject malformed identities, dates, prices and response shapes
+  ---
+  duration_ms: 0.380764
+  type: 'test'
+  ...
+# Subtest: rate limits are shared across factor readers and survive close/reopen
+ok 258 - rate limits are shared across factor readers and survive close/reopen
+  ---
+  duration_ms: 1.256172
+  type: 'test'
+  ...
+# Subtest: HTTP 200 empty data and a missing individual factor do not count as successful quotes
+ok 259 - HTTP 200 empty data and a missing individual factor do not count as successful quotes
+  ---
+  duration_ms: 1.053948
+  type: 'test'
+  ...
+# Subtest: closing a reader interrupts its wait and an old producer cannot publish into a reopened reader
+ok 260 - closing a reader interrupts its wait and an old producer cannot publish into a reopened reader
+  ---
+  duration_ms: 6.969861
+  type: 'test'
+  ...
+# Subtest: a recently cached old primary does not outrank a successfully refreshed delayed backup
+ok 261 - a recently cached old primary does not outrank a successfully refreshed delayed backup
+  ---
+  duration_ms: 0.868088
+  type: 'test'
+  ...
+# Subtest: oversized NYMEX catalogue request must not prevent CL refresh
+ok 262 - oversized NYMEX catalogue request must not prevent CL refresh
+  ---
+  duration_ms: 15.351098
+  type: 'test'
+  ...
+# Subtest: one unresolved factor does not block the next refresh of the other factors
+ok 263 - one unresolved factor does not block the next refresh of the other factors
+  ---
+  duration_ms: 8.241978
+  type: 'test'
+  ...
+# Subtest: declared delayed quotes refresh their displayed value but never become live minute comparisons
+ok 264 - declared delayed quotes refresh their displayed value but never become live minute comparisons
+  ---
+  duration_ms: 0.847326
+  type: 'test'
+  ...
+# Subtest: macro frontend shows automatic checks and source delay without saying the feed is frozen
+ok 265 - macro frontend shows automatic checks and source delay without saying the feed is frozen
+  ---
+  duration_ms: 4.983938
+  type: 'test'
+  ...
+# Subtest: absolute provider cache expiry avoids an extra thirty-second cache-only cycle
+ok 266 - absolute provider cache expiry avoids an extra thirty-second cache-only cycle
+  ---
+  duration_ms: 0.784482
+  type: 'test'
+  ...
+# Subtest: shared catalogue age is not renewed by a second futures cache and pagination stays bounded
+ok 267 - shared catalogue age is not renewed by a second futures cache and pagination stays bounded
+  ---
+  duration_ms: 1.638568
+  type: 'test'
+  ...
+# Subtest: a successful catalogue fallback is refreshed without retrying the failing primary every cycle
+ok 268 - a successful catalogue fallback is refreshed without retrying the failing primary every cycle
+  ---
+  duration_ms: 0.933837
+  type: 'test'
+  ...
+# Subtest: a rejected out-of-order delayed quote preserves usable status without renewing its timestamps
+ok 269 - a rejected out-of-order delayed quote preserves usable status without renewing its timestamps
+  ---
+  duration_ms: 0.767136
+  type: 'test'
+  ...
+# Subtest: statistics use actual closes and covered trading dates, preserving gaps and adjustment warnings
+ok 270 - statistics use actual closes and covered trading dates, preserving gaps and adjustment warnings
+  ---
+  duration_ms: 1.701925
+  type: 'test'
+  ...
+# Subtest: no data yields explicit null statistics and a single close has no return
+ok 271 - no data yields explicit null statistics and a single close has no return
+  ---
+  duration_ms: 0.333362
+  type: 'test'
+  ...
+# Subtest: index statistics retain points and reject mixed currency or malformed column contracts
+ok 272 - index statistics retain points and reject mixed currency or malformed column contracts
+  ---
+  duration_ms: 1.403664
+  type: 'test'
+  ...
+# Subtest: client posts one query with the key only in Authorization and refuses redirects
+ok 273 - client posts one query with the key only in Authorization and refuses redirects
+  ---
+  duration_ms: 5.047494
+  type: 'test'
+  ...
+# Subtest: credential and base URL validation happen before any fetch
+ok 274 - credential and base URL validation happen before any fetch
+  ---
+  duration_ms: 0.549258
+  type: 'test'
+  ...
+# Subtest: auth and provider errors are sanitized without echoing key, URL or response text
+ok 275 - auth and provider errors are sanitized without echoing key, URL or response text
+  ---
+  duration_ms: 1.575373
+  type: 'test'
+  ...
+# Subtest: client bounds decoded response bytes, validates JSON and cancels oversized streams
+ok 276 - client bounds decoded response bytes, validates JSON and cancels oversized streams
+  ---
+  duration_ms: 1.657136
+  type: 'test'
+  ...
+# Subtest: request timeout aborts fetch and body reading with sanitized errors
+ok 277 - request timeout aborts fetch and body reading with sanitized errors
+  ---
+  duration_ms: 21.921867
+  type: 'test'
+  ...
+# Subtest: metadata may be unknown for an empty unavailable series, but invalid populated dates fail closed
+ok 278 - metadata may be unknown for an empty unavailable series, but invalid populated dates fail closed
+  ---
+  duration_ms: 0.495426
+  type: 'test'
+  ...
+# Subtest: response rejected before body reading is still cancelled, and identity mismatches are rejected
+ok 279 - response rejected before body reading is still cancelled, and identity mismatches are rejected
+  ---
+  duration_ms: 1.096232
+  type: 'test'
+  ...
+# Subtest: CLI complete JSON round trip, separate stats and secure output refuse existing files and symlinks
+ok 280 - CLI complete JSON round trip, separate stats and secure output refuse existing files and symlinks
+  ---
+  duration_ms: 301.77291
+  type: 'test'
+  ...
+# Subtest: CLI keeps complete unavailable JSON while returning a retryable nonzero exit status
+ok 281 - CLI keeps complete unavailable JSON while returning a retryable nonzero exit status
+  ---
+  duration_ms: 68.132382
+  type: 'test'
+  ...
+# Subtest: statistics retain non-ready daily status and disclose any included unclosed period
+ok 282 - statistics retain non-ready daily status and disclose any included unclosed period
+  ---
+  duration_ms: 0.645312
+  type: 'test'
+  ...
+# Subtest: quote contract preserves native precision, distinct source times and closed-market confirmed prices
+ok 283 - quote contract preserves native precision, distinct source times and closed-market confirmed prices
+  ---
+  duration_ms: 16.669234
+  type: 'test'
+  ...
+# Subtest: instrument identity and price units distinguish ETF, cash index and A shares without FX conversion
+ok 284 - instrument identity and price units distinguish ETF, cash index and A shares without FX conversion
+  ---
+  duration_ms: 1.514932
+  type: 'test'
+  ...
+# Subtest: intraday source history stays independent, sorted and deduplicated with UTC ms, dates and truthful unknown volume
+ok 285 - intraday source history stays independent, sorted and deduplicated with UTC ms, dates and truthful unknown volume
+  ---
+  duration_ms: 5.279244
+  type: 'test'
+  ...
+# Subtest: daily uses UTC date labels and preserves adjustment uncertainty and native index points
+ok 286 - daily uses UTC date labels and preserves adjustment uncertainty and native index points
+  ---
+  duration_ms: 0.706154
+  type: 'test'
+  ...
+# Subtest: server samples select retained exchange days, preserve gaps, observation times and source changes
+ok 287 - server samples select retained exchange days, preserve gaps, observation times and source changes
+  ---
+  duration_ms: 2.837165
+  type: 'test'
+  ...
+# Subtest: all requested sections remain explicit on failures, and not-applicable fields do not invalidate valid index data
+ok 288 - all requested sections remain explicit on failures, and not-applicable fields do not invalidate valid index data
+  ---
+  duration_ms: 3.655648
+  type: 'test'
+  ...
+# Subtest: recovery prices and independently stale financial fields report partial without changing their ages
+ok 289 - recovery prices and independently stale financial fields report partial without changing their ages
+  ---
+  duration_ms: 0.837591
+  type: 'test'
+  ...
+# Subtest: news and macro output whitelisted observations, safe links and source dates with no internal metadata
+ok 290 - news and macro output whitelisted observations, safe links and source dates with no internal metadata
+  ---
+  duration_ms: 1.017433
+  type: 'test'
+  ...
+# Subtest: an empty successful news result is ready while missing news and empty macro data are unavailable
+ok 291 - an empty successful news result is ready while missing news and empty macro data are unavailable
+  ---
+  duration_ms: 0.449217
+  type: 'test'
+  ...
+# Subtest: retained quote with a source error remains usable and never exports the raw error
+ok 292 - retained quote with a source error remains usable and never exports the raw error
+  ---
+  duration_ms: 0.566964
+  type: 'test'
+  ...
+# Subtest: source intraday default scope is its latest exchange trading date without filling missing minutes
+ok 293 - source intraday default scope is its latest exchange trading date without filling missing minutes
+  ---
+  duration_ms: 0.694737
+  type: 'test'
+  ...
+# Subtest: denomination-normalized history uses its own currency without rescaling quote values
+ok 294 - denomination-normalized history uses its own currency without rescaling quote values
+  ---
+  duration_ms: 3.529998
+  type: 'test'
+  ...
+# Subtest: snapshot read time never renews provider confirmation, and missing sample observations remain null
+ok 295 - snapshot read time never renews provider confirmation, and missing sample observations remain null
+  ---
+  duration_ms: 0.365271
+  type: 'test'
+  ...
+# Subtest: daily invalid/future rows are omitted with an explicit quality warning, and input snapshots are not changed
+ok 296 - daily invalid/future rows are omitted with an explicit quality warning, and input snapshots are not changed
+  ---
+  duration_ms: 0.411881
+  type: 'test'
+  ...
+# Subtest: macro calendar retains provider numeric strings as reported and distinguishes consensus from model forecasts
+ok 297 - macro calendar retains provider numeric strings as reported and distinguishes consensus from model forecasts
+  ---
+  duration_ms: 0.309917
+  type: 'test'
+  ...
+# Subtest: native extended quote t uses seconds and closing intraday print belongs to the regular session
+ok 298 - native extended quote t uses seconds and closing intraday print belongs to the regular session
+  ---
+  duration_ms: 0.562547
+  type: 'test'
+  ...
+# Subtest: samples-only requests infer only the unique currency within selected retained trading dates
+ok 299 - samples-only requests infer only the unique currency within selected retained trading dates
+  ---
+  duration_ms: 0.24564
+  type: 'test'
+  ...
+# Subtest: quote freshness derives overdue successful checks even without stale flags and preserves original times
+ok 300 - quote freshness derives overdue successful checks even without stale flags and preserves original times
+  ---
+  duration_ms: 2.50895
+  type: 'test'
+  ...
+# Subtest: unknown and invalid source check timestamps are partial while old closed quotes with fresh confirmation remain ready
+ok 301 - unknown and invalid source check timestamps are partial while old closed quotes with fresh confirmation remain ready
+  ---
+  duration_ms: 3.15262
+  type: 'test'
+  ...
+# Subtest: read-only key cannot reuse the administrator token
+ok 302 - read-only key cannot reuse the administrator token
+  ---
+  duration_ms: 1.431276
+  type: 'test'
+  ...
+# Subtest: auth precedes expensive work and only the dedicated header key is accepted
+ok 303 - auth precedes expensive work and only the dedicated header key is accepted
+  ---
+  duration_ms: 40.738105
+  type: 'test'
+  ...
+# Subtest: authenticated native HTTP returns complete JSON and preserves saved watchlist
+ok 304 - authenticated native HTTP returns complete JSON and preserves saved watchlist
+  ---
+  duration_ms: 69.175359
+  type: 'test'
+  ...
+# Subtest: strict payload and method handling keep malformed clients out of data services
+ok 305 - strict payload and method handling keep malformed clients out of data services
+  ---
+  duration_ms: 11.963124
+  type: 'test'
+  ...
+# Subtest: token bucket allows burst3 and enforces a separate rolling20-per-minute bound
+ok 306 - token bucket allows burst3 and enforces a separate rolling20-per-minute bound
+  ---
+  duration_ms: 0.304338
+  type: 'test'
+  ...
+# Subtest: wire response cap and chunked request cap are enforced without silent truncation
+ok 307 - wire response cap and chunked request cap are enforced without silent truncation
+  ---
+  duration_ms: 25.819564
+  type: 'test'
+  ...
+# node:internal/modules/esm/resolve:275
+#     throw new ERR_MODULE_NOT_FOUND(
+#           ^
+# Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/mnt/data/work/QQQSP-main/node_modules/ajv/dist/2020.js' imported from /mnt/data/work/QQQSP-main/tests/v2/market-context-schema.test.mjs
+#     at finalizeResolution (node:internal/modules/esm/resolve:275:11)
+#     at moduleResolve (node:internal/modules/esm/resolve:860:10)
+#     at defaultResolve (node:internal/modules/esm/resolve:984:11)
+#     at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:780:12)
+#     at \#cachedDefaultResolve (node:internal/modules/esm/loader:704:25)
+#     at ModuleLoader.resolve (node:internal/modules/esm/loader:687:38)
+#     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:305:38)
+#     at ModuleJob._link (node:internal/modules/esm/module_job:137:49) {
+#   code: 'ERR_MODULE_NOT_FOUND',
+#   url: 'file:///mnt/data/work/QQQSP-main/node_modules/ajv/dist/2020.js'
+# }
+# Node.js v22.16.0
+# Subtest: /mnt/data/work/QQQSP-main/tests/v2/market-context-schema.test.mjs
+not ok 49 - /mnt/data/work/QQQSP-main/tests/v2/market-context-schema.test.mjs
+  ---
+  duration_ms: 39.345057
+  type: 'test'
+  location: '/mnt/data/work/QQQSP-main/tests/v2/market-context-schema.test.mjs:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: context query validates ranges, single canonical identity, fields and defaults
+ok 309 - context query validates ranges, single canonical identity, fields and defaults
+  ---
+  duration_ms: 1.848605
+  type: 'test'
+  ...
+# Subtest: fresh quote is returned independently of stalled history within one deadline and browser subscriptions survive
+ok 310 - fresh quote is returned independently of stalled history within one deadline and browser subscriptions survive
+  ---
+  duration_ms: 114.432131
+  type: 'test'
+  ...
+# Subtest: samples and macro are cache reads; query neither subscribes nor changes collection membership
+ok 311 - samples and macro are cache reads; query neither subscribes nor changes collection membership
+  ---
+  duration_ms: 1.509544
+  type: 'test'
+  ...
+# Subtest: news projection reads existing cache and cannot create orphaned producers after a short query
+ok 312 - news projection reads existing cache and cannot create orphaned producers after a short query
+  ---
+  duration_ms: 2.186114
+  type: 'test'
+  ...
+# Subtest: zero-wait queries only inspect caches without starting a temporary quote subscription
+ok 313 - zero-wait queries only inspect caches without starting a temporary quote subscription
+  ---
+  duration_ms: 0.580405
+  type: 'test'
+  ...
+# Subtest: overdue checks get a bounded recovery opportunity without relabeling old data as newly checked
+ok 314 - overdue checks get a bounded recovery opportunity without relabeling old data as newly checked
+  ---
+  duration_ms: 80.716176
+  type: 'test'
+  ...
+# Subtest: global queue is bounded, queue wait counts in deadline, disconnect releases only its temporary subscription
+ok 315 - global queue is bounded, queue wait counts in deadline, disconnect releases only its temporary subscription
+  ---
+  duration_ms: 323.553927
+  type: 'test'
+  ...
+# Subtest: stop cancels active and queued work and does not allow retained requests to restart network work
+ok 316 - stop cancels active and queued work and does not allow retained requests to restart network work
+  ---
+  duration_ms: 20.76853
+  type: 'test'
+  ...
+# Subtest: cold first failure becomes an explicit error with retry time and then recovers
+ok 317 - cold first failure becomes an explicit error with retry time and then recovers
+  ---
+  duration_ms: 220.3923
+  type: 'test'
+  ...
+# Subtest: non-batch source failure also stops claiming that the first request is still pending
+ok 318 - non-batch source failure also stops claiming that the first request is still pending
+  ---
+  duration_ms: 111.845207
+  type: 'test'
+  ...
+# Subtest: Nikkei background collects without browsers; multiple SSE clients share updates despite Yahoo 429
+ok 319 - Nikkei background collects without browsers; multiple SSE clients share updates despite Yahoo 429
+  ---
+  duration_ms: 312.47784
+  type: 'test'
+  ...
+# Subtest: a warm Naver failure can recover through Yahoo without waiting for enrichment
+ok 320 - a warm Naver failure can recover through Yahoo without waiting for enrichment
+  ---
+  duration_ms: 207.708034
+  type: 'test'
+  ...
+# Subtest: Nikkei has a verified index route distinct from Japanese equities, ETFs and futures
+ok 321 - Nikkei has a verified index route distinct from Japanese equities, ETFs and futures
+  ---
+  duration_ms: 1.89122
+  type: 'test'
+  ...
+# Subtest: index quote keeps provider timestamp, delay and point identity; no fabricated index-share volume
+ok 322 - index quote keeps provider timestamp, delay and point identity; no fabricated index-share volume
+  ---
+  duration_ms: 15.411298
+  type: 'test'
+  ...
+# Subtest: Tokyo chart times and daily dates stay correct and unknown volumes remain absent
+ok 323 - Tokyo chart times and daily dates stay correct and unknown volumes remain absent
+  ---
+  duration_ms: 5.175908
+  type: 'test'
+  ...
+# Subtest: index batch bypasses unsupported stock routes and shares the existing polling path
+ok 324 - index batch bypasses unsupported stock routes and shares the existing polling path
+  ---
+  duration_ms: 1.763537
+  type: 'test'
+  ...
+# Subtest: Yahoo failure cannot block verified Nikkei history and larger ranges fetch correctly
+ok 325 - Yahoo failure cannot block verified Nikkei history and larger ranges fetch correctly
+  ---
+  duration_ms: 49.712617
+  type: 'test'
+  ...
+# Subtest: 429 cooldown is honored, stop aborts work and malformed responses are rejected
+ok 326 - 429 cooldown is honored, stop aborts work and malformed responses are rejected
+  ---
+  duration_ms: 1.11452
+  type: 'test'
+  ...
+# Subtest: cached quotes carry the exact source deadline across network latency and reconnects
+ok 327 - cached quotes carry the exact source deadline across network latency and reconnects
+  ---
+  duration_ms: 0.806245
+  type: 'test'
+  ...
+# Subtest: one-second schedule counts from request start, not response finish; slow history cannot block quotes
+ok 328 - one-second schedule counts from request start, not response finish; slow history cannot block quotes
+  ---
+  duration_ms: 4.288671
+  type: 'test'
+  ...
+# Subtest: opening resumes promptly but does not override a provider Retry-After
+ok 329 - opening resumes promptly but does not override a provider Retry-After
+  ---
+  duration_ms: 2.093184
+  type: 'test'
+  ...
+# Subtest: nested source TTL does not skip a second when batch and source starts differ by 1 ms
+ok 330 - nested source TTL does not skip a second when batch and source starts differ by 1 ms
+  ---
+  duration_ms: 22.399117
+  type: 'test'
+  ...
+# Subtest: absolute source deadlines keep a fallback at 1 s without bypassing primary Retry-After
+ok 331 - absolute source deadlines keep a fallback at 1 s without bypassing primary Retry-After
+  ---
+  duration_ms: 6.183766
+  type: 'test'
+  ...
+# Subtest: Sina builds one HTTPS batch, parses data without eval and distinguishes website time from trade time
+ok 332 - Sina builds one HTTPS batch, parses data without eval and distinguishes website time from trade time
+  ---
+  duration_ms: 17.233333
+  type: 'test'
+  ...
+# Subtest: Sina extended trade selects its own timestamp and regular reference, never request time
+ok 333 - Sina extended trade selects its own timestamp and regular reference, never request time
+  ---
+  duration_ms: 0.717672
+  type: 'test'
+  ...
+# Subtest: Sina rejects malformed, future and missing trade times; EST/EDT and year boundary are explicit
+ok 334 - Sina rejects malformed, future and missing trade times; EST/EDT and year boundary are explicit
+  ---
+  duration_ms: 0.404158
+  type: 'test'
+  ...
+# Subtest: Chinese and Hong Kong Sina records preserve separate currencies and identity
+ok 335 - Chinese and Hong Kong Sina records preserve separate currencies and identity
+  ---
+  duration_ms: 1.229292
+  type: 'test'
+  ...
+# Subtest: Tencent HK batch cannot accidentally use USD; source polling floor is 1s
+ok 336 - Tencent HK batch cannot accidentally use USD; source polling floor is 1s
+  ---
+  duration_ms: 1.723456
+  type: 'test'
+  ...
+# Subtest: 429 Retry-After suppresses queued siblings; closing and reopening do not bypass cooldown
+ok 337 - 429 Retry-After suppresses queued siblings; closing and reopening do not bypass cooldown
+  ---
+  duration_ms: 2.352204
+  type: 'test'
+  ...
+# Subtest: HTTP reads only cached quotes; one update path, exact trade time retained
+ok 338 - HTTP reads only cached quotes; one update path, exact trade time retained
+  ---
+  duration_ms: 6.186351
+  type: 'test'
+  ...
+# Subtest: new trades coalesce to one event; unchanged snapshots do not emit
+ok 339 - new trades coalesce to one event; unchanged snapshots do not emit
+  ---
+  duration_ms: 211.900619
+  type: 'test'
+  ...
+# Subtest: three started trading days at 2026-09-13T13:00:00Z
+ok 340 - three started trading days at 2026-09-13T13:00:00Z
+  ---
+  duration_ms: 15.798843
+  type: 'test'
+  ...
+# Subtest: three started trading days at 2026-09-14T07:59:00Z
+ok 341 - three started trading days at 2026-09-14T07:59:00Z
+  ---
+  duration_ms: 0.717891
+  type: 'test'
+  ...
+# Subtest: three started trading days at 2026-09-14T08:00:00Z
+ok 342 - three started trading days at 2026-09-14T08:00:00Z
+  ---
+  duration_ms: 0.357108
+  type: 'test'
+  ...
+# Subtest: three started trading days at 2026-09-07T14:00:00Z
+ok 343 - three started trading days at 2026-09-07T14:00:00Z
+  ---
+  duration_ms: 0.306682
+  type: 'test'
+  ...
+# Subtest: three started trading days at 2026-11-02T08:59:00Z
+ok 344 - three started trading days at 2026-11-02T08:59:00Z
+  ---
+  duration_ms: 0.316777
+  type: 'test'
+  ...
+# Subtest: three started trading days at 2026-11-02T09:00:00Z
+ok 345 - three started trading days at 2026-11-02T09:00:00Z
+  ---
+  duration_ms: 0.267553
+  type: 'test'
+  ...
+# Subtest: three started trading days at 2026-11-27T19:00:00Z
+ok 346 - three started trading days at 2026-11-27T19:00:00Z
+  ---
+  duration_ms: 0.3787
+  type: 'test'
+  ...
+# Subtest: unsupported futures and unknown calendar fail closed
+ok 347 - unsupported futures and unknown calendar fail closed
+  ---
+  duration_ms: 0.224037
+  type: 'test'
+  ...
+# Subtest: minute last actual quote, deduplication, corrections, no stale/future/unknown data
+ok 348 - minute last actual quote, deduplication, corrections, no stale/future/unknown data
+  ---
+  duration_ms: 3.017716
+  type: 'test'
+  ...
+# Subtest: delayed quotes retain source time and delay; first opening cannot backfill weekend closes
+ok 349 - delayed quotes retain source time and delay; first opening cannot backfill weekend closes
+  ---
+  duration_ms: 0.787847
+  type: 'test'
+  ...
+# Subtest: window excludes an unobserved trading day rather than retaining older observed dates
+ok 350 - window excludes an unobserved trading day rather than retaining older observed dates
+  ---
+  duration_ms: 1.948926
+  type: 'test'
+  ...
+# Subtest: persist and restore preserve points, prune removed symbols and report write failures
+ok 351 - persist and restore preserve points, prune removed symbols and report write failures
+  ---
+  duration_ms: 10.889857
+  type: 'test'
+  ...
+# Subtest: malformed or symlink persisted files are not trusted and capacity stays bounded
+ok 352 - malformed or symlink persisted files are not trusted and capacity stays bounded
+  ---
+  duration_ms: 11.092061
+  type: 'test'
+  ...
+# Subtest: server membership survives zero browser clients and removal stops sampling
+ok 353 - server membership survives zero browser clients and removal stops sampling
+  ---
+  duration_ms: 5.19678
+  type: 'test'
+  ...
+# Subtest: connected clients receive source-only and persistence error transitions without new prices
+ok 354 - connected clients receive source-only and persistence error transitions without new prices
+  ---
+  duration_ms: 4.109292
+  type: 'test'
+  ...
+# Subtest: interrupting startup restore and restarting does not double-count retained bytes
+ok 355 - interrupting startup restore and restarting does not double-count retained bytes
+  ---
+  duration_ms: 5.069578
+  type: 'test'
+  ...
+# Subtest: capacity rejection is visible and clears after retained dates expire
+ok 356 - capacity rejection is visible and clears after retained dates expire
+  ---
+  duration_ms: 1.718264
+  type: 'test'
+  ...
+# Subtest: global-market samples preserve minor currency units without a hundred-fold conversion
+ok 357 - global-market samples preserve minor currency units without a hundred-fold conversion
+  ---
+  duration_ms: 1.319839
+  type: 'test'
+  ...
+# Subtest: real HTTP with production source composition: US batch every second, Korean identity/history, no per-card polling
+ok 358 - real HTTP with production source composition: US batch every second, Korean identity/history, no per-card polling
+  ---
+  duration_ms: 3472.129583
+  type: 'test'
+  ...
+# Subtest: R03 real quote HTTP admission rejects overflow and never starts a cancelled queued request
+ok 359 - R03 real quote HTTP admission rejects overflow and never starts a cancelled queued request
+  ---
+  duration_ms: 4042.392335
+  type: 'test'
+  ...
+# Subtest: R03 client search disconnect aborts the actual dependency signal
+ok 360 - R03 client search disconnect aborts the actual dependency signal
+  ---
+  duration_ms: 4010.308687
+  type: 'test'
+  ...
+# Subtest: R03 quote and macro streams share one connection budget; HEAD never consumes it
+ok 361 - R03 quote and macro streams share one connection budget; HEAD never consumes it
+  ---
+  duration_ms: 32.7182
+  type: 'test'
+  ...
+# Subtest: R03 fifty stream open/close cycles return all subscriptions, owners and buffers to baseline
+ok 362 - R03 fifty stream open/close cycles return all subscriptions, owners and buffers to baseline
+  ---
+  duration_ms: 323.515054
+  type: 'test'
+  ...
+# Subtest: R13 allowed/rejected origins have consistent CORS on new GET, HEAD, OPTIONS and SSE routes
+ok 363 - R13 allowed/rejected origins have consistent CORS on new GET, HEAD, OPTIONS and SSE routes
+  ---
+  duration_ms: 63.802193
+  type: 'test'
+  ...
+# Subtest: R11 read-only APIs preserve durable membership; explicit save is validated and origin-protected
+ok 364 - R11 read-only APIs preserve durable membership; explicit save is validated and origin-protected
+  ---
+  duration_ms: 20.49806
+  type: 'test'
+  ...
+# Subtest: R02 a stalled POST body times out without later mutating persistent membership
+ok 365 - R02 a stalled POST body times out without later mutating persistent membership
+  ---
+  duration_ms: 71.761269
+  type: 'test'
+  ...
+# Subtest: R15 configured per-client quota is enforced on the actual HTTP path
+ok 366 - R15 configured per-client quota is enforced on the actual HTTP path
+  ---
+  duration_ms: 5.579776
+  type: 'test'
+  ...
+# Subtest: R18 container probe reads a custom PORT and rejects non-ready JSON even with HTTP 200
+ok 367 - R18 container probe reads a custom PORT and rejects non-ready JSON even with HTTP 200
+  ---
+  duration_ms: 133.540618
+  type: 'test'
+  ...
+# Subtest: R01 heartbeat-only old trade cannot suppress a website fallback during trading
+ok 368 - R01 heartbeat-only old trade cannot suppress a website fallback during trading
+  ---
+  duration_ms: 3.671561
+  type: 'test'
+  ...
+# Subtest: R01 legal newer backup wins without manufacturing a new timestamp
+ok 369 - R01 legal newer backup wins without manufacturing a new timestamp
+  ---
+  duration_ms: 0.490188
+  type: 'test'
+  ...
+# Subtest: R01 delayed, unknown-delay, disconnected and resumed feeds have explicit availability
+ok 370 - R01 delayed, unknown-delay, disconnected and resumed feeds have explicit availability
+  ---
+  duration_ms: 0.659273
+  type: 'test'
+  ...
+# Subtest: R01 market closure accepts last legal trade but never changes its quoteAt
+ok 371 - R01 market closure accepts last legal trade but never changes its quoteAt
+  ---
+  duration_ms: 1.271515
+  type: 'test'
+  ...
+# Subtest: R01 real service switches its enrichment cadence when a per-security trade ages
+ok 372 - R01 real service switches its enrichment cadence when a per-security trade ages
+  ---
+  duration_ms: 6.586864
+  type: 'test'
+  ...
+# Subtest: R03 bounded admission rejects excess and removes cancelled waiting work immediately
+ok 373 - R03 bounded admission rejects excess and removes cancelled waiting work immediately
+  ---
+  duration_ms: 1.690006
+  type: 'test'
+  ...
+# Subtest: R03 active cancellation retains its slot until an uncooperative producer actually stops
+ok 374 - R03 active cancellation retains its slot until an uncooperative producer actually stops
+  ---
+  duration_ms: 3.219831
+  type: 'test'
+  ...
+# Subtest: R03 absolute source queue deadline prevents cancelled jobs from ever reaching the network
+ok 375 - R03 absolute source queue deadline prevents cancelled jobs from ever reaching the network
+  ---
+  duration_ms: 37.795972
+  type: 'test'
+  ...
+# Subtest: R02 shared readers own independent cancellation; last cancellation stops producer
+ok 376 - R02 shared readers own independent cancellation; last cancellation stops producer
+  ---
+  duration_ms: 3.48444
+  type: 'test'
+  ...
+# Subtest: R02 queued history has a total deadline separate from its upstream execution limit
+ok 377 - R02 queued history has a total deadline separate from its upstream execution limit
+  ---
+  duration_ms: 48.985833
+  type: 'test'
+  ...
+# Subtest: R02 cancelling one HTTP-equivalent history reader does not abort another reader
+ok 378 - R02 cancelling one HTTP-equivalent history reader does not abort another reader
+  ---
+  duration_ms: 75.46117
+  type: 'test'
+  ...
+# Subtest: R16 SSE event parser survives every split position, including split UTF-8 text
+ok 379 - R16 SSE event parser survives every split position, including split UTF-8 text
+  ---
+  duration_ms: 4.714433
+  type: 'test'
+  ...
+# Subtest: R03 accepted SSE backpressure keeps a connection registered until budget overflow closes it
+ok 380 - R03 accepted SSE backpressure keeps a connection registered until budget overflow closes it
+  ---
+  duration_ms: 0.45809
+  type: 'test'
+  ...
+# Subtest: R05 corrupted checkpoint metadata skips only the bad entry without TypeError
+ok 381 - R05 corrupted checkpoint metadata skips only the bad entry without TypeError
+  ---
+  duration_ms: 667.893201
+  type: 'test'
+  ...
+# Subtest: R06 recovery creates its own nested directory, atomically persists 0600 and restarts
+ok 382 - R06 recovery creates its own nested directory, atomically persists 0600 and restarts
+  ---
+  duration_ms: 15.722047
+  type: 'test'
+  ...
+# Subtest: R06 recovery and shared atomic writer refuse symlink targets without modifying their referent
+ok 383 - R06 recovery and shared atomic writer refuse symlink targets without modifying their referent
+  ---
+  duration_ms: 4.16161
+  type: 'test'
+  ...
+# Subtest: R09 immutable recovery bars retain identity while caller metadata remains independent
+ok 384 - R09 immutable recovery bars retain identity while caller metadata remains independent
+  ---
+  duration_ms: 1.669976
+  type: 'test'
+  ...
+# Subtest: R09 a healthy quote never materializes a recovery fallback
+ok 385 - R09 a healthy quote never materializes a recovery fallback
+  ---
+  duration_ms: 2.131962
+  type: 'test'
+  ...
+# Subtest: R10 near-term preparation precedes idle long-range expansion for every subscribed security
+ok 386 - R10 near-term preparation precedes idle long-range expansion for every subscribed security
+  ---
+  duration_ms: 1.534762
+  type: 'test'
+  ...
+# Subtest: R11 durable symbols and independent live-owner leases are merged, bounded and released independently
+ok 387 - R11 durable symbols and independent live-owner leases are merged, bounded and released independently
+  ---
+  duration_ms: 0.595176
+  type: 'test'
+  ...
+# Subtest: R14 registered health roles include both default Sina hosts
+ok 388 - R14 registered health roles include both default Sina hosts
+  ---
+  duration_ms: 0.116495
+  type: 'test'
+  ...
+# Subtest: R15 accepted configuration preserves deadlines, enrichment and disk path, rejecting invalid budgets
+ok 389 - R15 accepted configuration preserves deadlines, enrichment and disk path, rejecting invalid budgets
+  ---
+  duration_ms: 0.657491
+  type: 'test'
+  ...
+# Subtest: R17 a deliberately slow log sink has a hard byte bound and drains after pressure ends
+ok 390 - R17 a deliberately slow log sink has a hard byte bound and drains after pressure ends
+  ---
+  duration_ms: 0.591672
+  type: 'test'
+  ...
+# Subtest: R17 sink errors are counted without preventing later queued records from draining
+ok 391 - R17 sink errors are counted without preventing later queued records from draining
+  ---
+  duration_ms: 0.187572
+  type: 'test'
+  ...
+# Subtest: R18 release retention protects current/previous and shared data under count and disk pressure
+ok 392 - R18 release retention protects current/previous and shared data under count and disk pressure
+  ---
+  duration_ms: 29.466659
+  type: 'test'
+  ...
+# Subtest: R18 retention refuses an anchor outside its owned release directory
+ok 393 - R18 retention refuses an anchor outside its owned release directory
+  ---
+  duration_ms: 2.909359
+  type: 'test'
+  ...
+# Subtest: SWR starts at TTL, not after the old maximum quote age
+ok 394 - SWR starts at TTL, not after the old maximum quote age
+  ---
+  duration_ms: 2.515901
+  type: 'test'
+  ...
+# Subtest: cold failure is cached and not retried by every display tick
+ok 395 - cold failure is cached and not retried by every display tick
+  ---
+  duration_ms: 2.195128
+  type: 'test'
+  ...
+# Subtest: API shapes, symbol/search merge, news metadata and static encodings remain usable
+ok 396 - API shapes, symbol/search merge, news metadata and static encodings remain usable
+  ---
+  duration_ms: 62.088082
+  type: 'test'
+  ...
+# Subtest: default stays history; empty samples never convert the latest quote into a historical point
+ok 397 - default stays history; empty samples never convert the latest quote into a historical point
+  ---
+  duration_ms: 3.506153
+  type: 'test'
+  ...
+# Subtest: server samples load once, minute upserts replace and retained dates prune
+ok 398 - server samples load once, minute upserts replace and retained dates prune
+  ---
+  duration_ms: 1.540291
+  type: 'test'
+  ...
+# Subtest: a delayed snapshot cannot erase a newer push, reconnect reloads and failed loads retain data
+ok 399 - a delayed snapshot cannot erase a newer push, reconnect reloads and failed loads retain data
+  ---
+  duration_ms: 1.159597
+  type: 'test'
+  ...
+# Subtest: samples API is read-only; durable watchlist collects with no client and SSE resynchronizes
+ok 400 - samples API is read-only; durable watchlist collects with no client and SSE resynchronizes
+  ---
+  duration_ms: 4086.043964
+  type: 'test'
+  ...
+# Subtest: closed market checks the later postmarket provider even when regular close is healthy
+ok 401 - closed market checks the later postmarket provider even when regular close is healthy
+  ---
+  duration_ms: 17.468346
+  type: 'test'
+  ...
+# Subtest: older price merges only compatible independent history: USD
+ok 402 - older price merges only compatible independent history: USD
+  ---
+  duration_ms: 4.923868
+  type: 'test'
+  ...
+# Subtest: older price merges only compatible independent history: KRW
+ok 403 - older price merges only compatible independent history: KRW
+  ---
+  duration_ms: 0.660675
+  type: 'test'
+  ...
+# Subtest: recovery persistence accepts new independent history without downgrading the saved price
+ok 404 - recovery persistence accepts new independent history without downgrading the saved price
+  ---
+  duration_ms: 1.554912
+  type: 'test'
+  ...
+# Subtest: history merge keeps newer verified families and never serializes a spurious update
+ok 405 - history merge keeps newer verified families and never serializes a spurious update
+  ---
+  duration_ms: 0.359732
+  type: 'test'
+  ...
+# Subtest: SOXX is an authoritative ETF before any quote, even if a source calls it an equity
+ok 406 - SOXX is an authoritative ETF before any quote, even if a source calls it an equity
+  ---
+  duration_ms: 4.455413
+  type: 'test'
+  ...
+# Subtest: SOX index has its own verified route, unit and accurate summer/winter times
+ok 407 - SOX index has its own verified route, unit and accurate summer/winter times
+  ---
+  duration_ms: 3.688386
+  type: 'test'
+  ...
+# Subtest: SOX and Nikkei share the service without mixing identity, caches or 7s/70s cadence
+ok 408 - SOX and Nikkei share the service without mixing identity, caches or 7s/70s cadence
+  ---
+  duration_ms: 2.660528
+  type: 'test'
+  ...
+# Subtest: one failed index cannot block a healthy sibling; failure keeps its retry deadline
+ok 409 - one failed index cannot block a healthy sibling; failure keeps its retry deadline
+  ---
+  duration_ms: 0.749469
+  type: 'test'
+  ...
+# Subtest: a failed SOX quote can recover through the existing Yahoo fallback alongside healthy Nikkei
+ok 410 - a failed SOX quote can recover through the existing Yahoo fallback alongside healthy Nikkei
+  ---
+  duration_ms: 1.62633
+  type: 'test'
+  ...
+# Subtest: 13 and 100 quote/history symbols succeed, 101 and oversized POST remain rejected
+ok 411 - 13 and 100 quote/history symbols succeed, 101 and oversized POST remain rejected
+  ---
+  duration_ms: 61.013806
+  type: 'test'
+  ...
+# Subtest: browser storage and chart version hints retain all 100 entries
+ok 412 - browser storage and chart version hints retain all 100 entries
+  ---
+  duration_ms: 4.578678
+  type: 'test'
+  ...
+# Subtest: 100 durable memberships survive restart; background collection retains more than 50 and accepts replacement
+ok 413 - 100 durable memberships survive restart; background collection retains more than 50 and accepts replacement
+  ---
+  duration_ms: 295.655324
+  type: 'test'
+  ...
+# Subtest: recovery snapshot retains all 100 symbols after restart
+ok 414 - recovery snapshot retains all 100 symbols after restart
+  ---
+  duration_ms: 7.862145
+  type: 'test'
+  ...
+# Subtest: 100 large quote/history snapshots drain without 1 MiB disconnect or missing symbols
+ok 415 - 100 large quote/history snapshots drain without 1 MiB disconnect or missing symbols
+  ---
+  duration_ms: 86.613062
+  type: 'test'
+  ...
+# Subtest: capacity configuration supports 100 histories and three full extended-session sample days within bounded budgets
+ok 416 - capacity configuration supports 100 histories and three full extended-session sample days within bounded budgets
+  ---
+  duration_ms: 0.948069
+  type: 'test'
+  ...
+# Subtest: worst valid 100-symbol URL preserves ampersands and membership below proxy request-line limit
+ok 417 - worst valid 100-symbol URL preserves ampersands and membership below proxy request-line limit
+  ---
+  duration_ms: 2.725637
+  type: 'test'
+  ...
+# Subtest: 100-history warming eventually expands every symbol while refreshes remain due
+ok 418 - 100-history warming eventually expands every symbol while refreshes remain due
+  ---
+  duration_ms: 9.45859
+  type: 'test'
+  ...
+# Subtest: news batches preserve the existing 12-symbol admission and serial upstream demand
+ok 419 - news batches preserve the existing 12-symbol admission and serial upstream demand
+  ---
+  duration_ms: 6.887586
+  type: 'test'
+  ...
+# Subtest: retired sample reserve is bounded and cannot block replacement active symbols
+ok 420 - retired sample reserve is bounded and cannot block replacement active symbols
+  ---
+  duration_ms: 3.472331
+  type: 'test'
+  ...
+# Subtest: real HTTP streams deliver all 100 large snapshots on cold connect and reconnect
+ok 421 - real HTTP streams deliver all 100 large snapshots on cold connect and reconnect
+  ---
+  duration_ms: 4250.883499
+  type: 'test'
+  ...
+# Subtest: XLK has authoritative ETF identity without depending on a prior quote
+ok 422 - XLK has authoritative ETF identity without depending on a prior quote
+  ---
+  duration_ms: 1.005184
+  type: 'test'
+  ...
+# Subtest: XLK intraday uses the ETF endpoint after the primary fails; cached reads do not refetch
+ok 423 - XLK intraday uses the ETF endpoint after the primary fails; cached reads do not refetch
+  ---
+  duration_ms: 3.263146
+  type: 'test'
+  ...
+# Subtest: independent daily, weekly, monthly and yearly histories all use the verified XLK ETF route
+ok 424 - independent daily, weekly, monthly and yearly histories all use the verified XLK ETF route
+  ---
+  duration_ms: 37.692584
+  type: 'test'
+  ...
+# Subtest: XLK Naver listing is explicit and its after-hours quote remains distinct from regular close
+ok 425 - XLK Naver listing is explicit and its after-hours quote remains distinct from regular close
+  ---
+  duration_ms: 2.01789
+  type: 'test'
+  ...
+1..425
+# tests 425
+# suites 0
+# pass 424
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 40501.034842
+FAILED: v2-core

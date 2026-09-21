@@ -1,7 +1,7 @@
 import {MAX_WATCHLIST_SYMBOLS} from './lib/watchlist-limits.js';
 // Only the composition root supplies process.env. Modules receive explicit values.
 export const DEFAULTS=Object.freeze({
-  HOST:'127.0.0.1',PORT:8567,SYMBOLS:'QQQ,SPY',PUBLIC_ORIGIN:'',STATS_TOKEN:'',LLM_API_KEY:'',
+  HOST:'127.0.0.1',PORT:8567,SYMBOLS:'QQQ,SPY',PUBLIC_ORIGIN:'',STATS_TOKEN:'',LLM_API_KEY:'',LLM_KEY_STORE_PATH:'./state/api-keys.json',API_V1_DEPRECATION_AT:'',API_V1_SUNSET_AT:'',
   REALTIME_SNAPSHOTS:'1',PUBLIC_SOURCE_REDUNDANCY:'1',RECOVERY_PATH:'./state/quotes.json',FX_MODE:'reference',
   POLL_MS:1000,POLL_PRIMARY:'sina',CACHE_MS:2000,QUOTE_MAX_AGE:10000,UPSTREAM_TIMEOUT:8000,UPSTREAM_MAX_BODY_BYTES:2097152,
   Y429_BASE:30000,Y429_CAP:900000,Y_TASK_DEADLINE:20000,HOST_QUEUE_MAX:32,HOST_DEADLINE_MS:20000,
@@ -26,13 +26,15 @@ export function loadConfig(input={}){
   const result={...DEFAULTS};
   for(const [key,def] of Object.entries(DEFAULTS)){
     if(input[key]==null)continue;
-    if(input[key]===''&&!['SAMPLES_STATE_PATH','MACRO_STATE_PATH','HISTORY_STATE_PATH','RECOVERY_PATH','LOG_FILE'].includes(key))continue;
+    if(input[key]===''&&!['LLM_KEY_STORE_PATH','SAMPLES_STATE_PATH','MACRO_STATE_PATH','HISTORY_STATE_PATH','RECOVERY_PATH','LOG_FILE'].includes(key))continue;
     const value=typeof def==='number'?Number(input[key]):String(input[key]);
     if(typeof def==='number'&&(!Number.isInteger(value)||value<0||!Number.isSafeInteger(value)))throw new TypeError('配置必须为非负整数：'+key);
     result[key]=value;
   }
   if(result.LLM_API_KEY&&!/^[A-Za-z0-9_-]{32,256}$/.test(result.LLM_API_KEY))throw new TypeError('LLM_API_KEY must be 32-256 URL-safe characters');
   if(result.LLM_API_KEY&&result.LLM_API_KEY===result.STATS_TOKEN)throw new TypeError('Read-only and administrator keys must differ');
+  for(const k of ['API_V1_DEPRECATION_AT','API_V1_SUNSET_AT'])if(result[k]&&(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(result[k])||!Number.isFinite(Date.parse(result[k]))||new Date(result[k]).toISOString().replace('.000Z','Z')!==result[k]))throw new TypeError(k+' 必须为有效UTC日期时间');
+  if(result.API_V1_SUNSET_AT&&(!result.API_V1_DEPRECATION_AT||Date.parse(result.API_V1_SUNSET_AT)<Date.parse(result.API_V1_DEPRECATION_AT)))throw new TypeError('Sunset 不得早于 Deprecation');
   if(result.POLL_MS<1000||result.POLL_MS>60000)throw new TypeError('POLL_MS 必须为 1000～60000');
   if(!['sina','tencent'].includes(result.POLL_PRIMARY))throw new TypeError('POLL_PRIMARY 必须为 sina 或 tencent');
   if(result.PORT>65535)throw new TypeError('PORT 超出范围');

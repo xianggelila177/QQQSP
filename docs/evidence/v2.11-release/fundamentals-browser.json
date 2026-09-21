@@ -1,0 +1,72 @@
+{
+  "mode": "真实 Chromium 执行正式构建产物；行情与财务为离线样本",
+  "assetVersion": "92",
+  "cases": [
+    {
+      "storageDisabled": false,
+      "cardCount": 3,
+      "compactMetrics": 16,
+      "expandedMetrics": 24,
+      "synchronizedExpansion": true,
+      "currencyConversion": {
+        "before": "89.46亿 USD",
+        "after": "≈635.17亿 CNY",
+        "ratioUnchanged": true
+      },
+      "dialogKeyboardAndFocus": true,
+      "quoteClock": {
+        "unchangedTimestamps": true,
+        "updates": 4,
+        "maximumGapMs": 1000.6
+      },
+      "layouts": [
+        {
+          "viewport": 320,
+          "scroll": 320,
+          "client": 320,
+          "cardHeightDifference": 0
+        },
+        {
+          "viewport": 375,
+          "scroll": 375,
+          "client": 375,
+          "cardHeightDifference": 0
+        },
+        {
+          "viewport": 768,
+          "scroll": 768,
+          "client": 768,
+          "cardHeightDifference": 0
+        },
+        {
+          "viewport": 1024,
+          "scroll": 1024,
+          "client": 1024,
+          "cardHeightDifference": 0
+        },
+        {
+          "viewport": 1440,
+          "scroll": 1440,
+          "client": 1440,
+          "cardHeightDifference": 0
+        },
+        {
+          "viewport": 1730,
+          "scroll": 1730,
+          "client": 1730,
+          "cardHeightDifference": 0
+        }
+      ],
+      "javascriptErrors": []
+    },
+    {
+      "storageDisabled": true,
+      "cardCount": 2,
+      "compactMetrics": 16,
+      "expandedMetrics": 24,
+      "synchronizedExpansion": true,
+      "javascriptErrors": []
+    }
+  ],
+  "passed": true
+}

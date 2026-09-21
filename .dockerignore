@@ -1,0 +1,10 @@
+.git
+node_modules
+.env
+.env.*
+logs
+state
+docs/evidence
+coverage
+*.zip
+*.patch

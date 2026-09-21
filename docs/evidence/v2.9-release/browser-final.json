@@ -1,0 +1,171 @@
+{
+  "mode": "actual app and built frontend; synthetic upstream",
+  "tabs": [
+    {
+      "symbol": "NVDA",
+      "tf": "daily30",
+      "ms": 31.100000000093132,
+      "bars": 60,
+      "candle": true,
+      "status": "日K · fixture-history · 后台已预备 · 交易所交易日"
+    },
+    {
+      "symbol": "NVDA",
+      "tf": "weekly",
+      "ms": 32.0999999998603,
+      "bars": 60,
+      "candle": true,
+      "status": "周K · fixture-history · 后台已预备 · 交易所交易日"
+    },
+    {
+      "symbol": "NVDA",
+      "tf": "monthly",
+      "ms": 30.100000000093132,
+      "bars": 60,
+      "candle": true,
+      "status": "月K · fixture-history · 后台已预备 · 交易所交易日"
+    },
+    {
+      "symbol": "NVDA",
+      "tf": "yearly",
+      "ms": 24.699999999953434,
+      "bars": 20,
+      "candle": true,
+      "status": "年K · fixture-history · 后台已预备 · 交易所交易日"
+    },
+    {
+      "symbol": "MRVL",
+      "tf": "daily30",
+      "ms": 30,
+      "bars": 60,
+      "candle": true,
+      "status": "日K · fixture-history · 后台已预备 · 交易所交易日"
+    },
+    {
+      "symbol": "MRVL",
+      "tf": "weekly",
+      "ms": 30.5,
+      "bars": 60,
+      "candle": true,
+      "status": "周K · fixture-history · 后台已预备 · 交易所交易日"
+    },
+    {
+      "symbol": "MRVL",
+      "tf": "monthly",
+      "ms": 29,
+      "bars": 60,
+      "candle": true,
+      "status": "月K · fixture-history · 后台已预备 · 交易所交易日"
+    },
+    {
+      "symbol": "MRVL",
+      "tf": "yearly",
+      "ms": 29.299999999813735,
+      "bars": 20,
+      "candle": true,
+      "status": "年K · fixture-history · 后台已预备 · 交易所交易日"
+    },
+    {
+      "symbol": "LITE",
+      "tf": "daily30",
+      "ms": 28.600000000093132,
+      "bars": 60,
+      "candle": true,
+      "status": "日K · fixture-history · 后台已预备 · 交易所交易日"
+    },
+    {
+      "symbol": "LITE",
+      "tf": "weekly",
+      "ms": 30.800000000046566,
+      "bars": 60,
+      "candle": true,
+      "status": "周K · fixture-history · 后台已预备 · 交易所交易日"
+    },
+    {
+      "symbol": "LITE",
+      "tf": "monthly",
+      "ms": 28.5999999998603,
+      "bars": 60,
+      "candle": true,
+      "status": "月K · fixture-history · 后台已预备 · 交易所交易日"
+    },
+    {
+      "symbol": "LITE",
+      "tf": "yearly",
+      "ms": 25.600000000093132,
+      "bars": 20,
+      "candle": true,
+      "status": "年K · fixture-history · 后台已预备 · 交易所交易日"
+    },
+    {
+      "symbol": "AAOI",
+      "tf": "daily30",
+      "ms": 29.700000000186265,
+      "bars": 60,
+      "candle": true,
+      "status": "日K · fixture-history · 后台已预备 · 交易所交易日"
+    },
+    {
+      "symbol": "AAOI",
+      "tf": "weekly",
+      "ms": 27.699999999953434,
+      "bars": 60,
+      "candle": true,
+      "status": "周K · fixture-history · 后台已预备 · 交易所交易日"
+    },
+    {
+      "symbol": "AAOI",
+      "tf": "monthly",
+      "ms": 22.5,
+      "bars": 60,
+      "candle": true,
+      "status": "月K · fixture-history · 后台已预备 · 交易所交易日"
+    },
+    {
+      "symbol": "AAOI",
+      "tf": "yearly",
+      "ms": 27.4000000001397,
+      "bars": 20,
+      "candle": true,
+      "status": "年K · fixture-history · 后台已预备 · 交易所交易日"
+    }
+  ],
+  "nativeAttemptError": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:41851/\nCall log:\n  - navigating to \"http://127.0.0.1:41851/\", waiting until \"domcontentloaded\"\n",
+  "transport": "test-only local HTTP/SSE bridge",
+  "callsBeforeTabs": 8,
+  "callsAfterTabs": 8,
+  "unselectedPeriodUpdated": true,
+  "news": [
+    {
+      "title": "美国核心通胀高于预期，交易员加大美联储加息押注，加息概率升至90%。",
+      "labels": "纳指100 · 条件偏利空\n美债价格 · 条件偏利空\n黄金 · 条件偏利空\n美元 · 条件偏利多\n事件条件分析 · 美国"
+    },
+    {
+      "title": "Oil Soars Past $100 as Saudi Output Crashes to Lowest Since 1990",
+      "labels": "纳指100 · 条件偏利空\n原油 · 条件偏利多\n事件条件分析"
+    },
+    {
+      "title": "Gold Rebounds as US Inflation Data Cools Record-High Real Rates",
+      "labels": "纳指100 · 条件偏利多\n美债价格 · 条件偏利多\n黄金 · 条件偏利多\n事件条件分析 · 美国"
+    },
+    {
+      "title": "U.S. Stocks Rise, Treasury Yields Slip Despite Stubborn Inflation",
+      "labels": "纳指100 · 条件偏利多\n美债价格 · 条件偏利多\n黄金 · 条件偏利多\n事件条件分析 · 美国"
+    },
+    {
+      "title": "Gold Price Forecast: Bulls Defend 200-Day EMA After Hot CPI",
+      "labels": "黄金 · 待验证\n事件条件分析"
+    }
+  ],
+  "failureKeepsCandles": true,
+  "viewports": [
+    320,
+    375,
+    768,
+    1024,
+    1440,
+    1730
+  ],
+  "javascriptErrors": [],
+  "passed": true
+}

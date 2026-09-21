@@ -1,6 +1,6 @@
 {
   "name": "qqqsp-v2",
-  "version": "2.12.0",
+  "version": "2.14.0",
   "private": true,
   "type": "module",
   "description": "单用户、零运行时依赖的多市场行情面板",
@@ -27,7 +27,13 @@
     "test:e2e": "node scripts/e2e.mjs",
     "coverage": "node scripts/coverage.mjs",
     "test:fundamentals": "node --test tests/v2/fundamentals*.test.mjs",
-    "test:fundamentals-browser": "python3 tests/v2/fundamentals_browser_check.py"
+    "test:fundamentals-browser": "python3 tests/v2/fundamentals_browser_check.py",
+    "test:v93": "node --test tests/v2/v93-*.test.mjs",
+    "test:v93-browser": "python3 tests/v2/v93-browser-check.py",
+    "init:config": "node scripts/init-config.mjs",
+    "test:v94": "node --test tests/v2/v94-*.test.mjs",
+    "test:v94-browser": "python3 tests/v2/v94-browser-check.py",
+    "test:v94-regression-browser": "python3 tests/v2/v94-regression-browser-check.py"
   },
   "devDependencies": {
     "@playwright/test": "1.55.1",

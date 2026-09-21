@@ -1,6 +1,6 @@
 """Package the checked source with Python stdlib; do not run legacy release.mjs.
-Usage: python3 scripts/package.py /mnt/data/QQQSP-2.11.0-v86-full-source.zip
-       python3 scripts/package.py --verify /mnt/data/QQQSP-2.11.0-v86-full-source.zip
+Usage: python3 scripts/package.py /mnt/data/qqqsp-v2.14.0-source.zip
+       python3 scripts/package.py --verify /mnt/data/qqqsp-v2.14.0-source.zip
 Run scripts/verify.mjs and tests/run.mjs BEFORE packaging; this is not a test gate.
 """
 from pathlib import Path, PurePosixPath
@@ -27,7 +27,7 @@ def verify(target):
         for name,sha in expected.items(): assert digest(archive.read(name))==sha,name
         return {'zipEntries':len(names),'verifiedFiles':len(expected),'root':prefix[:-1]}
 def package(target):
-    version=json.loads((ROOT/'package.json').read_text())['version'];suffix=version[:-2] if version.endswith('.0') else version
+    version=json.loads((ROOT/'package.json').read_text())['version'];suffix=version
     prefix='qqqsp-v'+suffix+'/'
     files={}
     for p in sorted(ROOT.rglob('*')):
@@ -46,7 +46,7 @@ def package(target):
     target.parent.mkdir(parents=True,exist_ok=True)
     with zipfile.ZipFile(target,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
         for name,data in sorted(files.items()):
-            info=zipfile.ZipInfo(prefix+name,date_time=(2026,9,14,0,0,0));info.create_system=3
+            info=zipfile.ZipInfo(prefix+name,date_time=(2026,9,21,0,0,0));info.create_system=3
             info.external_attr=(stat.S_IFREG|(0o755 if name.endswith('.sh') else 0o644))<<16
             info.compress_type=zipfile.ZIP_DEFLATED;archive.writestr(info,data,compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
     result=verify(target);result.update({'file':str(target),'bytes':target.stat().st_size,'sha256':digest(target.read_bytes()),'applicationVersion':version,'assetVersion':files['VERSION'].decode().strip()})

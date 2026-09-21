@@ -14,7 +14,9 @@ test('authenticated native HTTP returns complete JSON and preserves saved watchl
  const r=await fetch(f.url,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({symbol:'NVDA',include:['quote'],max_wait_ms:200})});assert.equal(r.status,200);assert.equal(r.headers.get('cache-control'),'no-store');const data=await r.json();assert.equal(data.schema_version,1);assert.equal(data.sections.quote.data.price,100);assert.ok(data.request_id);assert.equal(data.status,'complete');assert.deepEqual(f.app.services.historyPrewarm.status().persistentWatchlist,before);assert.equal(f.app.services.engine.diagnostics().subscribers,0);
 });
 test('strict payload and method handling keep malformed clients out of data services',async t=>{
- const f=await fixture(t),auth={Authorization:'Bearer '+token};assert.equal((await fetch(f.url,{headers:auth})).status,405);
+ const f=await fixture(t),auth={Authorization:'Bearer '+token};// v94 adds authenticated GET; a missing query remains invalid and starts no work.
+ assert.equal((await fetch(f.url,{headers:auth})).status,400);
+ assert.equal((await fetch(f.url,{method:'PUT',headers:auth})).status,405);
  assert.equal((await fetch(f.url,{method:'POST',headers:auth,body:'{}'})).status,415);
  assert.equal((await fetch(f.url,{method:'POST',headers:{...auth,'Content-Type':'application/json'},body:'{"symbol":'})).status,400);
  assert.equal((await fetch(f.url,{method:'POST',headers:{...auth,'Content-Type':'application/json'},body:'x'.repeat(8193)})).status,413);assert.equal(f.calls(),0);

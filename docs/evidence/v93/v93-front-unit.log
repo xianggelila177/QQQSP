@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: v93 failed watchlist write retains pending revision and retries without another user edit
+ok 1 - v93 failed watchlist write retains pending revision and retries without another user edit
+  ---
+  duration_ms: 4.334801
+  type: 'test'
+  ...
+# Subtest: v93 newer in-flight watchlist revisions are not overwritten by an older completion
+ok 2 - v93 newer in-flight watchlist revisions are not overwritten by an older completion
+  ---
+  duration_ms: 2.385344
+  type: 'test'
+  ...
+# Subtest: v93 authorization failures stop automatic writes until explicit retry; secret is only in header
+ok 3 - v93 authorization failures stop automatic writes until explicit retry; secret is only in header
+  ---
+  duration_ms: 1.362252
+  type: 'test'
+  ...
+# Subtest: v93 paused synchronization keeps pending changes and stops scheduled retries
+ok 4 - v93 paused synchronization keeps pending changes and stops scheduled retries
+  ---
+  duration_ms: 1.229292
+  type: 'test'
+  ...
+# Subtest: v93 Alpaca subscribes to quotes; book nanosecond order and trade time remain independent
+ok 5 - v93 Alpaca subscribes to quotes; book nanosecond order and trade time remain independent
+  ---
+  duration_ms: 19.258222
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 123.337093
