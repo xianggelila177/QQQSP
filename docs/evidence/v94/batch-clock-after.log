@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: one-second schedule counts from request start, not response finish; slow history cannot block quotes
+ok 1 - one-second schedule counts from request start, not response finish; slow history cannot block quotes
+  ---
+  duration_ms: 5.95595
+  type: 'test'
+  ...
+# Subtest: opening resumes promptly but does not override a provider Retry-After
+ok 2 - opening resumes promptly but does not override a provider Retry-After
+  ---
+  duration_ms: 2.649832
+  type: 'test'
+  ...
+# Subtest: nested source TTL does not skip a second when batch and source starts differ by 1 ms
+ok 3 - nested source TTL does not skip a second when batch and source starts differ by 1 ms
+  ---
+  duration_ms: 30.600441
+  type: 'test'
+  ...
+# Subtest: absolute source deadlines keep a fallback at 1 s without bypassing primary Retry-After
+ok 4 - absolute source deadlines keep a fallback at 1 s without bypassing primary Retry-After
+  ---
+  duration_ms: 6.635111
+  type: 'test'
+  ...
+# Subtest: v94 crossing a source TTL boundary inside one iteration cannot split a same-deadline batch
+ok 5 - v94 crossing a source TTL boundary inside one iteration cannot split a same-deadline batch
+  ---
+  duration_ms: 27.545172
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 126.053689

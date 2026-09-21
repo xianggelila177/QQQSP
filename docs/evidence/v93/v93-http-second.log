@@ -1,0 +1,52 @@
+TAP version 13
+# Subtest: v93 administrator authorization rejects forwarding, aliases and duplicate headers
+ok 1 - v93 administrator authorization rejects forwarding, aliases and duplicate headers
+  ---
+  duration_ms: 1.220048
+  type: 'test'
+  ...
+# Subtest: v93 watchlist writes require an administrator key; read-only key cannot write
+ok 2 - v93 watchlist writes require an administrator key; read-only key cannot write
+  ---
+  duration_ms: 48.082923
+  type: 'test'
+  ...
+# Subtest: v93 browser details are cache-only and the Agent endpoint is authenticated
+ok 3 - v93 browser details are cache-only and the Agent endpoint is authenticated
+  ---
+  duration_ms: 82.132135
+  type: 'test'
+  ...
+# Subtest: v93 v1 and v2 share one token bucket instead of doubling provider demand
+ok 4 - v93 v1 and v2 share one token bucket instead of doubling provider demand
+  ---
+  duration_ms: 17.035232
+  type: 'test'
+  ...
+# Subtest: v93 public provider diagnostics do not leak watched security identities or arbitrary metadata
+ok 5 - v93 public provider diagnostics do not leak watched security identities or arbitrary metadata
+  ---
+  duration_ms: 0.386732
+  type: 'test'
+  ...
+# Subtest: v93 published v2 schema validates records, compact rows, empty fields and negative assertions
+ok 6 - v93 published v2 schema validates records, compact rows, empty fields and negative assertions
+  ---
+  duration_ms: 19292.566318
+  type: 'test'
+  ...
+# Subtest: v93 new client preserves safe transport, wrong identity and version failures
+ok 7 - v93 new client preserves safe transport, wrong identity and version failures
+  ---
+  duration_ms: 2.626656
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 19620.945608

@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
-import Ajv2020 from 'ajv/dist/2020.js';
+import Ajv2020 from '../support/schema-validator.mjs';
 import {querySchema,responseSchema,openapi,buildContextDocs} from '../../scripts/build-context-docs.mjs';
 import {buildMarketContext} from '../../lib/market-context-format.js';import {parseContextQuery} from '../../lib/market-context-service.js';
 const ajv=new Ajv2020({allErrors:true}),validate=ajv.compile(responseSchema),checkQuery=ajv.compile(querySchema);

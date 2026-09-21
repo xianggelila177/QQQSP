@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: v94 query schemas represent all optional controls and reject unknown controls
+ok 1 - v94 query schemas represent all optional controls and reject unknown controls
+  ---
+  duration_ms: 2996.409192
+  type: 'test'
+  ...
+# Subtest: v94 published row/object schemas validate historical, aggregated, adjusted and action sections
+ok 2 - v94 published row/object schemas validate historical, aggregated, adjusted and action sections
+  ---
+  duration_ms: 5038.359761
+  type: 'test'
+  ...
+# Subtest: v94 published envelope schema validates batch and denies missing batch identities
+ok 3 - v94 published envelope schema validates batch and denies missing batch identities
+  ---
+  duration_ms: 3385.835537
+  type: 'test'
+  ...
+# Subtest: v94 v2 analysis query schema exposes new controls while snapshots reject them
+ok 4 - v94 v2 analysis query schema exposes new controls while snapshots reject them
+  ---
+  duration_ms: 3039.845875
+  type: 'test'
+  ...
+# Subtest: v94 calendar and status OpenAPI response shapes match actual responses
+ok 5 - v94 calendar and status OpenAPI response shapes match actual responses
+  ---
+  duration_ms: 2964.726072
+  type: 'test'
+  ...
+# Subtest: v94 advanced CLI preserves optional fields, rejects unsafe queries and exposes batch
+ok 6 - v94 advanced CLI preserves optional fields, rejects unsafe queries and exposes batch
+  ---
+  duration_ms: 1.54792
+  type: 'test'
+  ...
+# Subtest: v94 client checks batch identity, version, redirects, conditional reads and response size
+ok 7 - v94 client checks batch identity, version, redirects, conditional reads and response size
+  ---
+  duration_ms: 24.112335
+  type: 'test'
+  ...
+# Subtest: v94 streaming client transmits key only in header and yields bounded event frames
+ok 8 - v94 streaming client transmits key only in header and yields bounded event frames
+  ---
+  duration_ms: 0.992472
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 17548.302273

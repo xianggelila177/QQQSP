@@ -1,0 +1,84 @@
+TAP version 13
+# Subtest: v93 every financial field exists even on a cold cache
+ok 1 - v93 every financial field exists even on a cold cache
+  ---
+  duration_ms: 66.480776
+  type: 'test'
+  ...
+# Subtest: v93 denominator and input provenance survive projection without arbitrary upstream properties
+not ok 2 - v93 denominator and input provenance survive projection without arbitrary upstream properties
+  ---
+  duration_ms: 13.204718
+  type: 'test'
+  location: '/mnt/data/work/QQQSP-main/tests/v2/v93-data-contract.test.mjs:16:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(!JSON.stringify(c).includes('never'))
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///mnt/data/work/QQQSP-main/tests/v2/v93-data-contract.test.mjs:20:105)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: v93 ETF company valuation fields are explicit not applicable
+ok 3 - v93 ETF company valuation fields are explicit not applicable
+  ---
+  duration_ms: 0.519062
+  type: 'test'
+  ...
+# Subtest: v93 incompatible 52-week observations cannot be paired
+ok 4 - v93 incompatible 52-week observations cannot be paired
+  ---
+  duration_ms: 0.713185
+  type: 'test'
+  ...
+# Subtest: v93 order book is independent from last trade and preserves round lots
+ok 5 - v93 order book is independent from last trade and preserves round lots
+  ---
+  duration_ms: 0.276517
+  type: 'test'
+  ...
+# Subtest: v93 rejects crossed, wrong-identity, future and invalid-sized books
+ok 6 - v93 rejects crossed, wrong-identity, future and invalid-sized books
+  ---
+  duration_ms: 0.181714
+  type: 'test'
+  ...
+# Subtest: v93 snapshot profile avoids history and analysis supports explicit compact output
+ok 7 - v93 snapshot profile avoids history and analysis supports explicit compact output
+  ---
+  duration_ms: 1.052606
+  type: 'test'
+  ...
+# Subtest: v93 history continuation is passed to the existing history reader
+ok 8 - v93 history continuation is passed to the existing history reader
+  ---
+  duration_ms: 2.769473
+  type: 'test'
+  ...
+# Subtest: v93 stalled fundamentals do not relabel a successfully completed quote as timed out
+ok 9 - v93 stalled fundamentals do not relabel a successfully completed quote as timed out
+  ---
+  duration_ms: 33.042234
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 8
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 304.274887

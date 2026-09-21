@@ -8,10 +8,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>全球自选行情 · QQQSP</title>
 <!-- 资源版本源: panel/VERSION · 由 build_version.sh 统一注入 ?v=(P1-Q5) -->
-<link rel="manifest" href="/manifest.webmanifest?v=92">
-<link rel="icon" href="/icon.svg?v=92" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/icon.svg?v=92">
-<link rel="stylesheet" href="/style.css?v=92">
+<link rel="manifest" href="/manifest.webmanifest?v=94">
+<link rel="icon" href="/icon.svg?v=94" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg?v=94">
+<link rel="stylesheet" href="/style.css?v=94">
 </head>
 <body>
   <header class="topbar">
@@ -24,9 +24,10 @@
       <span class="chip" id="clock">--:--:--</span>
       <span class="chip live" id="updateAt">连接中…</span>
       <button id="btnRefresh" aria-label="立即刷新全部自选行情" class="chip action" title="立即刷新(手动)">↻</button>
+      <button id="btnAdmin" type="button" class="chip action">后台同步</button>
       <button id="btnPwa" class="chip action" hidden>安装</button>
     </div>
-  </header>
+  <a href="/api-keys.html" class="api-keys-link" aria-label="接口密钥管理">接口密钥管理</a></header>
 
   <div class="searchwrap">
     <input id="q" class="searchbox" aria-label="搜索全球股票、基金、指数或期货" role="combobox" aria-autocomplete="list" aria-controls="sresults" aria-expanded="false" placeholder="搜索代码 / 名称 · 如纳指夜盘、NQ00Y、海力士、VOD.L" autocomplete="off">
@@ -59,6 +60,7 @@
 
   <div class="layout-controls"><label for="layoutPreference">&#x6BCF;&#x884C;&#x5361;&#x7247;</label><select id="layoutPreference"><option value="auto">&#x81EA;&#x52A8;</option><option value="2">2&#x5217;</option><option value="3">3&#x5217;</option><option value="4">4&#x5217;</option></select></div>
 
+  <p id="watchlistSyncStatus" class="sync-status" role="status" aria-live="polite"></p>
   <main id="panels"></main>
 
   <details id="marketDirectory" class="market-directory">
@@ -76,7 +78,7 @@
   </details>
   <p class="note">推送优先 · 断流后缓存读取兜底 · 报价及检查时间按 UTC+8 展示，历史日期按交易所交易日展示 · 数据来源 Alpaca / Finnhub（可选）/ Naver / Yahoo / Nasdaq / 腾讯 / 东方财富 / 新浪 / Google News · 宏观影响为证据条件推断，非投资建议；个股新闻保留标题情绪参考</p>
 
-  <script src="/panel.bundle.js?v=92" defer></script>
+  <script src="/panel.bundle.js?v=94" defer></script>
   <script>document.addEventListener("DOMContentLoaded",function(){var p=document.getElementById("panels"),s=document.getElementById("layoutPreference");if(!p||!s)return;var k="qqqsp:layout:v1",v="auto";try{v=localStorage.getItem(k)||v}catch(e){}if(!["auto","2","3","4"].includes(v))v="auto";s.value=v;p.dataset.layout=v;s.addEventListener("change",function(){var x=["auto","2","3","4"].includes(s.value)?s.value:"auto";p.dataset.layout=x;try{localStorage.setItem(k,x)}catch(e){}})});</script>
 </body>
 </html>

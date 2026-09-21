@@ -4,7 +4,7 @@
     const FRIENDLY = {QQQ:'纳指100 ETF',SPY:'标普500 ETF'};
     const TF = (window.PANEL_TIMEFRAMES?.all || [['intraday','分时'],['daily30','日K'],['weekly','周K'],['monthly','月K'],['yearly','年K']]).map(t=>Array.isArray(t)?t:[t.key,t.label]);
     const cardCache=new Map(), lastPrice=new Map();
-    let fundamentalsView=null;
+    let fundamentalsView=null,detailView=null;
     // Measure natural content, never the stretched card or a previous minimum.
     // A shared observer only schedules work when a band's intrinsic size changes.
     const layoutRecords = new Map(), layoutSizes = new Map();
@@ -110,6 +110,8 @@
     chartController.mount(q);
     fundamentalsView ||= window.PANEL_FUNDAMENTALS.createView({document,cards:cardCache,formatterFor,onLayout:scheduleBands});
     fundamentalsView.mount(q);
+    detailView ||= window.PANEL_DETAIL.createDetailView({document});
+    detailView.mount(q);
     mountBands(q);
     q.ccybtns.forEach(b => b.addEventListener('click', () => onCurrency(sym, b.dataset.ccy)));
     q.ccybtns.forEach(b => {b.classList.toggle('on', b.dataset.ccy === cardCurOf(sym));b.setAttribute('aria-pressed',String(b.dataset.ccy === cardCurOf(sym)));});
@@ -300,7 +302,7 @@
       applyRequestState(q);
     }
 
-    function remove(symbol) { const q=cardCache.get(symbol);if(!q)return;fundamentalsView?.remove(q);chartController.unmount(q);for(const content of q.layoutContents||[]){bandObserver?.unobserve(content);layoutRecords.delete(content);}scheduleBands();q.el.remove();q.strip?.remove();cardCache.delete(symbol);lastPrice.delete(symbol); }
+    function remove(symbol) { const q=cardCache.get(symbol);if(!q)return;fundamentalsView?.remove(q);detailView?.remove(q);chartController.unmount(q);for(const content of q.layoutContents||[]){bandObserver?.unobserve(content);layoutRecords.delete(content);}scheduleBands();q.el.remove();q.strip?.remove();cardCache.delete(symbol);lastPrice.delete(symbol); }
     return Object.freeze({ ensureCard, render, renderStrip, updateQuoteMeta, setFetchStatus, cardCache, remove });
   };
   window.PANEL_CARD_VIEW=Object.freeze({createCardView});

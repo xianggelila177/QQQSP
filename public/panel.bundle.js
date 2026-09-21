@@ -509,6 +509,73 @@
 
 ;
 
+;/* public/modules/panel-watchlist-sync.js */
+(() => {
+  // A failed write keeps the latest revision. Only one write is in flight.
+  function createWatchlistSync({network,getToken=()=>'',onStatus=()=>{},now=Date.now,setTimer=setTimeout,clearTimer=clearTimeout,maxRetries=5}={}) {
+    let pending=null,revision=0,active=false,timer=null,failures=0,paused=false,blocked=false;
+    const report=(state,extra={})=>onStatus({state,pending:pending!==null,...extra});
+    const clear=()=>{if(timer!==null)clearTimer(timer);timer=null;};
+    async function drain() {
+      if(active||paused||blocked||pending===null)return;
+      clear();active=true;
+      try {
+        while(pending!==null&&!paused&&!blocked){
+          const item=pending;report('saving');
+          let response;
+          try {const token=getToken();response=await network.request('watchlist','/api/history/watchlist',{method:'POST',headers:{'Content-Type':'application/json',...(token?{'X-Admin-Token':token}:{})},body:JSON.stringify({symbols:item.symbols})});}
+          catch(error){if(paused||error.name==='AbortError')break;response={ok:false,status:0};}
+          if(response.ok){if(pending?.revision===item.revision)pending=null;failures=0;report(pending?'saving':'saved');continue;}
+          if(response.status===401||response.status===403){blocked=true;report('auth-required');break;}
+          if([400,413,415].includes(response.status)){blocked=true;report('invalid');break;}
+          failures++;
+          if(failures>maxRetries){report('failed');break;}
+          const delay=Math.max(Math.min(1000*2**(failures-1),30000),Math.max(0,(response.retryAt||0)-now()));
+          report('retrying',{retryAt:now()+delay,attempt:failures});
+          timer=setTimer(()=>{timer=null;void drain();},delay);break;
+        }
+      } finally {active=false;}
+    }
+    return Object.freeze({
+      save(symbols){pending={symbols:[...symbols],revision:++revision};failures=0;clear();void drain();},
+      retry(){blocked=false;failures=0;clear();void drain();},
+      pause(){paused=true;clear();network.abort?.('watchlist');},
+      resume(){paused=false;void drain();},
+      state:()=>({pending:pending!==null,active,blocked,failures})
+    });
+  }
+  window.PANEL_WATCHLIST_SYNC=Object.freeze({createWatchlistSync});
+})();
+
+;
+
+;/* public/modules/panel-admin.js */
+(() => {
+  // The administrator secret is held in memory only, never local/session storage.
+  function createAdminControl({document,button,status,onRetry=()=>{}}={}) {
+    let token='',dialog=null,input=null,opener=null;
+    const messages={saving:'正在保存后台自选…',saved:'后台自选已保存','auth-required':'本地已保存；后台同步需要管理密钥',retrying:'本地已保存；正在等待重试',failed:'本地已保存；后台同步失败，请重试',invalid:'后台未接受自选，请检查请求',idle:'管理密钥仅在本次页面会话有效'};
+    function close(){if(!dialog)return;input.value='';dialog.close();opener?.focus();}
+    function show(){
+      if(!dialog){
+        dialog=document.createElement('dialog');dialog.className='admin-dialog';dialog.setAttribute('aria-labelledby','admin-title');
+        dialog.innerHTML='<h2 id="admin-title">后台自选同步</h2><p>管理密钥用于保存服务器自选。只读智能体密钥不能用于写入。密钥只保留在当前页面内存中，刷新页面后需要重新输入。</p><form><label for="admin-key">管理密钥（STATS_TOKEN）</label><input id="admin-key" type="password" autocomplete="off" spellcheck="false" maxlength="1024"><p class="admin-status" role="status"></p><div class="detail-actions"><button type="submit">应用并重试</button><button type="button" data-clear>清除密钥</button><button type="button" data-close>关闭</button></div></form>';
+        document.body.appendChild(dialog);input=dialog.querySelector('input');
+        dialog.querySelector('form').addEventListener('submit',event=>{event.preventDefault();token=input.value.trim();input.value='';dialog.querySelector('.admin-status').textContent=token?'密钥已保留在当前页面，正在重试同步。':'未设置密钥，仅允许直连本机的写入。';onRetry();});
+        dialog.querySelector('[data-clear]').addEventListener('click',()=>{token='';input.value='';dialog.querySelector('.admin-status').textContent='当前页面中的密钥已清除。';});
+        dialog.querySelector('[data-close]').addEventListener('click',close);
+        dialog.addEventListener('cancel',event=>{event.preventDefault();close();});
+      }
+      opener=document.activeElement;dialog.showModal();input.focus();
+    }
+    button?.addEventListener('click',show);
+    return Object.freeze({getToken:()=>token,show,clear(){token='';if(input)input.value='';},setStatus(value){if(status){status.textContent=messages[value.state]||messages.idle;status.dataset.state=value.state;}if(button)button.dataset.pending=String(!!value.pending);}});
+  }
+  window.PANEL_ADMIN=Object.freeze({createAdminControl});
+})();
+
+;
+
 ;/* public/modules/panel-state.js */
 (() => {
   const MAX_WATCHLIST_SYMBOLS = 100;
@@ -1057,7 +1124,7 @@
     return value.toLocaleString('zh-CN',{maximumFractionDigits:2});
   }
   function markup(){
-    return '<section class="statistics" aria-label="基础信息"><div class="statistics-head"><h3>基础信息</h3><div class="statistics-actions"><button type="button" class="statistics-toggle" aria-expanded="false">全部指标</button><button type="button" class="statistics-help">口径与来源</button></div></div><div class="grid">'+definitions.map(d=>'<div class="cell" data-metric="'+d.key+'"'+(d.extra?' data-metric-extra hidden':'')+'><label>'+d.label+'</label><b class="'+d.key+'">—</b></div>').join('')+'</div><div class="statistics-status">财务资料等待报价</div></section>';
+    return '<section class="statistics" aria-label="基础信息"><div class="statistics-head"><h3>基础信息</h3><div class="statistics-actions"><button type="button" class="statistics-toggle" aria-expanded="false">全部指标</button><button type="button" class="statistics-help">口径与来源</button><button type="button" class="market-detail-open">完整数据</button></div></div><div class="grid">'+definitions.map(d=>'<div class="cell" data-metric="'+d.key+'"'+(d.extra?' data-metric-extra hidden':'')+'><label>'+d.label+'</label><b class="'+d.key+'">—</b></div>').join('')+'</div><div class="statistics-status">财务资料等待报价</div></section>';
   }
   function formatMetric(def,quote,formatter){
     const fund=['ETF','MUTUALFUND'].includes(quote.instrumentType),fields=quote.fundamentals?.fields||{};
@@ -1157,6 +1224,102 @@
 
 ;
 
+;/* public/modules/panel-detail.js */
+(() => {
+  const reasons={NO_ORDER_BOOK:'当前来源未提供买卖盘口',SOURCE_HAS_NO_BOOK:'当前来源未提供买卖盘口',BOOK_IDENTITY_MISMATCH:'盘口证券身份或币种不匹配',EMPTY_BOOK:'来源未返回有效盘口价格',NO_QUOTE:'尚未取得有效报价',SOURCE_FIELD_UNAVAILABLE:'来源尚未提供该字段',NO_FUNDAMENTALS:'尚未取得财务资料',CONTEXT_TIMEOUT:'本次等待结束，来源尚未完成',PARTIAL_DATA:'部分字段缺失或待核验',SOURCE_UNAVAILABLE:'来源暂不可用',INSTRUMENT_TYPE:'当前证券类型不适用',CROSSED_BOOK:'买价高于卖价，盘口存在冲突',RETAINED_BOOK:'保留的旧盘口，非当前新报价',INCOMPLETE_BOOK:'盘口字段或单位不完整',BOOK_TIME_INVALID:'盘口时间未通过校验','source-missing':'来源未提供该字段','no-order-book':'没有明确范围的委托买卖盘','no-trade-amount':'来源未提供累计成交金额','no-five-day-minute-baseline':'缺少前五个交易日每分钟均量基准','no-shares':'缺少可靠股本分母','no-regular-volume':'缺少已核验的正常时段成交量','no-regular-range':'缺少正常时段高低价或昨收','float-exceeds-total':'流通股超过总股本，停止计算',loading:'来源仍在读取',disabled:'该功能已关闭',expired:'资料已超过保留期',FIELD_NOT_AVAILABLE:'来源未提供该字段',QUOTE_PENDING:'报价仍在读取'};
+  const statuses={ready:'已取得',complete:'已取得',partial:'部分取得',unavailable:'暂不可用',not_applicable:'不适用','not-applicable':'不适用',available:'已取得',loss:'亏损','nonpositive-book':'非正净资产',conflict:'数据冲突',loading:'读取中',stale:'旧值待更新'};
+  const units={percent:'%',ratio:'倍',shares:'股',money:'',price:'',points:'点',lots:'手',round_lots:'整手（每手股数未核验）','money-per-share':'/股'};
+  const groups={trading:'交易统计',capital:'市值与股本',valuation:'估值',dividends:'股息与分红',inputs:'计算输入与财务依据'};
+  const sessions={REGULAR:'正常交易',PRE:'盘前',POST:'盘后',CLOSED:'休市',BREAK:'午间休市',AUCTION:'集合竞价',UNKNOWN:'状态未核验'};
+  const numeric=value=>typeof value==='number'&&Number.isFinite(value);
+  const formatted=(value,digits=6)=>numeric(value)?value.toLocaleString('zh-CN',{maximumFractionDigits:digits}):'—';
+  const time=value=>numeric(value)&&value>0?new Date(value).toLocaleString('zh-CN',{hour12:false,timeZone:'Asia/Shanghai'})+'（北京时间）':'时间未提供';
+  function createDetailView({document,fetchImpl=fetch}={}) {
+    let dialog=null,body=null,note=null,title=null,controller=null,current=null,opener=null,payload=null,generation=0;
+    function node(tag,text,className){const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(className)el.className=className;return el;}
+    function reason(code){return code?(reasons[code]||'待核验：'+code):'来源未提供说明';}
+    function sourceName(id){return payload?.sources?.[id]?.name||'来源未提供';}
+    function close(){generation++;controller?.abort();controller=null;current=null;payload=null;if(dialog?.open)dialog.close();opener?.focus();}
+    function makeDialog(){
+      if(dialog)return;
+      dialog=node('dialog',undefined,'market-detail-dialog');dialog.setAttribute('aria-labelledby','market-detail-title');
+      const head=node('div',undefined,'detail-head');title=node('h2','证券详情');title.id='market-detail-title';
+      const closeButton=node('button','关闭');closeButton.type='button';closeButton.addEventListener('click',close);head.append(title,closeButton);
+      const actions=node('div',undefined,'detail-actions'),refresh=node('button','刷新快照'),download=node('button','导出完整数据');refresh.type=download.type='button';
+      refresh.addEventListener('click',()=>void load());download.addEventListener('click',()=>{
+        if(!payload)return;
+        const blob=new Blob([JSON.stringify(payload,null,2)+'\n'],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),link=node('a');
+        link.href=url;link.download='market-detail-'+payload.instrument.symbol.replace(/[^A-Z0-9_.-]/gi,'_')+'.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+      });actions.append(refresh,download);note=node('p','', 'detail-note');note.setAttribute('role','status');body=node('div',undefined,'detail-body');
+      dialog.append(head,actions,note,body);document.body.appendChild(dialog);
+      dialog.addEventListener('cancel',event=>{event.preventDefault();close();});
+    }
+    function evidence(field){
+      const details=node('details',undefined,'detail-evidence');details.append(node('summary','口径、时间与来源'));
+      const lines=[field.description,field.missing_reason?'说明：'+reason(field.missing_reason):null,
+        '来源：'+sourceName(field.source_id),'资料时间：'+time(field.as_of_ms),'成功检查：'+time(field.source_checked_at_ms),
+        field.financial_period?'财务期间：'+field.financial_period:null,field.basis?'统计口径：'+field.basis:null,
+        field.formula?'公式：'+field.formula:null,field.denominator!==null?'计算分母：'+formatted(field.denominator):null,
+        field.share_source_id?'股本来源：'+sourceName(field.share_source_id)+'；'+time(field.share_as_of_ms):null];
+      for(const line of lines)if(line)details.append(node('p',line));
+      for(const input of field.inputs||[])details.append(node('p',(input.name||'输入')+'：'+formatted(input.value)+'；'+sourceName(input.source_id)+'；'+time(input.as_of_ms)+(input.financial_period?'；'+input.financial_period:'')));
+      for(const item of field.attempts||[])details.append(node('p','尝试来源：'+sourceName(item.source_id)+'；状态：'+(statuses[item.state]||item.state||'未知')+(item.code?'；'+item.code:'')+(item.retry_at_ms?'；下次允许重试：'+time(item.retry_at_ms):'')));
+      return details;
+    }
+    function fieldCard(label,value,meta){
+      const card=node('div',undefined,'detail-metric');card.append(node('span',label,'detail-label'),node('strong',value));
+      if(meta)card.append(node('span',meta,'detail-small'));return card;
+    }
+    function section(label){const container=node('section',undefined,'detail-section');container.append(node('h3',label));const grid=node('div',undefined,'detail-grid');container.append(grid);body.append(container);return {container,grid};}
+    function render(data){
+      payload=data;body.replaceChildren();const instrument=data.instrument,q=data.sections.quote,book=data.sections.order_book,f=data.sections.fundamentals;
+      title.textContent=instrument.symbol+' · '+instrument.name;
+      const available=f?.coverage?.available_fields||0,total=f?.coverage?.applicable_fields||0;
+      note.textContent=(statuses[data.status]||data.status)+' · 财务字段 '+available+'/'+total+' · 原生币种 '+(instrument.currency||'未提供')+' · 生成于 '+time(data.generated_at_ms)+'。未取得的数据不填零。';
+      const overview=node('div',undefined,'detail-overview'),price=q?.data?.price;
+      overview.append(node('strong',formatted(price),'detail-price'),node('span',(instrument.price_unit||'单位未提供')+' · '+(sessions[q?.data?.market_state]||q?.data?.market_state||'市场状态待核验')));
+      if(q?.data){overview.append(node('p','涨跌 '+formatted(q.data.change)+' / '+formatted(q.data.change_percent)+'%'),node('p','成交时间：'+time(q.data.quote_at_ms)),node('p','来源检查：'+time(q.data.source_checked_at_ms)+' · 延迟 '+(q.delay_minutes==null?'未声明':q.delay_minutes+' 分钟')));}
+      body.append(overview);
+      const market=section('最新成交与当日统计');
+      for(const [key,label] of [['open','今开'],['previous_close','昨收'],['high','最高'],['low','最低'],['volume','成交量']]){
+        const value=q?.data?.[key],unit=key==='volume'?units[q?.data?.volume_unit]||q?.data?.volume_unit||'单位未核验':instrument.price_unit||'';
+        market.grid.append(fieldCard(label,formatted(value)+(value!=null?' '+unit:''),value==null?'来源暂缺':null));
+      }
+      market.container.append(node('p','统计交易日：'+(q?.data?.statistics_trading_date||'未提供')+' · 统计时段：'+(sessions[q?.data?.statistics_session]||q?.data?.statistics_session||'未核验')+' · '+time(q?.data?.statistics_as_of_ms),'detail-small'));
+      const depth=section('买卖盘口 · 最优一档');
+      for(const [side,label] of [['bid','买一'],['ask','卖一']]){
+        const v=book?.data?.[side];depth.grid.append(fieldCard(label,formatted(v?.price),formatted(v?.size)+' '+(units[book?.data?.size_unit]||book?.data?.size_unit||'数量单位未提供')));
+      }
+      const scope={'single-exchange':'单一交易所','consolidated':'综合行情','provider-top-of-book':'供应商最优一档'}[book?.coverage?.scope]||book?.coverage?.scope||'覆盖范围未提供';
+      depth.container.append(node('p',(statuses[book?.status]||'暂不可用')+' · '+scope+' · '+time(book?.as_of_ms)+' · '+(book?.source_ids||[]).map(sourceName).join(' / '),'detail-small'));
+      if(book?.missing_reason)depth.container.append(node('p',reason(book.missing_reason),'detail-warning'));
+      depth.container.append(node('p','盘口与最新成交具有独立时间。最优一档不等于完整订单簿；整手数量不擅自换算为股数。','detail-small'));
+      const groupNodes=new Map();
+      for(const field of Object.values(f?.data?.fields||{})){
+        const group=field.group||'inputs';if(!groupNodes.has(group))groupNodes.set(group,section(groups[group]||group));
+        const state=statuses[field.status]||field.status,known=field.value!==null;
+        const value=known?(field.estimated?'≈ ':'')+formatted(field.value,['percent','ratio'].includes(field.unit)?2:6)+(field.unit==='percent'?'%':field.unit==='ratio'?' 倍':''):(['loss','nonpositive-book'].includes(field.status)?state:'—');
+        const card=fieldCard(field.label||field.key,value,[state,field.stale?'旧值待更新':null,field.currency,known&&field.unit&&!['percent','ratio'].includes(field.unit)?units[field.unit]||field.unit:null].filter(Boolean).join(' · '));
+        card.dataset.field=field.key;card.append(evidence(field));groupNodes.get(group).grid.append(card);
+      }
+      body.append(node('p','本窗口读取服务器已取得的快照，不主动启动历史采集。智能体需要历史序列时使用分析档位；资讯标题及供应商内容仅作为不可信数据。','detail-small'));
+    }
+    async function load(){
+      if(!current)return;
+      controller?.abort();controller=new AbortController();const epoch=++generation,symbol=current;
+      note.textContent='正在读取服务器快照…';const timer=setTimeout(()=>controller?.abort(),10000);
+      try {const response=await fetchImpl('/api/detail?symbol='+encodeURIComponent(symbol),{signal:controller.signal,cache:'no-store'});if(!response.ok)throw new Error('HTTP '+response.status);const data=await response.json();
+        if(epoch!==generation)return;if(data.schema_version!==2||data.instrument?.symbol!==symbol)throw new Error('数据身份或版本不符');render(data);
+      }catch(error){if(epoch===generation)note.textContent='读取失败；已有内容保持不变。请稍后刷新。'+(error.name==='AbortError'?'请求已取消或超时。':'');}
+      finally{clearTimeout(timer);}
+    }
+    return Object.freeze({mount(card){const button=card.el.querySelector('.market-detail-open');button?.addEventListener('click',()=>{makeDialog();opener=button;current=card.symbol||card.d?.symbol||card.el.dataset.symbol;payload=null;body.replaceChildren();dialog.showModal();void load();});},remove(card){if(current===(card.symbol||card.d?.symbol||card.el.dataset.symbol))close();},close});
+  }
+  window.PANEL_DETAIL=Object.freeze({createDetailView});
+})();
+
+;
+
 ;/* public/modules/panel-card-view.js */
 (() => {
   const createCardView = ({ document, panelsEl, stripEl, chartController, formatterFor, cardCurOf, nameOf, onRemove, onRetry, onCurrency, humanizeAge, UP, DOWN, getReadIntervalMs=()=>0, quoteClock=null, onNewsToggle=()=>{} }) => {
@@ -1164,7 +1327,7 @@
     const FRIENDLY = {QQQ:'纳指100 ETF',SPY:'标普500 ETF'};
     const TF = (window.PANEL_TIMEFRAMES?.all || [['intraday','分时'],['daily30','日K'],['weekly','周K'],['monthly','月K'],['yearly','年K']]).map(t=>Array.isArray(t)?t:[t.key,t.label]);
     const cardCache=new Map(), lastPrice=new Map();
-    let fundamentalsView=null;
+    let fundamentalsView=null,detailView=null;
     // Measure natural content, never the stretched card or a previous minimum.
     // A shared observer only schedules work when a band's intrinsic size changes.
     const layoutRecords = new Map(), layoutSizes = new Map();
@@ -1270,6 +1433,8 @@
     chartController.mount(q);
     fundamentalsView ||= window.PANEL_FUNDAMENTALS.createView({document,cards:cardCache,formatterFor,onLayout:scheduleBands});
     fundamentalsView.mount(q);
+    detailView ||= window.PANEL_DETAIL.createDetailView({document});
+    detailView.mount(q);
     mountBands(q);
     q.ccybtns.forEach(b => b.addEventListener('click', () => onCurrency(sym, b.dataset.ccy)));
     q.ccybtns.forEach(b => {b.classList.toggle('on', b.dataset.ccy === cardCurOf(sym));b.setAttribute('aria-pressed',String(b.dataset.ccy === cardCurOf(sym)));});
@@ -1460,7 +1625,7 @@
       applyRequestState(q);
     }
 
-    function remove(symbol) { const q=cardCache.get(symbol);if(!q)return;fundamentalsView?.remove(q);chartController.unmount(q);for(const content of q.layoutContents||[]){bandObserver?.unobserve(content);layoutRecords.delete(content);}scheduleBands();q.el.remove();q.strip?.remove();cardCache.delete(symbol);lastPrice.delete(symbol); }
+    function remove(symbol) { const q=cardCache.get(symbol);if(!q)return;fundamentalsView?.remove(q);detailView?.remove(q);chartController.unmount(q);for(const content of q.layoutContents||[]){bandObserver?.unobserve(content);layoutRecords.delete(content);}scheduleBands();q.el.remove();q.strip?.remove();cardCache.delete(symbol);lastPrice.delete(symbol); }
     return Object.freeze({ ensureCard, render, renderStrip, updateQuoteMeta, setFetchStatus, cardCache, remove });
   };
   window.PANEL_CARD_VIEW=Object.freeze({createCardView});
@@ -2083,16 +2248,13 @@
   const WL_KEY = 'qqq-watchlist';
   let watchlist = panelState.loadWatchlist(WL_KEY, ['QQQ', 'SPY']);
   const watchlistNetwork=PANEL.createNetwork({fetchImpl:fetch,timeoutMs:10000});
-  let pendingWatchlist=null,savingWatchlist=false;
-  async function persistWatchlist(){
-    if(savingWatchlist)return;savingWatchlist=true;
-    try{while(pendingWatchlist!==null){const symbols=pendingWatchlist;pendingWatchlist=null;
-      const response=await watchlistNetwork.request('watchlist','/api/history/watchlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({symbols})});
-      if(!response.ok)throw new Error('保存失败');
-    }}catch{flash('本地自选已更新，服务器后台自选尚未保存；下次增删时将重试','warn');}
-    finally{savingWatchlist=false;}
-  }
-  const saveWL=()=>{panelState.saveWatchlist(WL_KEY,watchlist);pendingWatchlist=[...watchlist];void persistWatchlist();};
+  let watchlistSync;
+  const adminControl=window.PANEL_ADMIN.createAdminControl({document,button:$('btnAdmin'),status:$('watchlistSyncStatus'),onRetry:()=>watchlistSync.retry()});
+  watchlistSync=window.PANEL_WATCHLIST_SYNC.createWatchlistSync({network:watchlistNetwork,getToken:adminControl.getToken,onStatus:adminControl.setStatus});
+  const saveWL=()=>{panelState.saveWatchlist(WL_KEY,watchlist);watchlistSync.save(watchlist);};
+  window.addEventListener('pagehide',()=>{watchlistSync.pause();adminControl.clear();});
+  window.addEventListener('pageshow',()=>watchlistSync.resume());
+  window.addEventListener('online',()=>watchlistSync.retry());
   const emptyState=document.createElement('section');emptyState.className='watchlist-empty';emptyState.hidden=true;
   emptyState.innerHTML='<h2>尚未添加自选</h2><p>搜索证券代码或名称，即可添加行情卡片。</p><button type="button">搜索并添加标的</button>';
   emptyState.querySelector('button').addEventListener('click',()=>$('q').focus());panelsEl.appendChild(emptyState);
@@ -2294,7 +2456,7 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=92').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=94').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
         nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本','info',{label:'刷新页面',run:()=>location.reload()}); });
       });
@@ -2468,9 +2630,7 @@
       const labels={cooldown:'冷却中',probing:'恢复探测',requesting:'读取中',ready:'可读取',streaming:'已接收成交',subscribing:'等待订阅或首笔成交',connecting:'连接中',backoff:'等待重连',blocked:'权限或配置受限',idle:'空闲',stopped:'已停止','website-polling':'网站批量报价'};
       const rows=Object.entries(data.hosts||{}).map(([host,v])=>host+'：'+(labels[v.state]||v.state)+'；实际请求 '+v.calls+'；429 '+v.rateLimits+(v.retryAt?'；'+new Date(v.retryAt).toLocaleTimeString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false})+' 后可重试':''));
       for(const [source,v] of Object.entries(data.fundamentals?.sources||{})){
-        const securities=Object.entries(v.securities||{}),failed=securities.filter(([,s])=>s.code),pending=securities.filter(([,s])=>s.inflight);
-        rows.push('基础资料 '+source+'：'+securities.length+' 只证券；补充中 '+pending.length+'；失败 '+failed.length);
-        for(const [symbol,s] of failed)rows.push('  '+symbol+'：'+s.code+'；缺失 '+(s.missingFields||[]).join('、')+(s.retryAt?'；'+new Date(s.retryAt).toLocaleTimeString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false})+' 后重试':''));
+        rows.push('基础资料 '+source+'：'+(v.tracked||0)+' 只证券；补充中 '+(v.inflight||0)+'；失败 '+(v.failed||0)+'（详细诊断仅管理员可见）');
       }
       const streams=data.stream?.primary||data.stream?.backup?[['主流',data.stream.primary],['备流',data.stream.backup]]:[['行情流',data.stream]];
       for(const [name,v] of streams)if(v)rows.unshift(name+'：'+(labels[v.status]||v.status||'未启用')+(v.errorCode?'（'+v.errorCode+'）':''));

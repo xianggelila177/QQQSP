@@ -23,16 +23,13 @@
   const WL_KEY = 'qqq-watchlist';
   let watchlist = panelState.loadWatchlist(WL_KEY, ['QQQ', 'SPY']);
   const watchlistNetwork=PANEL.createNetwork({fetchImpl:fetch,timeoutMs:10000});
-  let pendingWatchlist=null,savingWatchlist=false;
-  async function persistWatchlist(){
-    if(savingWatchlist)return;savingWatchlist=true;
-    try{while(pendingWatchlist!==null){const symbols=pendingWatchlist;pendingWatchlist=null;
-      const response=await watchlistNetwork.request('watchlist','/api/history/watchlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({symbols})});
-      if(!response.ok)throw new Error('保存失败');
-    }}catch{flash('本地自选已更新，服务器后台自选尚未保存；下次增删时将重试','warn');}
-    finally{savingWatchlist=false;}
-  }
-  const saveWL=()=>{panelState.saveWatchlist(WL_KEY,watchlist);pendingWatchlist=[...watchlist];void persistWatchlist();};
+  let watchlistSync;
+  const adminControl=window.PANEL_ADMIN.createAdminControl({document,button:$('btnAdmin'),status:$('watchlistSyncStatus'),onRetry:()=>watchlistSync.retry()});
+  watchlistSync=window.PANEL_WATCHLIST_SYNC.createWatchlistSync({network:watchlistNetwork,getToken:adminControl.getToken,onStatus:adminControl.setStatus});
+  const saveWL=()=>{panelState.saveWatchlist(WL_KEY,watchlist);watchlistSync.save(watchlist);};
+  window.addEventListener('pagehide',()=>{watchlistSync.pause();adminControl.clear();});
+  window.addEventListener('pageshow',()=>watchlistSync.resume());
+  window.addEventListener('online',()=>watchlistSync.retry());
   const emptyState=document.createElement('section');emptyState.className='watchlist-empty';emptyState.hidden=true;
   emptyState.innerHTML='<h2>尚未添加自选</h2><p>搜索证券代码或名称，即可添加行情卡片。</p><button type="button">搜索并添加标的</button>';
   emptyState.querySelector('button').addEventListener('click',()=>$('q').focus());panelsEl.appendChild(emptyState);
@@ -234,7 +231,7 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=92').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=94').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
         nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本','info',{label:'刷新页面',run:()=>location.reload()}); });
       });
@@ -408,9 +405,7 @@
       const labels={cooldown:'冷却中',probing:'恢复探测',requesting:'读取中',ready:'可读取',streaming:'已接收成交',subscribing:'等待订阅或首笔成交',connecting:'连接中',backoff:'等待重连',blocked:'权限或配置受限',idle:'空闲',stopped:'已停止','website-polling':'网站批量报价'};
       const rows=Object.entries(data.hosts||{}).map(([host,v])=>host+'：'+(labels[v.state]||v.state)+'；实际请求 '+v.calls+'；429 '+v.rateLimits+(v.retryAt?'；'+new Date(v.retryAt).toLocaleTimeString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false})+' 后可重试':''));
       for(const [source,v] of Object.entries(data.fundamentals?.sources||{})){
-        const securities=Object.entries(v.securities||{}),failed=securities.filter(([,s])=>s.code),pending=securities.filter(([,s])=>s.inflight);
-        rows.push('基础资料 '+source+'：'+securities.length+' 只证券；补充中 '+pending.length+'；失败 '+failed.length);
-        for(const [symbol,s] of failed)rows.push('  '+symbol+'：'+s.code+'；缺失 '+(s.missingFields||[]).join('、')+(s.retryAt?'；'+new Date(s.retryAt).toLocaleTimeString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false})+' 后重试':''));
+        rows.push('基础资料 '+source+'：'+(v.tracked||0)+' 只证券；补充中 '+(v.inflight||0)+'；失败 '+(v.failed||0)+'（详细诊断仅管理员可见）');
       }
       const streams=data.stream?.primary||data.stream?.backup?[['主流',data.stream.primary],['备流',data.stream.backup]]:[['行情流',data.stream]];
       for(const [name,v] of streams)if(v)rows.unshift(name+'：'+(labels[v.status]||v.status||'未启用')+(v.errorCode?'（'+v.errorCode+'）':''));

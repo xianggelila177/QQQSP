@@ -1,0 +1,286 @@
+TAP version 13
+# Subtest: v94 default single query preserves v93 section order, counts, compact layout and missing values
+ok 1 - v94 default single query preserves v93 section order, counts, compact layout and missing values
+  ---
+  duration_ms: 15.718031
+  type: 'test'
+  ...
+# Subtest: v94 strict optional parameter validation: unknown
+ok 2 - v94 strict optional parameter validation: unknown
+  ---
+  duration_ms: 0.417064
+  type: 'test'
+  ...
+# Subtest: v94 strict optional parameter validation: badAdjustment
+ok 3 - v94 strict optional parameter validation: badAdjustment
+  ---
+  duration_ms: 0.239463
+  type: 'test'
+  ...
+# Subtest: v94 strict optional parameter validation: missingDaily
+ok 4 - v94 strict optional parameter validation: missingDaily
+  ---
+  duration_ms: 0.111344
+  type: 'test'
+  ...
+# Subtest: v94 strict optional parameter validation: fraction
+ok 5 - v94 strict optional parameter validation: fraction
+  ---
+  duration_ms: 0.107589
+  type: 'test'
+  ...
+# Subtest: v94 strict optional parameter validation: badMinutes
+ok 6 - v94 strict optional parameter validation: badMinutes
+  ---
+  duration_ms: 0.101009
+  type: 'test'
+  ...
+# Subtest: v94 strict optional parameter validation: sourceWithoutMinutes
+ok 7 - v94 strict optional parameter validation: sourceWithoutMinutes
+  ---
+  duration_ms: 0.139145
+  type: 'test'
+  ...
+# Subtest: v94 strict optional parameter validation: wrongSource
+ok 8 - v94 strict optional parameter validation: wrongSource
+  ---
+  duration_ms: 0.10182
+  type: 'test'
+  ...
+# Subtest: v94 strict optional parameter validation: twoSelectors
+ok 9 - v94 strict optional parameter validation: twoSelectors
+  ---
+  duration_ms: 0.291029
+  type: 'test'
+  ...
+# Subtest: v94 strict optional parameter validation: badMonth
+ok 10 - v94 strict optional parameter validation: badMonth
+  ---
+  duration_ms: 0.371998
+  type: 'test'
+  ...
+# Subtest: v94 strict optional parameter validation: invalidDate
+ok 11 - v94 strict optional parameter validation: invalidDate
+  ---
+  duration_ms: 0.343045
+  type: 'test'
+  ...
+# Subtest: v94 strict optional parameter validation: wrongIncluded
+ok 12 - v94 strict optional parameter validation: wrongIncluded
+  ---
+  duration_ms: 0.10223
+  type: 'test'
+  ...
+# Subtest: v94 strict optional parameter validation: csvMixed
+ok 13 - v94 strict optional parameter validation: csvMixed
+  ---
+  duration_ms: 0.081349
+  type: 'test'
+  ...
+# Subtest: v94 strict optional parameter validation: actionRange
+ok 14 - v94 strict optional parameter validation: actionRange
+  ---
+  duration_ms: 0.1626
+  type: 'test'
+  ...
+# Subtest: v94 batch normalization is bounded, unique and quote/fundamentals only
+ok 15 - v94 batch normalization is bounded, unique and quote/fundamentals only
+  ---
+  duration_ms: 1.186127
+  type: 'test'
+  ...
+# Subtest: v94 GET parameters reject duplicates and noninteger numbers
+ok 16 - v94 GET parameters reject duplicates and noninteger numbers
+  ---
+  duration_ms: 0.453158
+  type: 'test'
+  ...
+# Subtest: v94 v2 snapshot remains narrow; analysis explicitly opts into new parameters
+ok 17 - v94 v2 snapshot remains narrow; analysis explicitly opts into new parameters
+  ---
+  duration_ms: 0.71334
+  type: 'test'
+  ...
+# Subtest: v94 calendar skips Labor Day instead of inventing a Monday opening
+ok 18 - v94 calendar skips Labor Day instead of inventing a Monday opening
+  ---
+  duration_ms: 2.419484
+  type: 'test'
+  ...
+# Subtest: v94 ordinary weekend, DST and half-day regular sessions use exchange calendar
+ok 19 - v94 ordinary weekend, DST and half-day regular sessions use exchange calendar
+  ---
+  duration_ms: 0.720541
+  type: 'test'
+  ...
+# Subtest: v94 unknown calendar years remain unknown and range is bounded
+ok 20 - v94 unknown calendar years remain unknown and range is bounded
+  ---
+  duration_ms: 0.365738
+  type: 'test'
+  ...
+# Subtest: v94 observed-price OHLC preserves null empty buckets and never treats cumulative quantities as volume
+ok 21 - v94 observed-price OHLC preserves null empty buckets and never treats cumulative quantities as volume
+  ---
+  duration_ms: 1.074052
+  type: 'test'
+  ...
+# Subtest: v94 a source/currency change inside a bucket invalidates OHLC rather than mixing it
+ok 22 - v94 a source/currency change inside a bucket invalidates OHLC rather than mixing it
+  ---
+  duration_ms: 0.342093
+  type: 'test'
+  ...
+# Subtest: v94 verified source OHLC aggregation sums only complete bar volume
+ok 23 - v94 verified source OHLC aggregation sums only complete bar volume
+  ---
+  duration_ms: 0.7128
+  type: 'test'
+  ...
+# Subtest: v94 session boundaries never merge PRE and REGULAR hourly observations
+ok 24 - v94 session boundaries never merge PRE and REGULAR hourly observations
+  ---
+  duration_ms: 0.388512
+  type: 'test'
+  ...
+# Subtest: v94 paid-dividend calculation requires currency, payment-date coverage and share-basis evidence
+ok 25 - v94 paid-dividend calculation requires currency, payment-date coverage and share-basis evidence
+  ---
+  duration_ms: 0.308434
+  type: 'test'
+  ...
+# Subtest: v94 weak semantic ETag ignores envelope IDs but changes when coverage or source time changes
+ok 26 - v94 weak semantic ETag ignores envelope IDs but changes when coverage or source time changes
+  ---
+  duration_ms: 0.84874
+  type: 'test'
+  ...
+# Subtest: v94 CSV is escaped, CRLF-terminated, null-preserving, and has complete metadata
+ok 27 - v94 CSV is escaped, CRLF-terminated, null-preserving, and has complete metadata
+  ---
+  duration_ms: 0.511003
+  type: 'test'
+  ...
+# Subtest: v94 lifecycle headers are opt-in and use distinct RFC 9745/8594 date encodings
+ok 28 - v94 lifecycle headers are opt-in and use distinct RFC 9745/8594 date encodings
+  ---
+  duration_ms: 0.752799
+  type: 'test'
+  ...
+# Subtest: v94 mover limits and universe parameters cannot be silently broadened
+ok 29 - v94 mover limits and universe parameters cannot be silently broadened
+  ---
+  duration_ms: 0.252602
+  type: 'test'
+  ...
+# Subtest: v94 lifecycle configuration rejects impossible dates and reversed deadlines
+ok 30 - v94 lifecycle configuration rejects impossible dates and reversed deadlines
+  ---
+  duration_ms: 0.354012
+  type: 'test'
+  ...
+# Subtest: v94 quota charges every batch symbol atomically while burst is per envelope
+ok 31 - v94 quota charges every batch symbol atomically while burst is per envelope
+  ---
+  duration_ms: 1.152748
+  type: 'test'
+  ...
+# Subtest: v94 key creation stores digests only; restart, scoped auth and family revocation work
+ok 32 - v94 key creation stores digests only; restart, scoped auth and family revocation work
+  ---
+  duration_ms: 12.950895
+  type: 'test'
+  ...
+# Subtest: v94 rotation grants exactly 24 hours, shares rate family, then KEY_ROTATED
+ok 33 - v94 rotation grants exactly 24 hours, shares rate family, then KEY_ROTATED
+  ---
+  duration_ms: 11.374434
+  type: 'test'
+  ...
+# Subtest: v94 corrupt key stores fail closed and failed atomic writes do not mutate memory
+ok 34 - v94 corrupt key stores fail closed and failed atomic writes do not mutate memory
+  ---
+  duration_ms: 2.541332
+  type: 'test'
+  ...
+# Subtest: v94 store creation rejects invalid scopes/unknown fields/unknown actions and duplicate authorization
+ok 35 - v94 store creation rejects invalid scopes/unknown fields/unknown actions and duplicate authorization
+  ---
+  duration_ms: 4.249269
+  type: 'test'
+  ...
+# Subtest: v94 GET/HEAD conditional responses authorize first; POST returns 412, never 304
+ok 36 - v94 GET/HEAD conditional responses authorize first; POST returns 412, never 304
+  ---
+  duration_ms: 49.954617
+  type: 'test'
+  ...
+# Subtest: v94 HEAD computes headers with an empty body, invalid UTF8 cannot reach service
+ok 37 - v94 HEAD computes headers with an empty body, invalid UTF8 cannot reach service
+  ---
+  duration_ms: 8.924555
+  type: 'test'
+  ...
+# Subtest: v94 CSV HTTP representation and advanced client preserve metadata and refuse redirects
+ok 38 - v94 CSV HTTP representation and advanced client preserve metadata and refuse redirects
+  ---
+  duration_ms: 6.890869
+  type: 'test'
+  ...
+# Subtest: v94 batch HTTP charges three units, preserves each item and rejects cross-scope work
+ok 39 - v94 batch HTTP charges three units, preserves each item and rejects cross-scope work
+  ---
+  duration_ms: 10.36782
+  type: 'test'
+  ...
+# Subtest: v94 scopes and rotation headers are enforced before work, without returning a secret
+ok 40 - v94 scopes and rotation headers are enforced before work, without returning a secret
+  ---
+  duration_ms: 8.478367
+  type: 'test'
+  ...
+# Subtest: v94 private admin API requires STATS_TOKEN even on loopback; read-only key cannot manage
+ok 41 - v94 private admin API requires STATS_TOKEN even on loopback; read-only key cannot manage
+  ---
+  duration_ms: 11.984191
+  type: 'test'
+  ...
+# Subtest: v94 auxiliary routes share auth, scope and quota with market queries
+ok 42 - v94 auxiliary routes share auth, scope and quota with market queries
+  ---
+  duration_ms: 9.120453
+  type: 'test'
+  ...
+# Subtest: v94 quote stream is coalesced, bounded, closes on revoked credentials, and releases leases
+ok 43 - v94 quote stream is coalesced, bounded, closes on revoked credentials, and releases leases
+  ---
+  duration_ms: 20.984062
+  type: 'test'
+  ...
+# Subtest: v94 streaming cannot exceed two connections per key and slow buffers are bounded
+ok 44 - v94 streaming cannot exceed two connections per key and slow buffers are bounded
+  ---
+  duration_ms: 0.880116
+  type: 'test'
+  ...
+# Subtest: v94 SSE leases end predictably and broken quote readers cannot crash a timer callback
+ok 45 - v94 SSE leases end predictably and broken quote readers cannot crash a timer callback
+  ---
+  duration_ms: 30.703372
+  type: 'test'
+  ...
+# Subtest: v94 replacing or removing environment key cannot leave imported old key active
+ok 46 - v94 replacing or removing environment key cannot leave imported old key active
+  ---
+  duration_ms: 4.282357
+  type: 'test'
+  ...
+1..46
+# tests 46
+# suites 0
+# pass 46
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 279.212865

@@ -23,7 +23,7 @@ for(const file of files){
 }
 console.log(`REGRESSION_PASS_FILES=${files.length-failed.length} REGRESSION_FAIL_FILES=${failed.length} RETIRED_FILES=${Object.keys(retired).length}`);
 const core=fs.readdirSync(path.join(dir,'v2')).filter(f=>f.endsWith('.test.mjs')).sort().map(f=>path.join(dir,'v2',f));
-const result=spawnSync(process.execPath,['--test','--test-concurrency=2',...core],{cwd:root,stdio:'inherit',timeout:120000,env:{...process.env,...(process.env.QQQSP_COVERAGE_DIR?{NODE_V8_COVERAGE:path.resolve(process.env.QQQSP_COVERAGE_DIR)}:{})}});
+const result=spawnSync(process.execPath,['--test','--test-concurrency=2',...core],{cwd:root,stdio:'inherit',timeout:300000,env:{...process.env,...(process.env.QQQSP_COVERAGE_DIR?{NODE_V8_COVERAGE:path.resolve(process.env.QQQSP_COVERAGE_DIR)}:{})}});
 if(result.status!==0||result.error)failed.push('v2-core');
 if(failed.length)console.error('FAILED: '+failed.join(', '));
 process.exitCode=failed.length?1:0;

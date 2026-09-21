@@ -1,0 +1,11 @@
+PASS: VERSION 文件存在且为纯数字(实际="94")
+PASS: sw.js 顶部定义 const VERSION='vNN'
+PASS: sw.js VERSION=v94 与 VERSION 文件 94 一致
+PASS: sw.js 无硬编码 'qqq-panel-vNN' 字面量(CACHE 必须由 VERSION 拼接)
+PASS: CACHE = 'qqq-panel-' + VERSION
+PASS: index.html 含 >=4 处 ?v= 引用(实际 5)
+PASS: index.html 全部 ?v= 等于 94
+PASS: index.html 有版本源注释(build_version.sh/panel/VERSION)
+PASS: app.js 的 sw.js?v= 等于 94
+PASS: build_version.sh 把 95 同步到了 sw.js/index.html/app.js
+---- _test_version: pass=10 fail=0 ----

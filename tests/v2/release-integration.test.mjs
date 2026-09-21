@@ -17,7 +17,7 @@ test('real HTTP with production source composition: US batch every second, Korea
  const rows=await (await fetch(origin+'/api/market?symbols=NVDA,LITE,000660.KS')).json();
  const us=rows.find(q=>q.symbol==='NVDA'),kr=rows.find(q=>q.symbol==='000660.KS');assert.ok(us.price>=103,JSON.stringify(rows));assert.equal(us.src,'sina-batch');assert.equal(kr.currency,'KRW');assert.equal(kr.src,'naver-kr');assert.equal(kr.charts.intraday[0].c,200000);assert.equal(kr.charts.intraday[0].v,null);
  assert.ok(sina.length>=3&&sina.length<=4,sina.length);const gaps=sina.slice(1).map((at,i)=>at-sina[i]);assert.ok(Math.max(...gaps)<1300,JSON.stringify(gaps));
- assert.equal(calls.filter(u=>u.includes('/domestic/stock/')).length,1);assert.ok(calls.filter(u=>u.includes('hq.sinajs.cn')).every(u=>u.includes('gb_nvda')&&u.includes('gb_lite')));
+ assert.equal(calls.filter(u=>u.includes('/domestic/stock/')).length,1);assert.ok(calls.filter(u=>u.includes('hq.sinajs.cn')).every(u=>u.includes('gb_nvda')&&u.includes('gb_lite')),JSON.stringify(calls.filter(u=>u.includes('hq.sinajs.cn'))));
  assert.equal(calls.filter(u=>u.includes('qt.gtimg.cn')).length,0,'healthy primary never triggers secondary quote source');
  const before=calls.filter(u=>u.includes('hq.sinajs.cn')).length;for(let i=0;i<8;i++)await (await fetch(origin+'/api/market?symbols=NVDA,LITE')).json();assert.equal(calls.filter(u=>u.includes('hq.sinajs.cn')).length,before,'HTTP cache reads cannot force upstream reads');
 });

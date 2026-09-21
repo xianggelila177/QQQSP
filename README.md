@@ -1,79 +1,77 @@
-# QQQSP v92 — 多市场行情与 LLM 分析数据 API
+# QQQSP 2.14.0 · 行情数据接口增强版
 
-应用版本 **2.12.0**，静态资源版本 **92**。完整源码包含网页行情、服务器三交易日报价采样、最多 100 只自选，以及独立鉴权的只读 LLM 数据接口。
+## 一、版本概览
 
-本仓库是脱敏发布副本。`quotes.example.com`、`203.0.113.10` 等为示例部署地址；运行时使用自己的域名和配置。真实密钥、私有环境文件、运行日志、采样记录和本地调用包不随源码发布。
+应用版本 **2.14.0**，静态资源版本 **94**。基于用户提供的 2.13.0 完整源码增量实现，不是从 v92 重写。保留行情面板、独立盘口、完整数据窗口、后台自选和三交易日采样，补齐高级历史、公司行动、密钥治理与本地智能体调用链。
 
-## 本地运行
+生产启动没有第三方 npm 运行时依赖；已构建网页资源在 `public`。没有附带真实密钥、私人运行数据或商业行情权限。代码可启动不意味着每个供应商、交易市场与资料范围都已经获得授权。
 
-需要 Node.js **22.16+**，推荐 Node.js 24。生产程序没有 npm 运行时依赖，构建后的静态资源已包含在仓库中。
+## 二、首次运行与升级
+
+需要 Node.js 22.16 或更新版本。进入解压目录：
 
 ```sh
-umask 077
-cp .env.example .env
-# 按需编辑 .env，填写自己的配置
+node scripts/init-config.mjs
 npm start
 ```
 
-默认地址为 `http://127.0.0.1:8567`。Linux 服务、持久化目录及升级步骤见 [部署说明](部署说明.md)。升级时保留已有配置和状态。
+默认 `http://127.0.0.1:8567`。初始化只在 `.env` 不存在时执行，生成不同的管理员和只读密钥，不输出密钥、不覆盖已有配置。已有部署保留 `.env`、`state`、`logs`；升级不要重新初始化。
 
-## v92 新增：供 LLM 查询的完整 JSON
+详细步骤见 [本版部署与升级](部署与升级-v94.md)；既有 systemd、持久化及回滚体系见 [部署说明](部署说明.md)。管理面板 `/api-keys.html` 必须使用 `STATS_TOKEN`，只读密钥不能管理其他密钥。公网必须经 HTTPS 和适当的入口访问控制。
 
-```http
-POST /api/v1/market-context
-Authorization: Bearer <独立只读密钥>
-Content-Type: application/json
+## 三、接口能力
 
-{"symbol":"NVDA"}
-```
+新参数全部可选。旧 v1 单证券默认仍为七个原分区、252 根日线、三个交易日采样和紧凑格式；旧 v2 详情默认仍为详情快照及具名对象。没有强迫旧调用端改用高级接口。
 
-在服务器 `.env` 中配置 `LLM_API_KEY`：32～256 位 URL 安全字符，并与 `STATS_TOKEN` 不同。留空时接口拒绝访问。密钥只在 HTTP 请求头中传递。
+| 能力 | 入口与约束 |
+| --- | --- |
+| 原聚合接口 | `POST /api/v1/market-context`；新增同契约 GET/HEAD |
+| 截图式完整详情 | `POST /api/v2/market-detail`，保留 snapshot/analysis 两档 |
+| 显式复权 | `adjustment=raw/split/split_dividend`，只使用能声明该口径的已配置来源 |
+| 日、周、月 | `daily_granularity`，周期由日线聚合，保留实际末交易日和分页标识 |
+| 公司行动 | 显式加入 `corporate_actions`；处理日期、除权日、支付日期分别声明 |
+| 历史分时与观察柱 | 日期、月份、向前游标；1/5/15/30/60 分钟，采样不是成交柱 |
+| 市场状态与日历 | `/api/v1/market-status`、`/api/v1/trading-calendar`，节假日、半日市、未知覆盖 |
+| 多证券 | `symbols` 最多10个，仅 quote/fundamentals；每个证券消耗一个滚动额度 |
+| 密钥管理 | 多密钥、分权限、24小时轮换、同系列共用配额及撤销；仅存摘要 |
+| 条件与导出 | GET/HEAD ETag/304；单时序 CSV + 元数据，不把 POST 返回成304 |
+| 全市场榜单 | `/api/v1/movers`，来源覆盖明确，不拿自选列表冒充全市场 |
+| 报价流 | `/api/v1/quote-stream`，独立鉴权、有界连接、60秒租期，非逐笔回放 |
 
-默认返回最新报价、来源最新交易日分时、252 根日线、服务器三个交易日的采样、基础指标、缓存资讯和宏观概况。每个分区包含来源、时间、单位、覆盖范围和缺失原因；时序使用带列定义的紧凑 JSON。指数以点计价，未知值为 `null`，缺失数据不补造。
+接口指南：[market-api-guide.md](public/market-api-guide.md)；完整核验：[需求核验与实现清单](docs/v94-需求核验与实现清单.md)。原计划中的服务端技术指标按“不做”的要求保留在客户端，不新增服务端指标运算。
 
-- 每次查询一个标的，支持未加入自选的证券；查询不会修改自选或启动永久采样。
-- 整体等待最多 15 秒，含排队；部分数据可用时返回 `partial`。
-- 请求体最多 8 KiB，响应压缩前最多 2 MiB，不静默截断。
-- 每密钥每分钟最多 20 次、突发 3 次；全局执行 1 次、等待最多 2 次。
+## 四、本地智能体
 
-文档与客户端：
-
-- [接口与字段说明](public/market-context.md)
-- [OpenAPI 3.1](public/market-context.openapi.json)；运行时地址 `/api/v1/openapi.json`
-- [JSON Schema](public/market-context.schema.json)
-- [Agent 工具定义](public/market-context.tool.json) 与 [llms.txt](public/llms.txt)
-- [零运行时依赖的查询与统计脚本](scripts/market-context-client.mjs)
-
-调用脚本从私有环境文件读取 `LLM_API_KEY` 和 `LLM_API_BASE_URL`。本机测试可设置 `LLM_API_BASE_URL=http://127.0.0.1:8567`；公网使用自己的 HTTPS 地址：
+将 `LLM_API_KEY` 和 `LLM_API_BASE_URL` 写入私有客户端环境文件；不要提交到仓库。默认只读密钥或新建的密钥必须具有所请求分区的权限。
 
 ```sh
-node --env-file=/private/client.env scripts/market-context-client.mjs NVDA --output nvda-context.json --stats
+# 详情（原 v93 客户端继续兼容）
+node --env-file=/private/client.env scripts/market-detail-client.mjs NVDA --output nvda-detail.json
+
+# 三证券批量
+node --env-file=/private/client.env scripts/market-api-client.mjs NVDA,SPY,QQQ --include quote,fundamentals --output batch.json
+
+# 已配置、有权限来源的拆股复权周线
+node --env-file=/private/client.env scripts/market-api-client.mjs NVDA --include daily --adjustment split --granularity weekly --daily-bars 52 --output weekly.json
+
+# 单日来源分钟柱聚合为15分钟；来源无权限时返回明确缺失
+node --env-file=/private/client.env scripts/market-api-client.mjs NVDA --include intraday --intraday-date 2026-09-18 --minutes 15 --format csv --output intraday.csv
 ```
 
-输出路径必须是新的 `.json` 文件。完整数据写入文件，统计摘要写到 stderr，文件权限为 0600。支持 HTTP 工具的 LLM 可读取整份 JSON 后执行统计；不要从被对话界面截断的文本计算。
+CSV 文件同时写出 `.metadata.json` 侧车，包含来源、单位、覆盖和空值说明。客户端拒绝覆盖已有文件，使用私有文件权限；行情全部不可用时保留 JSON 诊断并以退出码2退出。不存在可靠支付日期、币种及拆股基准的公司行动，不用于硬补“已支付股息”。
 
-## 现有功能
-
-- 多市场股票、ETF、基金、指数与现有支持的期货来源。
-- 自选上限 100，服务器持续采集已保存自选，浏览器关闭后继续运行。
-- 真实来源历史与服务器观察采样分开，页面默认来源历史。
-- 行情与图表共享来源缓存、限流和重试；SSE 分批推送。
-- 日经、费城半导体指数及 SOXX ETF 的身份和行情路由已修正。
-- 来源延迟、休市、盘前盘后、复权未知及缺失数据明确标注。
-
-## 构建和验证
+## 五、构建、验证与边界
 
 ```sh
-npm ci
 npm run build
 npm run check
 npm test
-
-# 可选浏览器验证，开发依赖不用于生产运行
-npx playwright install chromium webkit
-npm run test:e2e
+npm run test:v94
+# 浏览器测试需要 Python Playwright 和 Chromium
+npm run test:v94-browser
+npm run test:v94-regression-browser
 ```
 
-构建会统一 `VERSION`、Service Worker 和静态资源，并生成接口文档。开发验证使用 Node 内置测试、Playwright 和 Ajv；生产仍为零第三方运行时依赖。
+开发依赖可通过 `npm ci` 安装；没有 npm 包的离线验证环境会用 Python jsonschema 校验模式，生产不依赖它。测试采用标明的离线样本，不把测试价格当成实盘结果。完整日志见 `docs/evidence/v94`；此前版本的证据保持历史归属。
 
-发布前检查了源码凭据、版本和生成产物一致性。已退役的历史用例不计为通过，见 `tests/retired-v72.json`。使用自己的行情数据权限与基础设施配置部署。
+显式复权、长期授权分钟历史和全市场榜单使用自己的 Alpaca 资料权限；默认免费网页来源不会自动获得商业授权。日历只在仓库已核验的市场和年份范围内给出确定结果，不替代实时停牌流。操作员必须保留密钥状态文件；回退到不理解多密钥的旧程序前，应先关闭 API 入口并重新配置凭据，避免重新启用旧环境密钥。

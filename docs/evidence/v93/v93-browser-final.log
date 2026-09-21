@@ -1,0 +1,36 @@
+{
+  "mode": "真实应用 HTTP 经测试桥接转送至 Chromium，正式构建；供应商均为离线样本",
+  "nativeBrowserTransport": false,
+  "limitation": "环境策略禁止 Chromium 直接访问本机；未验证原生 SSE 重连及反向代理缓冲。",
+  "cases": [
+    {
+      "viewport": 1440,
+      "fields": 24,
+      "rawBookUnitPreserved": true,
+      "exportVerified": true,
+      "formulaEvidence": true,
+      "missingNotZero": true,
+      "escapeFocusRestore": true,
+      "writeDeniedWithoutKey": true,
+      "authenticatedRetryPersisted": true,
+      "noSecretInStorage": true,
+      "failureState": true,
+      "javascriptErrors": []
+    },
+    {
+      "viewport": 375,
+      "fields": 24,
+      "rawBookUnitPreserved": true,
+      "exportVerified": true,
+      "formulaEvidence": true,
+      "missingNotZero": true,
+      "escapeFocusRestore": true,
+      "writeDeniedWithoutKey": true,
+      "authenticatedRetryPersisted": true,
+      "noSecretInStorage": true,
+      "failureState": true,
+      "javascriptErrors": []
+    }
+  ],
+  "passed": true
+}

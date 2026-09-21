@@ -1,0 +1,15 @@
+{
+  "archive": "qqqsp-v2.13.0-source.zip",
+  "mode": "原生 Node 生产入口；后台网络生产者关闭；仅验证冷启动与接口边界",
+  "node": "v22.16.0",
+  "noNodeModules": true,
+  "health": true,
+  "servedBundleExact": true,
+  "openapi": true,
+  "readOnlyAuth": true,
+  "writeAuth": true,
+  "coldUnavailableHonest": true,
+  "clientExitCode": 2,
+  "gracefulShutdown": true,
+  "passed": true
+}

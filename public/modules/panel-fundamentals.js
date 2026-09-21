@@ -46,7 +46,7 @@
     return value.toLocaleString('zh-CN',{maximumFractionDigits:2});
   }
   function markup(){
-    return '<section class="statistics" aria-label="基础信息"><div class="statistics-head"><h3>基础信息</h3><div class="statistics-actions"><button type="button" class="statistics-toggle" aria-expanded="false">全部指标</button><button type="button" class="statistics-help">口径与来源</button></div></div><div class="grid">'+definitions.map(d=>'<div class="cell" data-metric="'+d.key+'"'+(d.extra?' data-metric-extra hidden':'')+'><label>'+d.label+'</label><b class="'+d.key+'">—</b></div>').join('')+'</div><div class="statistics-status">财务资料等待报价</div></section>';
+    return '<section class="statistics" aria-label="基础信息"><div class="statistics-head"><h3>基础信息</h3><div class="statistics-actions"><button type="button" class="statistics-toggle" aria-expanded="false">全部指标</button><button type="button" class="statistics-help">口径与来源</button><button type="button" class="market-detail-open">完整数据</button></div></div><div class="grid">'+definitions.map(d=>'<div class="cell" data-metric="'+d.key+'"'+(d.extra?' data-metric-extra hidden':'')+'><label>'+d.label+'</label><b class="'+d.key+'">—</b></div>').join('')+'</div><div class="statistics-status">财务资料等待报价</div></section>';
   }
   function formatMetric(def,quote,formatter){
     const fund=['ETF','MUTUALFUND'].includes(quote.instrumentType),fields=quote.fundamentals?.fields||{};

@@ -1,0 +1,178 @@
+{
+  "mode": "Chromium / production bundle / synthetic upstream",
+  "checks": [
+    {
+      "name": "R04 storage getter",
+      "passed": true,
+      "detail": {
+        "cards": 3,
+        "errors": []
+      }
+    },
+    {
+      "name": "R04 storage read",
+      "passed": true,
+      "detail": {
+        "cards": 3,
+        "errors": []
+      }
+    },
+    {
+      "name": "R04 storage quota",
+      "passed": true,
+      "detail": {
+        "cards": 1,
+        "errors": []
+      }
+    },
+    {
+      "name": "R04 storage json",
+      "passed": true,
+      "detail": {
+        "cards": 1,
+        "errors": []
+      }
+    },
+    {
+      "name": "R08 single display clock",
+      "passed": true,
+      "detail": {
+        "writesIn5250ms": 5
+      }
+    },
+    {
+      "name": "R24 existing symbol does not reconnect",
+      "passed": true,
+      "detail": true
+    },
+    {
+      "name": "R23 PNG success semantics and bounded toast",
+      "passed": true,
+      "detail": true
+    },
+    {
+      "name": "R22 mobile touch dimensions",
+      "passed": true,
+      "detail": [
+        {
+          "width": 320,
+          "buttons": [
+            {
+              "text": "来源历史",
+              "w": 66,
+              "h": 44
+            },
+            {
+              "text": "报价采样",
+              "w": 66,
+              "h": 44
+            }
+          ]
+        },
+        {
+          "width": 375,
+          "buttons": [
+            {
+              "text": "来源历史",
+              "w": 66,
+              "h": 44
+            },
+            {
+              "text": "报价采样",
+              "w": 66,
+              "h": 44
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "R19 normal wheel versus modifier zoom",
+      "passed": true,
+      "detail": {
+        "ordinaryPrevented": false,
+        "old": 60,
+        "plain": 60,
+        "zoomPrevented": true,
+        "zoom": 50
+      }
+    },
+    {
+      "name": "R19 real wheel scrolls page over chart",
+      "passed": true,
+      "detail": true
+    },
+    {
+      "name": "R24 deletion focus and actionable empty state",
+      "passed": true,
+      "detail": true
+    },
+    {
+      "name": "production page JavaScript errors",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "R02 header and body timeout preserve candles",
+      "passed": true,
+      "detail": [
+        {
+          "phase": "headers",
+          "ms": 46.39999999990687,
+          "status": "stale",
+          "bars": 79,
+          "count": 79
+        },
+        {
+          "phase": "body",
+          "ms": 45.39999999990687,
+          "status": "stale",
+          "bars": 79,
+          "count": 79
+        }
+      ]
+    },
+    {
+      "name": "R07 fallback policy and pause",
+      "passed": true,
+      "detail": {
+        "economy": 1,
+        "active": 3,
+        "paused": 3
+      }
+    },
+    {
+      "name": "R12 keyed macro DOM preserves reading and focus",
+      "passed": true,
+      "detail": {
+        "same": true,
+        "changed": true,
+        "deletion": true,
+        "factorFocus": true,
+        "factorOpen": true
+      }
+    },
+    {
+      "name": "R21 search loading/retry and first up/down",
+      "passed": true,
+      "detail": {
+        "loading": true,
+        "up": "sitem-3",
+        "down": "sitem-0",
+        "retry": true,
+        "busy": "false"
+      }
+    },
+    {
+      "name": "R20 100 news add/remove cycles bounded",
+      "passed": true,
+      "detail": {
+        "peak": 1,
+        "remaining": 0
+      }
+    }
+  ],
+  "nativeAttemptError": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:39335/\nCall log:\n  - navigating to \"http://127.0.0.1:39335/\", waiting until \"domcontentloaded\"\n",
+  "transport": "test-only loopback HTTP/SSE bridge; native HTTP/SSE separately covered by Node integration tests",
+  "passed": true
+}
