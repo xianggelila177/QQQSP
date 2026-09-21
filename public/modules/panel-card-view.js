@@ -144,8 +144,8 @@
   }
   // T2: 卡片头部延迟徽标分级 — staleInfo.reason 细分原因, title 写详细说明; 文案只承诺重试
   function applyStaleBadge(q, d, now=quoteClock ? quoteClock.now() : Date.now()){
-    if(!q.staleWarn) return;
     const freshness=window.PANEL_STATE.selectFreshness(d,now,{readIntervalMs:getReadIntervalMs()});
+    if(!q.staleWarn) return freshness;
     const si=d.staleInfo;
     if(d.recovery||si?.reason==='offline-cache'){
       q.staleWarn.textContent='离线缓存·旧报价';
@@ -157,14 +157,24 @@
     } else if(si && si.reason==='cooldown'){
       q.staleWarn.textContent='数据延迟·自动重试中';
       q.staleWarn.title='数据源冷却中，面板正在自动重试，恢复后自动更新';
+    } else if(['source-overdue','stream-check-overdue'].includes(freshness.reason)){
+      q.staleWarn.textContent='来源检查超时';
+      q.staleWarn.title='来源检查已超过允许的检查间隔，尚未确认更新。报价时间保持不变。';
+    } else if(['quote-overdue','trade-age-exceeded'].includes(freshness.reason)){
+      q.staleWarn.textContent='报价久未更新';
+      q.staleWarn.title='报价年龄已超过当前时段及来源声明延迟允许的范围；保留原值和原时间，等待本来源提供更新报价。';
+    } else if(['quote-time-unknown','quote-time-invalid','source-time-unknown','source-time-invalid'].includes(freshness.reason)){
+      q.staleWarn.textContent=freshness.reason.startsWith('quote-')?'报价时间未核验':'来源检查时间未核验';
+      q.staleWarn.title='原始时间缺失或异常，不能用本次页面响应时间替代。';
     } else if(d.stale){
       q.staleWarn.textContent='数据延迟';
       q.staleWarn.title='部分数据延迟，正在自动重试';
     } else if(freshness.stale){
-      q.staleWarn.textContent=freshness.reason==='source-overdue'?'来源检查延迟':'报价延迟';
-      q.staleWarn.title=freshness.reason==='source-overdue'?'来源检查已超过公布的查询间隔，等待更新。':'最新成交已超过来源延迟与查询间隔允许的时间，等待更新。';
+      q.staleWarn.textContent='来源数据待更新';
+      q.staleWarn.title='来源保留了旧值或返回了异常状态，等待可核验的更新。';
     }
     q.staleWarn.hidden=!freshness.stale;
+    return freshness;
   }
 
   function quoteTimeMs(value) {
@@ -173,7 +183,7 @@
   }
   function updateQuoteMeta(q, now = quoteClock ? quoteClock.now() : Date.now()) {
     const d = q.d; if (!d || !q.quoteMeta) return;
-    applyStaleBadge(q,d,now);
+    const freshness=applyStaleBadge(q,d,now);
     const sourceNames = { 'yahoo-futures':'Yahoo · 期货', 'eastmoney-futures':'东方财富 · 期货', 'eastmoney-futures-list':'东方财富 · 期货目录（成交时间未知）', 'alpaca-iex':'Alpaca · IEX 单一交易所', 'alpaca-sip':'Alpaca · 美国 SIP 数据源', 'sina-batch':'新浪批量报价',yahoo: 'Yahoo', 'tx-cn': '腾讯', 'tx-us': '腾讯', 'tx-batch': '腾讯批量报价', 'naver-index': 'Naver 指数', 'naver-us': 'Naver 美股', 'naver-kr': 'Naver 韩股', 'em-cn': '东方财富', finnhub:'Finnhub · 覆盖依账户权限',fixture: '测试数据' };
     const sessionNames = { SOURCE_SNAPSHOT:'统计来自独立快照，非逐笔同步', CACHED_REGULAR: '常规时段统计', REGULAR: '常规时段统计', PRE: '盘前统计', POST: '盘后统计', CN_SNAPSHOT: '交易日快照', UNKNOWN: '统计时段未核验' };
     const at = quoteTimeMs(d.quoteAt ?? d.ts), checked = quoteTimeMs(d.sourceCheckedAt);
@@ -185,14 +195,16 @@
       const connected=quoteTimeMs(d.connectionCheckedAt),healthy=d.realtimeConnectionHealthy&&connected&&connected<=now+1000&&now-connected<=90000;
       parts.push((sourceNames[d.realtimeSource]||d.realtimeSource)+' · '+(healthy?'流连接正常':'流连接待恢复'));
       if(d.src!==d.realtimeSource)parts.push('当前价格由轮询源提供');
-      else if(healthy&&at&&now-at>30000)parts.push('暂无较新成交');
     }
-    if(d.feedDelayMinutes==null)parts.push('来源延迟未核验');
+    if(freshness.noNewQuote)parts.push('本来源暂无更新报价');
+    if(freshness.declaredDelayMinutes===null)parts.push('来源延迟未核验');
     if(d.quoteTimeBasis==='provider-published')parts.push('时间为来源发布时刻');
     if(d.quoteTimePrecision==='minute')parts.push('来源成交时间精度为分钟');
     const age = window.PANEL_STATE.formatQuoteAge(d.quoteAt ?? d.ts, now);
-    if (Number.isFinite(d.feedDelayMinutes) && d.feedDelayMinutes > 0) parts.push('源延迟 ' + d.feedDelayMinutes + ' 分钟');
-    if (d.marketState === 'CLOSED') parts.push('已休市，保留最近报价');
+    if (freshness.declaredDelayMinutes>0) parts.push('来源声明延迟'+freshness.declaredDelayMinutes+'分钟');
+    const publication=d.publicationSession;
+    if(publication?.kind==='index-publication'&&publication.verified===true&&publication.phase==='waiting'&&['CLOSED','HOLIDAY'].includes(d.marketState))parts.push('上一发布时段数值，等待发布');
+    else if (d.marketState === 'CLOSED') parts.push('已休市，保留最近报价');
     if (sessionNames[d.ohlcSession]) parts.push(sessionNames[d.ohlcSession]);
     if(checked)parts.push('来源检查 '+fmtTime8(checked));
     const cadence=Math.max(Number(d.pollAfterMs)||0,Number(d.checkIntervalMs)||0);

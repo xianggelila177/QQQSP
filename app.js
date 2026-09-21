@@ -3,6 +3,7 @@ import {createMarketContextService} from './lib/market-context-service.js';
 import {createFinancialSources} from './lib/providers/financial-sources.js';
 import {createFundamentalsService} from './lib/fundamentals-service.js';
 import {streamAvailability} from './lib/stream-policy.js';
+import {refreshIndexSession} from './lib/session-policy.js';
 import {createMacroMonitor} from './lib/macro-monitor.js';
 import {createMacroNotifier} from './lib/macro-notify.js';
 import {createMacroQuoteReader} from './lib/providers/macro-quotes.js';
@@ -116,7 +117,7 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
   const readSourceQuote=async (...args)=>{
     if(!accepting)throw Object.assign(new Error('Application stopped'),{code:'STOPPED'});
     const value=await (isFutureSymbol(args[0])?futures.getQuote(args[0]):servingGetQuote(...args));
-    return value;
+    return refreshIndexSession(value,now());
   };
   engine=createQuoteEngine({readQuote:readSourceQuote,decorateQuote:fundamentals.decorate,now,onMembership:list=>{fundamentals.retain(list);snapshots?.retain(list.filter(s=>!isFutureSymbol(s)));realtimeProvider?.retain?.(list.filter(s=>!isFutureSymbol(s)));}});
   realtimeProvider?.subscribe?.(symbol=>engine.poke(symbol));
