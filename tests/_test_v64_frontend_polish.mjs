@@ -24,7 +24,9 @@ await check('active fast budgets and authoritative failures retain their behavio
   assert.equal(select(active,now,{readIntervalMs:2000}).checkBudgetMs,30000);
   assert.equal(select(active,now,{readIntervalMs:2000}).stale,false);
   assert.equal(select(active,now+1,{readIntervalMs:2000}).reason,'source-overdue');
-  assert.equal(select({...active,sourceCheckedAt:now,quoteAt:now-16000},now,{readIntervalMs:2000}).reason,'quote-overdue','source allowance does not excuse overdue active trades');
+  assert.equal(select({...active,sourceCheckedAt:now,quoteAt:now-16000},now,{readIntervalMs:2000}).stale,false,'a source check cadence is not a deadline for new trades');
+  assert.equal(select({...active,sourceCheckedAt:now,quoteAt:now-300000},now,{readIntervalMs:2000}).stale,false,'the shared five-minute event-age boundary remains usable');
+  assert.equal(select({...active,sourceCheckedAt:now,quoteAt:now-300001},now,{readIntervalMs:2000}).reason,'quote-overdue','fresh source checks cannot excuse arbitrarily old active quotes');
   for(const flag of [{stale:true},{staleInfo:{reason:'rate-limited'}},{recovery:true}])assert.equal(select({...sample,...flag},now,{readIntervalMs:70000}).stale,true);
   env.fetch.push('market',{status:500,body:[]});await H.refresh(false);H.setCardCurrency('QQQ','USD');assert.equal(q.fetchStatus,'error');assert.match(q.state.textContent,/拉取失败/);
 });

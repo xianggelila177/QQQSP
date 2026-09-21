@@ -15,6 +15,11 @@ import { MARKET_REGISTRY } from './lib/market-registry.js';
 export const calendarRegistry = JSON.parse(readFileSync(new URL('./data/market-calendars.json',import.meta.url),'utf8'));
 for(const [key,profile] of Object.entries(calendarRegistry.profiles||{}))if(profile.sessions)SESSIONS[key]=profile.sessions;
 const calendarKey = marketKeyFor;
+// SOX is an index publication, not a stock with pre/post-market trades.
+// Nasdaq's 2026 methodology specifies 09:30:01–17:16 ET and corrections to
+// the closing value until 17:15. Other indexes retain their existing policies.
+const SOX_PUBLICATION = Object.freeze({kind:'index-publication',timeZone:'America/New_York',
+  source:'https://indexes.nasdaq.com/docs/methodology_SOX.pdf',openMinute:570+1/60,closeMinute:1036});
 export function sessionContext(symbol,value='') {
   return typeof value==='object'&&value?{venue:String(value.venue||value.exchangeName||''),instrumentType:instrumentTypeFor(symbol,value.instrumentType)}:{venue:String(value||''),instrumentType:instrumentTypeFor(symbol)};
 }
@@ -71,14 +76,21 @@ export function sessionFor(symbol, gmtoffset = null, nowMs = Date.now(), venue =
   let session=period?.sessionsByType?.[context.instrumentType]||period?.sessions||profile.sessionsByType?.[context.instrumentType]||SESSIONS[cal.key]||{reg:[]};
   const override=entry?.overrides?.[cal.date];
   if(override)session=override.sessionsByType?.[context.instrumentType]||override.sessions||override;
+  const publication=s==='^SOX'?SOX_PUBLICATION:null;
+  if(publication){
+    const from=publication.openMinute,to=publication.closeMinute;
+    // The methodology does not specify an early-close correction cutoff.
+    // Keep that window unverified instead of inventing a shifted schedule.
+    session=cal.earlyCloseMin?{reg:[[from,cal.earlyCloseMin]],unknown:[[cal.earlyCloseMin,to]]}:{reg:[[from,to]]};
+  }
   if(cal.pending)session={reg:[]};
-  if (cal.earlyCloseMin && session.reg?.[0]?.[1] > cal.earlyCloseMin) {
+  if (!publication && cal.earlyCloseMin && session.reg?.[0]?.[1] > cal.earlyCloseMin) {
     const regEnd = cal.earlyCloseMin;
     const late = cal.key === 'us' && /ARCA|AMEX|PCX/i.test(context.venue) ? [[regEnd, 1020]] : [];
     session = { ...session, reg: [[session.reg[0][0], regEnd]], post: late };
   }
   if (cal.halfDay && cal.key === 'hk') session = { ...session, reg: [session.reg[0]], brk: [], auc: [...(session.auc || []), [720, 730]], post: [] };
-  return { session, calendar: cal };
+  return { session, calendar: cal,...(publication?{publication}:{}) };
 }
 
 export function marketStateFor(symbol, gmtoffset, nowMs = Date.now(), venue = '') {
@@ -88,7 +100,7 @@ export function marketStateFor(symbol, gmtoffset, nowMs = Date.now(), venue = ''
   const off = gmtoffset != null ? gmtoffset : timezoneOffsetFor(s, nowMs);
   const local = new Date(nowMs + off * 1000);                          // 交易所本地墙钟(按UTC读)
   const day = local.getUTCDay();
-  const hm = local.getUTCHours() * 60 + local.getUTCMinutes();
+  const hm = local.getUTCHours() * 60 + local.getUTCMinutes() + local.getUTCSeconds()/60 + local.getUTCMilliseconds()/60000;
   const { session: calendarSession, calendar: cal } = sessionFor(s, gmtoffset, nowMs, venue);
   // Explicit special dates precede ordinary weekend rules. An announced
   // Sunday with unpublished times cannot be mistaken for a normal closure.

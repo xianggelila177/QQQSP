@@ -606,7 +606,7 @@
   function selectFreshness(data, now = Date.now(), {readIntervalMs=0} = {}) {
     if(!data)return {stale:false,reason:null};
     const quoteAt=timestampMs(data.quoteAt??data.ts);
-    const checkedAt=timestampMs(data.sourceCheckedAt)??timestampMs(data.fetchedAt);
+    const checkedAt=timestampMs(data.sourceCheckedAt);
     const cadence=Math.max(positive(data.pollAfterMs),positive(data.checkIntervalMs));
     const clientCadence=Math.min(120000,positive(readIntervalMs));
     // A response may arrive near the end of a source cycle and then wait a
@@ -614,16 +614,27 @@
     // one-hour source cadence and two-minute browser cadence, plus grace.
     const checkBudgetMs=Math.max(30000,Math.min(3600000,cadence)+clientCadence+5000);
     const connectionAt=timestampMs(data.connectionCheckedAt);
-    const streamPrice=data.priceBasis==='reported-trade'&&data.realtimeSource===data.src;
+    const streamPrice=data.priceBasis==='reported-trade'&&!!data.src&&data.realtimeSource===data.src;
     const streamHealthy=streamPrice&&data.realtimeStatus==='streaming'&&data.realtimeConnectionHealthy===true&&connectionAt&&connectionAt<=now+1000&&now-connectionAt<=90000;
-    const delayMs=positive(data.feedDelayMinutes)*60000;
+    const declaredDelayMinutes=typeof data.feedDelayMinutes==='number'&&Number.isFinite(data.feedDelayMinutes)&&data.feedDelayMinutes>=0?data.feedDelayMinutes:null;
+    const delayMs=(declaredDelayMinutes||0)*60000;
     const sessionStartedAt=timestampMs(data.sessionStartedAt);
-    const quoteBudgetMs=data.marketState==='BREAK'?Math.max(300000,delayMs+30000)+(sessionStartedAt&&sessionStartedAt<=now?now-sessionStartedAt:0):streamPrice?Math.max(300000,delayMs+30000):Math.max(15000,delayMs+cadence+clientCadence+5000);
+    const closed=['CLOSED','HOLIDAY'].includes(data.marketState);
+    // Event age is independent of transport and polling cadence. Both website
+    // and stream prices keep a finite age budget, including outside sessions.
+    const ordinaryBudgetMs=Math.max(300000,delayMs+30000);
+    const quoteBudgetMs=closed?14*86400000:ordinaryBudgetMs+(data.marketState==='BREAK'&&sessionStartedAt&&sessionStartedAt<=now?now-sessionStartedAt:0);
     const active=['REGULAR','PRE','POST','AUCTION','BREAK'].includes(data.marketState);
     let reason=data.recovery?'offline-cache':data.staleInfo?.reason || (data.stale||data.staleInfo?'provider-stale':null);
+    if(!reason&&!quoteAt)reason='quote-time-unknown';
+    if(!reason&&quoteAt>now+1000)reason='quote-time-invalid';
+    if(!reason&&!checkedAt)reason='source-time-unknown';
+    if(!reason&&checkedAt>now+1000)reason='source-time-invalid';
     if(!reason&&!streamHealthy&&checkedAt&&now-checkedAt>checkBudgetMs)reason='source-overdue';
-    if(!reason&&active&&quoteAt&&now-quoteAt>quoteBudgetMs)reason='quote-overdue';
-    return {stale:!!reason,reason,quoteAt,checkedAt,cadence,checkBudgetMs,quoteBudgetMs};
+    if(!reason&&quoteAt&&now-quoteAt>quoteBudgetMs)reason='quote-overdue';
+    const quietBudgetMs=delayMs+Math.max(30000,data.quoteTimePrecision==='minute'?60000:0);
+    const noNewQuote=!reason&&active&&now-quoteAt>quietBudgetMs;
+    return {stale:!!reason,reason,noNewQuote,declaredDelayMinutes,quoteAt,checkedAt,cadence,checkBudgetMs,quoteBudgetMs};
   }
   function pollingPolicy(data, {mode='economy',hidden=false,now=Date.now()}={}) {
     if(mode==='continuous')return {marketMs:2000,newsMs:60000,macroMs:60000};
@@ -1281,7 +1292,7 @@
       note.textContent=(statuses[data.status]||data.status)+' · 财务字段 '+available+'/'+total+' · 原生币种 '+(instrument.currency||'未提供')+' · 生成于 '+time(data.generated_at_ms)+'。未取得的数据不填零。';
       const overview=node('div',undefined,'detail-overview'),price=q?.data?.price;
       overview.append(node('strong',formatted(price),'detail-price'),node('span',(instrument.price_unit||'单位未提供')+' · '+(sessions[q?.data?.market_state]||q?.data?.market_state||'市场状态待核验')));
-      if(q?.data){overview.append(node('p','涨跌 '+formatted(q.data.change)+' / '+formatted(q.data.change_percent)+'%'),node('p','成交时间：'+time(q.data.quote_at_ms)),node('p','来源检查：'+time(q.data.source_checked_at_ms)+' · 延迟 '+(q.delay_minutes==null?'未声明':q.delay_minutes+' 分钟')));}
+      if(q?.data){const timeLabel=q.data.quote_time_basis==='provider-published'?(instrument.type==='INDEX'?'指数发布时间':'来源发布时间'):'成交时间';overview.append(node('p','涨跌 '+formatted(q.data.change)+' / '+formatted(q.data.change_percent)+'%'),node('p',timeLabel+'：'+time(q.data.quote_at_ms)),node('p','来源检查：'+time(q.data.source_checked_at_ms)+' · 延迟 '+(q.delay_minutes==null?'未声明':q.delay_minutes+' 分钟')));}
       body.append(overview);
       const market=section('最新成交与当日统计');
       for(const [key,label] of [['open','今开'],['previous_close','昨收'],['high','最高'],['low','最低'],['volume','成交量']]){
@@ -1470,8 +1481,8 @@
   }
   // T2: 卡片头部延迟徽标分级 — staleInfo.reason 细分原因, title 写详细说明; 文案只承诺重试
   function applyStaleBadge(q, d, now=quoteClock ? quoteClock.now() : Date.now()){
-    if(!q.staleWarn) return;
     const freshness=window.PANEL_STATE.selectFreshness(d,now,{readIntervalMs:getReadIntervalMs()});
+    if(!q.staleWarn) return freshness;
     const si=d.staleInfo;
     if(d.recovery||si?.reason==='offline-cache'){
       q.staleWarn.textContent='离线缓存·旧报价';
@@ -1483,14 +1494,24 @@
     } else if(si && si.reason==='cooldown'){
       q.staleWarn.textContent='数据延迟·自动重试中';
       q.staleWarn.title='数据源冷却中，面板正在自动重试，恢复后自动更新';
+    } else if(['source-overdue','stream-check-overdue'].includes(freshness.reason)){
+      q.staleWarn.textContent='来源检查超时';
+      q.staleWarn.title='来源检查已超过允许的检查间隔，尚未确认更新。报价时间保持不变。';
+    } else if(['quote-overdue','trade-age-exceeded'].includes(freshness.reason)){
+      q.staleWarn.textContent='报价久未更新';
+      q.staleWarn.title='报价年龄已超过当前时段及来源声明延迟允许的范围；保留原值和原时间，等待本来源提供更新报价。';
+    } else if(['quote-time-unknown','quote-time-invalid','source-time-unknown','source-time-invalid'].includes(freshness.reason)){
+      q.staleWarn.textContent=freshness.reason.startsWith('quote-')?'报价时间未核验':'来源检查时间未核验';
+      q.staleWarn.title='原始时间缺失或异常，不能用本次页面响应时间替代。';
     } else if(d.stale){
       q.staleWarn.textContent='数据延迟';
       q.staleWarn.title='部分数据延迟，正在自动重试';
     } else if(freshness.stale){
-      q.staleWarn.textContent=freshness.reason==='source-overdue'?'来源检查延迟':'报价延迟';
-      q.staleWarn.title=freshness.reason==='source-overdue'?'来源检查已超过公布的查询间隔，等待更新。':'最新成交已超过来源延迟与查询间隔允许的时间，等待更新。';
+      q.staleWarn.textContent='来源数据待更新';
+      q.staleWarn.title='来源保留了旧值或返回了异常状态，等待可核验的更新。';
     }
     q.staleWarn.hidden=!freshness.stale;
+    return freshness;
   }
 
   function quoteTimeMs(value) {
@@ -1499,7 +1520,7 @@
   }
   function updateQuoteMeta(q, now = quoteClock ? quoteClock.now() : Date.now()) {
     const d = q.d; if (!d || !q.quoteMeta) return;
-    applyStaleBadge(q,d,now);
+    const freshness=applyStaleBadge(q,d,now);
     const sourceNames = { 'yahoo-futures':'Yahoo · 期货', 'eastmoney-futures':'东方财富 · 期货', 'eastmoney-futures-list':'东方财富 · 期货目录（成交时间未知）', 'alpaca-iex':'Alpaca · IEX 单一交易所', 'alpaca-sip':'Alpaca · 美国 SIP 数据源', 'sina-batch':'新浪批量报价',yahoo: 'Yahoo', 'tx-cn': '腾讯', 'tx-us': '腾讯', 'tx-batch': '腾讯批量报价', 'naver-index': 'Naver 指数', 'naver-us': 'Naver 美股', 'naver-kr': 'Naver 韩股', 'em-cn': '东方财富', finnhub:'Finnhub · 覆盖依账户权限',fixture: '测试数据' };
     const sessionNames = { SOURCE_SNAPSHOT:'统计来自独立快照，非逐笔同步', CACHED_REGULAR: '常规时段统计', REGULAR: '常规时段统计', PRE: '盘前统计', POST: '盘后统计', CN_SNAPSHOT: '交易日快照', UNKNOWN: '统计时段未核验' };
     const at = quoteTimeMs(d.quoteAt ?? d.ts), checked = quoteTimeMs(d.sourceCheckedAt);
@@ -1511,14 +1532,16 @@
       const connected=quoteTimeMs(d.connectionCheckedAt),healthy=d.realtimeConnectionHealthy&&connected&&connected<=now+1000&&now-connected<=90000;
       parts.push((sourceNames[d.realtimeSource]||d.realtimeSource)+' · '+(healthy?'流连接正常':'流连接待恢复'));
       if(d.src!==d.realtimeSource)parts.push('当前价格由轮询源提供');
-      else if(healthy&&at&&now-at>30000)parts.push('暂无较新成交');
     }
-    if(d.feedDelayMinutes==null)parts.push('来源延迟未核验');
+    if(freshness.noNewQuote)parts.push('本来源暂无更新报价');
+    if(freshness.declaredDelayMinutes===null)parts.push('来源延迟未核验');
     if(d.quoteTimeBasis==='provider-published')parts.push('时间为来源发布时刻');
     if(d.quoteTimePrecision==='minute')parts.push('来源成交时间精度为分钟');
     const age = window.PANEL_STATE.formatQuoteAge(d.quoteAt ?? d.ts, now);
-    if (Number.isFinite(d.feedDelayMinutes) && d.feedDelayMinutes > 0) parts.push('源延迟 ' + d.feedDelayMinutes + ' 分钟');
-    if (d.marketState === 'CLOSED') parts.push('已休市，保留最近报价');
+    if (freshness.declaredDelayMinutes>0) parts.push('来源声明延迟'+freshness.declaredDelayMinutes+'分钟');
+    const publication=d.publicationSession;
+    if(publication?.kind==='index-publication'&&publication.verified===true&&publication.phase==='waiting'&&['CLOSED','HOLIDAY'].includes(d.marketState))parts.push('上一发布时段数值，等待发布');
+    else if (d.marketState === 'CLOSED') parts.push('已休市，保留最近报价');
     if (sessionNames[d.ohlcSession]) parts.push(sessionNames[d.ohlcSession]);
     if(checked)parts.push('来源检查 '+fmtTime8(checked));
     const cadence=Math.max(Number(d.pollAfterMs)||0,Number(d.checkIntervalMs)||0);
@@ -2471,7 +2494,7 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=96').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=97').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
         nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本','info',{label:'刷新页面',run:()=>location.reload()}); });
       });

@@ -51,7 +51,7 @@
       note.textContent=(statuses[data.status]||data.status)+' · 财务字段 '+available+'/'+total+' · 原生币种 '+(instrument.currency||'未提供')+' · 生成于 '+time(data.generated_at_ms)+'。未取得的数据不填零。';
       const overview=node('div',undefined,'detail-overview'),price=q?.data?.price;
       overview.append(node('strong',formatted(price),'detail-price'),node('span',(instrument.price_unit||'单位未提供')+' · '+(sessions[q?.data?.market_state]||q?.data?.market_state||'市场状态待核验')));
-      if(q?.data){overview.append(node('p','涨跌 '+formatted(q.data.change)+' / '+formatted(q.data.change_percent)+'%'),node('p','成交时间：'+time(q.data.quote_at_ms)),node('p','来源检查：'+time(q.data.source_checked_at_ms)+' · 延迟 '+(q.delay_minutes==null?'未声明':q.delay_minutes+' 分钟')));}
+      if(q?.data){const timeLabel=q.data.quote_time_basis==='provider-published'?(instrument.type==='INDEX'?'指数发布时间':'来源发布时间'):'成交时间';overview.append(node('p','涨跌 '+formatted(q.data.change)+' / '+formatted(q.data.change_percent)+'%'),node('p',timeLabel+'：'+time(q.data.quote_at_ms)),node('p','来源检查：'+time(q.data.source_checked_at_ms)+' · 延迟 '+(q.delay_minutes==null?'未声明':q.delay_minutes+' 分钟')));}
       body.append(overview);
       const market=section('最新成交与当日统计');
       for(const [key,label] of [['open','今开'],['previous_close','昨收'],['high','最高'],['low','最低'],['volume','成交量']]){

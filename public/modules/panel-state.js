@@ -27,7 +27,7 @@
   function selectFreshness(data, now = Date.now(), {readIntervalMs=0} = {}) {
     if(!data)return {stale:false,reason:null};
     const quoteAt=timestampMs(data.quoteAt??data.ts);
-    const checkedAt=timestampMs(data.sourceCheckedAt)??timestampMs(data.fetchedAt);
+    const checkedAt=timestampMs(data.sourceCheckedAt);
     const cadence=Math.max(positive(data.pollAfterMs),positive(data.checkIntervalMs));
     const clientCadence=Math.min(120000,positive(readIntervalMs));
     // A response may arrive near the end of a source cycle and then wait a
@@ -35,16 +35,27 @@
     // one-hour source cadence and two-minute browser cadence, plus grace.
     const checkBudgetMs=Math.max(30000,Math.min(3600000,cadence)+clientCadence+5000);
     const connectionAt=timestampMs(data.connectionCheckedAt);
-    const streamPrice=data.priceBasis==='reported-trade'&&data.realtimeSource===data.src;
+    const streamPrice=data.priceBasis==='reported-trade'&&!!data.src&&data.realtimeSource===data.src;
     const streamHealthy=streamPrice&&data.realtimeStatus==='streaming'&&data.realtimeConnectionHealthy===true&&connectionAt&&connectionAt<=now+1000&&now-connectionAt<=90000;
-    const delayMs=positive(data.feedDelayMinutes)*60000;
+    const declaredDelayMinutes=typeof data.feedDelayMinutes==='number'&&Number.isFinite(data.feedDelayMinutes)&&data.feedDelayMinutes>=0?data.feedDelayMinutes:null;
+    const delayMs=(declaredDelayMinutes||0)*60000;
     const sessionStartedAt=timestampMs(data.sessionStartedAt);
-    const quoteBudgetMs=data.marketState==='BREAK'?Math.max(300000,delayMs+30000)+(sessionStartedAt&&sessionStartedAt<=now?now-sessionStartedAt:0):streamPrice?Math.max(300000,delayMs+30000):Math.max(15000,delayMs+cadence+clientCadence+5000);
+    const closed=['CLOSED','HOLIDAY'].includes(data.marketState);
+    // Event age is independent of transport and polling cadence. Both website
+    // and stream prices keep a finite age budget, including outside sessions.
+    const ordinaryBudgetMs=Math.max(300000,delayMs+30000);
+    const quoteBudgetMs=closed?14*86400000:ordinaryBudgetMs+(data.marketState==='BREAK'&&sessionStartedAt&&sessionStartedAt<=now?now-sessionStartedAt:0);
     const active=['REGULAR','PRE','POST','AUCTION','BREAK'].includes(data.marketState);
     let reason=data.recovery?'offline-cache':data.staleInfo?.reason || (data.stale||data.staleInfo?'provider-stale':null);
+    if(!reason&&!quoteAt)reason='quote-time-unknown';
+    if(!reason&&quoteAt>now+1000)reason='quote-time-invalid';
+    if(!reason&&!checkedAt)reason='source-time-unknown';
+    if(!reason&&checkedAt>now+1000)reason='source-time-invalid';
     if(!reason&&!streamHealthy&&checkedAt&&now-checkedAt>checkBudgetMs)reason='source-overdue';
-    if(!reason&&active&&quoteAt&&now-quoteAt>quoteBudgetMs)reason='quote-overdue';
-    return {stale:!!reason,reason,quoteAt,checkedAt,cadence,checkBudgetMs,quoteBudgetMs};
+    if(!reason&&quoteAt&&now-quoteAt>quoteBudgetMs)reason='quote-overdue';
+    const quietBudgetMs=delayMs+Math.max(30000,data.quoteTimePrecision==='minute'?60000:0);
+    const noNewQuote=!reason&&active&&now-quoteAt>quietBudgetMs;
+    return {stale:!!reason,reason,noNewQuote,declaredDelayMinutes,quoteAt,checkedAt,cadence,checkBudgetMs,quoteBudgetMs};
   }
   function pollingPolicy(data, {mode='economy',hidden=false,now=Date.now()}={}) {
     if(mode==='continuous')return {marketMs:2000,newsMs:60000,macroMs:60000};
