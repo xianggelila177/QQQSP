@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {mergeAlpacaQuote,createRealtimeQuoteService} from '../lib/realtime-quote-service.js';
 let at=Date.parse('2026-09-09T15:00:00Z');
 const bar=(t,c)=>({t,o:c,h:c+1,l:c-1,c,v:100});
-const data={source:'alpaca-iex',coverage:'single-exchange',state:'streaming',snapshotCheckedAt:at,
+const data={source:'alpaca-iex',coverage:'single-exchange',state:'streaming',connectionCheckedAt:at,snapshotCheckedAt:at,
  trade:{symbol:'QQQ',price:110,quoteAt:at,receivedAt:at,exchange:'V',sourceTimestamp:new Date(at).toISOString(),conditions:['@']},
  snapshot:{dailyBar:bar('2026-09-09T04:00:00Z',109),prevDailyBar:bar('2026-09-08T04:00:00Z',100)}};
 const base={symbol:'QQQ',price:108,quoteAt:at-1000,src:'yahoo',currency:'USD',instrumentType:'ETF',prevClose:999,change:123,ext:{post:{price:777}},stale:true,staleInfo:{reason:'old'},charts:{intraday:[{t:(at-60000)/1000,c:108,v:5}]}};

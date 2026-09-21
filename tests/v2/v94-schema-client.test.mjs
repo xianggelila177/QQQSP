@@ -1,3 +1,4 @@
+import {fileURLToPath} from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -13,7 +14,7 @@ const now=Date.parse('2026-09-21T16:00Z'),key='fixture_readonly_'.repeat(3);
 const validator=new Validator({allErrors:true});
 // Validate multiple cases in one standard-validation call, reducing Python startup cost offline.
 function validateCases(schema,values){const v=validator.compile({type:'array',items:schema});assert.equal(v(values),true,JSON.stringify(v.errors)?.slice(0,1200));}
-const root=new URL('../..',import.meta.url).pathname;
+const root=fileURLToPath(new URL('../..',import.meta.url));
 test('v94 query schemas represent all optional controls and reject unknown controls',()=>{
  const cases=[{symbol:'NVDA'},{symbols:['NVDA','SPY'],include:['quote']},{symbol:'NVDA',include:['daily'],adjustment:'split_dividend',daily_granularity:'monthly'},{symbol:'NVDA',include:['intraday'],intraday_date:'2026-09-18',aggregate_minutes:15},{symbol:'NVDA',include:['samples'],aggregate_source:'samples',aggregate_minutes:5},{symbol:'NVDA',include:['corporate_actions'],format:'csv',actions_start:'2024-06-01',actions_end:'2024-07-01'}];
  validateCases(querySchema,cases);for(const c of cases)parseContextQuery(c);
@@ -30,7 +31,7 @@ test('v94 published row/object schemas validate historical, aggregated, adjusted
 });
 test('v94 published envelope schema validates batch and denies missing batch identities',()=>{
  const query=parseContextQuery({symbol:'NVDA',include:['quote']}),out=buildMarketContext({query,requestId:'test',generatedAt:now}),batch={schema_version:1,request_id:'test',generated_at_ms:now,status:'unavailable',coverage:{requested_symbols:1,returned_symbols:1,quota_cost:1},results:[out]};
- const published=JSON.parse(fs.readFileSync(root+'/public/market-context.schema.json'));validateCases(published,[out,batch]);const bad=structuredClone(batch);delete bad.results[0].instrument;const v=validator.compile(published);assert.equal(v(bad),false);
+ const published=JSON.parse(fs.readFileSync(root+'/public/market-context.schema.json'));validateCases(published,[out,batch]);const bad=structuredClone(batch);delete bad.results[0].instrument;const v=new Validator({allErrors:true}).compile(published);assert.equal(v(bad),false);
 });
 test('v94 v2 analysis query schema exposes new controls while snapshots reject them',()=>{
  validateCases(detailQuerySchema,[{symbol:'NVDA'},{symbol:'NVDA',profile:'analysis',include:['daily'],adjustment:'raw'},{symbol:'NVDA',profile:'analysis',include:['corporate_actions']}]);

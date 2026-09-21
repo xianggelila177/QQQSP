@@ -613,12 +613,15 @@
     // complete browser cycle. Allow both phases, capped at the supported
     // one-hour source cadence and two-minute browser cadence, plus grace.
     const checkBudgetMs=Math.max(30000,Math.min(3600000,cadence)+clientCadence+5000);
+    const connectionAt=timestampMs(data.connectionCheckedAt);
+    const streamPrice=data.priceBasis==='reported-trade'&&data.realtimeSource===data.src;
+    const streamHealthy=streamPrice&&data.realtimeStatus==='streaming'&&data.realtimeConnectionHealthy===true&&connectionAt&&connectionAt<=now+1000&&now-connectionAt<=90000;
     const delayMs=positive(data.feedDelayMinutes)*60000;
     const sessionStartedAt=timestampMs(data.sessionStartedAt);
-    const quoteBudgetMs=data.marketState==='BREAK'?Math.max(300000,delayMs+30000)+(sessionStartedAt&&sessionStartedAt<=now?now-sessionStartedAt:0):Math.max(15000,delayMs+cadence+clientCadence+5000);
+    const quoteBudgetMs=data.marketState==='BREAK'?Math.max(300000,delayMs+30000)+(sessionStartedAt&&sessionStartedAt<=now?now-sessionStartedAt:0):streamPrice?Math.max(300000,delayMs+30000):Math.max(15000,delayMs+cadence+clientCadence+5000);
     const active=['REGULAR','PRE','POST','AUCTION','BREAK'].includes(data.marketState);
     let reason=data.recovery?'offline-cache':data.staleInfo?.reason || (data.stale||data.staleInfo?'provider-stale':null);
-    if(!reason&&checkedAt&&now-checkedAt>checkBudgetMs)reason='source-overdue';
+    if(!reason&&!streamHealthy&&checkedAt&&now-checkedAt>checkBudgetMs)reason='source-overdue';
     if(!reason&&active&&quoteAt&&now-quoteAt>quoteBudgetMs)reason='quote-overdue';
     return {stale:!!reason,reason,quoteAt,checkedAt,cadence,checkBudgetMs,quoteBudgetMs};
   }
@@ -1502,8 +1505,14 @@
     const at = quoteTimeMs(d.quoteAt ?? d.ts), checked = quoteTimeMs(d.sourceCheckedAt);
     const parts = ['报价 ' + (at ? fmtTime8(at) : '时刻未知'), sourceNames[d.src] || '来源未标明'];
     const calendarMessage=window.PANEL_STATE.calendarStatus(d).message;if(calendarMessage)parts.push(calendarMessage);
-    const streamNames={streaming:'逐笔推送中',connecting:'连接行情源中',authenticating:'行情源鉴权中',subscribing:'等待订阅确认',backoff:'行情源重试中',blocked:'权限受限，使用后备数据','subscription-limited':'订阅数量受限',TRADE_INVALIDATED:'成交已撤销，使用后备报价',NEW_SOURCE_OLDER_THAN_FALLBACK:'推送报价较旧，保留较新后备报价'};
+    const streamNames={streaming:'行情流已连接',connecting:'连接行情源中',authenticating:'行情源鉴权中',subscribing:'等待来源首笔成交',backoff:'行情源重试中',blocked:'权限受限，使用后备数据','subscription-limited':'订阅数量受限，继续轮询',TRADE_INVALIDATED:'成交已撤销，使用后备报价',NEW_SOURCE_OLDER_THAN_FALLBACK:'保留较新轮询报价'};
     if(d.realtimeStatus)parts.push(streamNames[d.realtimeStatus]||'推送暂不可用，使用后备数据');
+    if(d.realtimeSource){
+      const connected=quoteTimeMs(d.connectionCheckedAt),healthy=d.realtimeConnectionHealthy&&connected&&connected<=now+1000&&now-connected<=90000;
+      parts.push((sourceNames[d.realtimeSource]||d.realtimeSource)+' · '+(healthy?'流连接正常':'流连接待恢复'));
+      if(d.src!==d.realtimeSource)parts.push('当前价格由轮询源提供');
+      else if(healthy&&at&&now-at>30000)parts.push('暂无较新成交');
+    }
     if(d.feedDelayMinutes==null)parts.push('来源延迟未核验');
     if(d.quoteTimeBasis==='provider-published')parts.push('时间为来源发布时刻');
     if(d.quoteTimePrecision==='minute')parts.push('来源成交时间精度为分钟');
@@ -2462,7 +2471,7 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=95').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=96').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
         nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本','info',{label:'刷新页面',run:()=>location.reload()}); });
       });
@@ -2537,7 +2546,7 @@
   $('btnRefresh').parentNode?.appendChild(refreshModeButton);
   function updateRefreshModeLabel(){
     const state=liveStore?.state()||'connecting';
-    const text={idle:'等待连接',connecting:'连接推送中',streaming:'推送已连接',fallback:'已回退读取',paused:'后台已暂停'}[state]||state;
+    const text={idle:'等待连接',connecting:'连接推送中',streaming:'面板推送已连接',fallback:'已回退读取',paused:'后台已暂停'}[state]||state;
     refreshModeButton.textContent=(refreshMode==='continuous'?'持续监控':'省流')+' · '+text;
     refreshModeButton.setAttribute('aria-label','当前'+text+'，点击切换持续监控与省流模式');
     refreshModeButton.setAttribute('aria-pressed',String(refreshMode==='continuous'));

@@ -179,8 +179,14 @@
     const at = quoteTimeMs(d.quoteAt ?? d.ts), checked = quoteTimeMs(d.sourceCheckedAt);
     const parts = ['报价 ' + (at ? fmtTime8(at) : '时刻未知'), sourceNames[d.src] || '来源未标明'];
     const calendarMessage=window.PANEL_STATE.calendarStatus(d).message;if(calendarMessage)parts.push(calendarMessage);
-    const streamNames={streaming:'逐笔推送中',connecting:'连接行情源中',authenticating:'行情源鉴权中',subscribing:'等待订阅确认',backoff:'行情源重试中',blocked:'权限受限，使用后备数据','subscription-limited':'订阅数量受限',TRADE_INVALIDATED:'成交已撤销，使用后备报价',NEW_SOURCE_OLDER_THAN_FALLBACK:'推送报价较旧，保留较新后备报价'};
+    const streamNames={streaming:'行情流已连接',connecting:'连接行情源中',authenticating:'行情源鉴权中',subscribing:'等待来源首笔成交',backoff:'行情源重试中',blocked:'权限受限，使用后备数据','subscription-limited':'订阅数量受限，继续轮询',TRADE_INVALIDATED:'成交已撤销，使用后备报价',NEW_SOURCE_OLDER_THAN_FALLBACK:'保留较新轮询报价'};
     if(d.realtimeStatus)parts.push(streamNames[d.realtimeStatus]||'推送暂不可用，使用后备数据');
+    if(d.realtimeSource){
+      const connected=quoteTimeMs(d.connectionCheckedAt),healthy=d.realtimeConnectionHealthy&&connected&&connected<=now+1000&&now-connected<=90000;
+      parts.push((sourceNames[d.realtimeSource]||d.realtimeSource)+' · '+(healthy?'流连接正常':'流连接待恢复'));
+      if(d.src!==d.realtimeSource)parts.push('当前价格由轮询源提供');
+      else if(healthy&&at&&now-at>30000)parts.push('暂无较新成交');
+    }
     if(d.feedDelayMinutes==null)parts.push('来源延迟未核验');
     if(d.quoteTimeBasis==='provider-published')parts.push('时间为来源发布时刻');
     if(d.quoteTimePrecision==='minute')parts.push('来源成交时间精度为分钟');

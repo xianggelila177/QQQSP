@@ -1,3 +1,4 @@
+import {fileURLToPath} from 'node:url';
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
 import Ajv2020 from '../support/schema-validator.mjs';
 import {querySchema,responseSchema,openapi,buildContextDocs} from '../../scripts/build-context-docs.mjs';
@@ -16,5 +17,5 @@ test('published schema validates full, partial and unavailable context with colu
 test('OpenAPI, tool input and runtime agree on defaults and explicit range failures',()=>{
  assert.ok(checkQuery({symbol:'NVDA'}));assert.ok(checkQuery({symbol:' ^SOX '}));for(const q of [{symbol:'NVDA',include:[]},{symbol:'NVDA',daily_bar_count:501},{symbol:'NVDA',daily_bar_count:'252'},{symbol:'NVDA',sample_trading_days:4},{symbol:'NVDA',secret:'ignored'}]){assert.equal(checkQuery(q),false);assert.throws(()=>parseContextQuery(q));}
  assert.equal(openapi.paths['/api/v1/market-context'].post.security[0].ReadOnlyApiKey.length,0);assert.equal(openapi.components.securitySchemes.ReadOnlyApiKey.scheme,'bearer');
- buildContextDocs(new URL('../..',import.meta.url).pathname,{check:true});assert.ok(fs.readFileSync(new URL('../../public/llms.txt',import.meta.url),'utf8').includes('untrusted'));
+ buildContextDocs(fileURLToPath(new URL('../..',import.meta.url)),{check:true});assert.ok(fs.readFileSync(new URL('../../public/llms.txt',import.meta.url),'utf8').includes('untrusted'));
 });

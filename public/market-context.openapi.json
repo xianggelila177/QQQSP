@@ -1553,7 +1553,7 @@
     },
     "/api/v1/quote-stream": {
       "get": {
-        "summary": "限时60秒报价快照SSE；不是逐笔成交流",
+        "summary": "持续连接的1秒合并报价快照SSE；15秒心跳，断线1秒后重连取得新快照，不承诺逐笔无损回放",
         "description": "Required scope: quote-only",
         "security": [
           {
@@ -1572,7 +1572,7 @@
         ],
         "responses": {
           "200": {
-            "description": "限时60秒报价快照SSE；不是逐笔成交流",
+            "description": "持续连接的1秒合并报价快照SSE；15秒心跳，断线1秒后重连取得新快照，不承诺逐笔无损回放",
             "headers": {
               "X-RateLimit-Limit": {
                 "schema": {
@@ -2674,6 +2674,41 @@
                               "data"
                             ],
                             "additionalProperties": false
+                          },
+                          "trade_received_at_ms": {
+                            "type": [
+                              "number",
+                              "null"
+                            ],
+                            "minimum": 0,
+                            "description": "Server receipt time of the selected stream trade; not a heartbeat or exchange event time"
+                          },
+                          "connection_checked_at_ms": {
+                            "type": [
+                              "number",
+                              "null"
+                            ],
+                            "minimum": 0,
+                            "description": "Last verified frame from the associated stream; never substitutes for quote_at_ms"
+                          },
+                          "stream_source_id": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "stream_status": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "stream_connection_healthy": {
+                            "type": [
+                              "boolean",
+                              "null"
+                            ],
+                            "description": "Health of the associated stream, which can differ from the selected price source; null when no stream is associated"
                           }
                         },
                         "required": [
@@ -2701,7 +2736,12 @@
                           "statistics_as_of_ms",
                           "statistics_session",
                           "retained",
-                          "order_book"
+                          "order_book",
+                          "trade_received_at_ms",
+                          "connection_checked_at_ms",
+                          "stream_source_id",
+                          "stream_status",
+                          "stream_connection_healthy"
                         ],
                         "additionalProperties": false
                       },
