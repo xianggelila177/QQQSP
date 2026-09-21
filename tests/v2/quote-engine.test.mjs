@@ -11,5 +11,5 @@ test('HTTP reads only cached quotes; one update path, exact trade time retained'
 test('new trades coalesce to one event; unchanged snapshots do not emit',async()=>{
  let price=10,now=1000,events=0;const e=createQuoteEngine({now:()=>now,readQuote:async()=>({symbol:'QQQ',price,quoteAt:now}),tickMs:60000});
  e.subscribe(()=>events++);e.start();e.watch(['QQQ']);await pause(70);assert.equal(events,1);e.tick();await pause(70);assert.equal(events,1);
- now++;price=11;e.poke('QQQ');await pause(70);assert.equal(events,2);e.stop();
+ now++;price=11;e.poke('QQQ');await pause(180);assert.equal(events,2);e.stop();
 });

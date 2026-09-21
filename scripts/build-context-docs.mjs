@@ -37,6 +37,8 @@ export const financialFieldSchema=object({value:num,status:str,unit:nullableStri
  inputs:{type:'array',maxItems:16,items:object({name:nullableString,value:num,source_id:nullableString,as_of_ms:time,financial_period:nullableString})},
  attempts:{type:'array',maxItems:16,items:object({source_id:nullableString,state:nullableString,code:nullableString,last_success_at_ms:time,retry_at_ms:time})}});
 const quoteData=object({price:{type:'number',exclusiveMinimum:0},currency:nullableString,price_unit:nullableString,previous_close:num,change:num,change_percent:num,quote_at_ms:time,observed_at_ms:time,source_checked_at_ms:time,quote_time_basis:nullableString,session:nullableString,market_state:nullableString,regular:ext,pre:ext,post:ext,open:num,high:num,low:num,volume:num,volume_unit:nullableString,statistics_trading_date:nullableString,statistics_as_of_ms:time,statistics_session:nullableString,retained:{type:'boolean'},order_book:orderBookSchema});
+Object.assign(quoteData.properties,{trade_received_at_ms:{...time,description:'Server receipt time of the selected stream trade; not a heartbeat or exchange event time'},connection_checked_at_ms:{...time,description:'Last verified frame from the associated stream; never substitutes for quote_at_ms'},stream_source_id:nullableString,stream_status:nullableString,stream_connection_healthy:{type:['boolean','null'],description:'Health of the associated stream, which can differ from the selected price source; null when no stream is associated'}});
+quoteData.required.push('trade_received_at_ms','connection_checked_at_ms','stream_source_id','stream_status','stream_connection_healthy');
 const named=data=>object({...common,data});
 const rowTime={type:'number',minimum:0},rowPrice={type:'number',exclusiveMinimum:0};
 const newsItemSchema=object({title:str,source:nullableString,published_at_ms:time,url:nullableString,
@@ -113,7 +115,7 @@ for(const [name,summary,scope,parameters] of [
  ['trading-calendar','已核验日历；范围外明确unknown','history',[['exchange','us'],['start','2026-09-01'],['end','2026-09-30']]],
  ['movers','供应商美股全范围涨幅/跌幅/活跃榜，不是本地自选排序','quote-only',[['market','us'],['range','1d'],['top','10']]],
  ['capabilities','配置能力声明，不保证已获商业授权','quote-only',[]],
- ['quote-stream','限时60秒报价快照SSE；不是逐笔成交流','quote-only',[['symbols','NVDA,SPY']]]
+ ['quote-stream','持续连接的1秒合并报价快照SSE；15秒心跳，断线1秒后重连取得新快照，不承诺逐笔无损回放','quote-only',[['symbols','NVDA,SPY']]]
 ])openapi.paths['/api/v1/'+name]={get:{summary,description:'Required scope: '+scope,security:[{ReadOnlyApiKey:[]}],parameters:parameters.map(([name,example])=>({name,in:'query',schema:{type:'string'},example})),responses:{200:{description:summary,headers:quotaDocs,content:{[name==='quote-stream'?'text/event-stream':'application/json']:{schema:name==='quote-stream'?str:{$ref:'#/components/schemas/'+name}}}},400:errorDoc,401:errorDoc,403:errorDoc,429:errorDoc,503:errorDoc}}};
 export const toolDefinition={type:'function',function:{name:'query_market_context',description,parameters:querySchema}};
 export function buildContextDocs(root,{check=false}={}){

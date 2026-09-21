@@ -34,12 +34,15 @@
     // complete browser cycle. Allow both phases, capped at the supported
     // one-hour source cadence and two-minute browser cadence, plus grace.
     const checkBudgetMs=Math.max(30000,Math.min(3600000,cadence)+clientCadence+5000);
+    const connectionAt=timestampMs(data.connectionCheckedAt);
+    const streamPrice=data.priceBasis==='reported-trade'&&data.realtimeSource===data.src;
+    const streamHealthy=streamPrice&&data.realtimeStatus==='streaming'&&data.realtimeConnectionHealthy===true&&connectionAt&&connectionAt<=now+1000&&now-connectionAt<=90000;
     const delayMs=positive(data.feedDelayMinutes)*60000;
     const sessionStartedAt=timestampMs(data.sessionStartedAt);
-    const quoteBudgetMs=data.marketState==='BREAK'?Math.max(300000,delayMs+30000)+(sessionStartedAt&&sessionStartedAt<=now?now-sessionStartedAt:0):Math.max(15000,delayMs+cadence+clientCadence+5000);
+    const quoteBudgetMs=data.marketState==='BREAK'?Math.max(300000,delayMs+30000)+(sessionStartedAt&&sessionStartedAt<=now?now-sessionStartedAt:0):streamPrice?Math.max(300000,delayMs+30000):Math.max(15000,delayMs+cadence+clientCadence+5000);
     const active=['REGULAR','PRE','POST','AUCTION','BREAK'].includes(data.marketState);
     let reason=data.recovery?'offline-cache':data.staleInfo?.reason || (data.stale||data.staleInfo?'provider-stale':null);
-    if(!reason&&checkedAt&&now-checkedAt>checkBudgetMs)reason='source-overdue';
+    if(!reason&&!streamHealthy&&checkedAt&&now-checkedAt>checkBudgetMs)reason='source-overdue';
     if(!reason&&active&&quoteAt&&now-quoteAt>quoteBudgetMs)reason='quote-overdue';
     return {stale:!!reason,reason,quoteAt,checkedAt,cadence,checkBudgetMs,quoteBudgetMs};
   }

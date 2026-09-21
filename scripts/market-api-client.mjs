@@ -42,15 +42,19 @@ export async function queryMarketApi(input,{apiKey,baseUrl='https://quotes.examp
  }catch(e){if(e.code&&/^[A-Z][A-Z0-9_]{0,79}$/.test(e.code))throw e;throw fail(controller.signal.aborted?'REQUEST_TIMEOUT':'REQUEST_FAILED');}
  finally{clearTimeout(timer);if(response?.body&&!response.body.locked)void response.body.cancel().catch(()=>{});}
 }
-export async function* streamQuotes(symbols,{apiKey,baseUrl='https://quotes.example.com',signal,fetchImpl=fetch}={}){
+export async function* streamQuotes(symbols,{apiKey,baseUrl='https://quotes.example.com',signal,timeoutMs=0,fetchImpl=fetch}={}){
  credentials(apiKey);const q=parseContextQuery({symbols,include:['quote']}),url=apiEndpoint(baseUrl,'/api/v1/quote-stream')+'?'+new URLSearchParams({symbols:q.symbols.join(',')});
- const lifetime=AbortSignal.timeout(65000),combined=signal?AbortSignal.any([lifetime,signal]):lifetime;
+ if(!Number.isSafeInteger(timeoutMs)||timeoutMs<0||timeoutMs>2147483647)throw fail('INVALID_STREAM_TIMEOUT');
+ const lifetime=timeoutMs>0?new AbortController():null,timer=lifetime?setTimeout(()=>lifetime.abort(fail('STREAM_TIMEOUT')),timeoutMs):null;
+ const combined=lifetime?(signal?AbortSignal.any([lifetime.signal,signal]):lifetime.signal):signal;let reader;
+ try{
  const r=await fetchImpl(url,{headers:{Authorization:'Bearer '+apiKey,Accept:'text/event-stream'},redirect:'error',signal:combined});
  if(r.redirected||!r.ok||!/^text\/event-stream/.test(r.headers.get('content-type')||'')){void r.body?.cancel().catch(()=>{});throw fail('STREAM_REJECTED',{status:r.status});}
- const reader=r.body.getReader(),decoder=new TextDecoder('utf-8',{fatal:true});let buffer='';
- try{for(;;){const {done,value}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});if(Buffer.byteLength(buffer)>262144)throw fail('STREAM_FRAME_TOO_LARGE');let boundary;
+ reader=r.body.getReader();const decoder=new TextDecoder('utf-8',{fatal:true});let buffer='';
+ for(;;){const {done,value}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});if(Buffer.byteLength(buffer)>262144)throw fail('STREAM_FRAME_TOO_LARGE');let boundary;
   while((boundary=buffer.indexOf('\n\n'))>=0){const frame=buffer.slice(0,boundary);buffer=buffer.slice(boundary+2);let event='message',data=[];for(const line of frame.split('\n')){if(line.startsWith('event:'))event=line.slice(6).trim();if(line.startsWith('data:'))data.push(line.slice(5).trimStart());}if(data.length){let value;try{value=JSON.parse(data.join('\n'));}catch{throw fail('INVALID_STREAM_DATA');}yield {event,data:value};}}
- }}finally{void reader.cancel().catch(()=>{});reader.releaseLock();}
+ }
+ }finally{clearTimeout(timer);if(reader){void reader.cancel().catch(()=>{});reader.releaseLock();}}
 }
 export function advancedCliOptions(argv){
  if(argv.length===1&&['--help','-h'].includes(argv[0]))return {help:true};

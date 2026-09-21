@@ -963,6 +963,41 @@
                           },
                           "retained": {
                             "type": "boolean"
+                          },
+                          "trade_received_at_ms": {
+                            "type": [
+                              "number",
+                              "null"
+                            ],
+                            "minimum": 0,
+                            "description": "Server receipt time of the selected stream trade; not a heartbeat or exchange event time"
+                          },
+                          "connection_checked_at_ms": {
+                            "type": [
+                              "number",
+                              "null"
+                            ],
+                            "minimum": 0,
+                            "description": "Last verified frame from the associated stream; never substitutes for quote_at_ms"
+                          },
+                          "stream_source_id": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "stream_status": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "stream_connection_healthy": {
+                            "type": [
+                              "boolean",
+                              "null"
+                            ],
+                            "description": "Health of the associated stream, which can differ from the selected price source; null when no stream is associated"
                           }
                         },
                         "required": [
@@ -989,7 +1024,12 @@
                           "statistics_trading_date",
                           "statistics_as_of_ms",
                           "statistics_session",
-                          "retained"
+                          "retained",
+                          "trade_received_at_ms",
+                          "connection_checked_at_ms",
+                          "stream_source_id",
+                          "stream_status",
+                          "stream_connection_healthy"
                         ],
                         "additionalProperties": false
                       },

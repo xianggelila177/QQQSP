@@ -231,7 +231,7 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=95').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=96').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
         nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本','info',{label:'刷新页面',run:()=>location.reload()}); });
       });
@@ -306,7 +306,7 @@
   $('btnRefresh').parentNode?.appendChild(refreshModeButton);
   function updateRefreshModeLabel(){
     const state=liveStore?.state()||'connecting';
-    const text={idle:'等待连接',connecting:'连接推送中',streaming:'推送已连接',fallback:'已回退读取',paused:'后台已暂停'}[state]||state;
+    const text={idle:'等待连接',connecting:'连接推送中',streaming:'面板推送已连接',fallback:'已回退读取',paused:'后台已暂停'}[state]||state;
     refreshModeButton.textContent=(refreshMode==='continuous'?'持续监控':'省流')+' · '+text;
     refreshModeButton.setAttribute('aria-label','当前'+text+'，点击切换持续监控与省流模式');
     refreshModeButton.setAttribute('aria-pressed',String(refreshMode==='continuous'));

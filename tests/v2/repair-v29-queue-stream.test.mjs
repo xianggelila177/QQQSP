@@ -11,7 +11,7 @@ import {dailyData,fixtureNow} from './history-v28-fixture.mjs';
 import {readSseEvent} from '../support/read-sse.mjs';
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
-const trade=(at,patch={})=>({state:'streaming',delayMinutes:0,connectionCheckedAt:at,source:'test-stream',trade:{symbol:'NVDA',quoteAt:at,receivedAt:at,price:110},...patch});
+const trade=(at,patch={})=>({state:'streaming',delayMinutes:0,coverage:'us-sip',connectionCheckedAt:at,source:'test-stream',trade:{symbol:'NVDA',quoteAt:at,receivedAt:at,price:110},...patch});
 test('R01 heartbeat-only old trade cannot suppress a website fallback during trading',()=>{
  const value=trade(fixtureNow-600000,{connectionCheckedAt:fixtureNow});const p=streamAvailability('NVDA',value,fixtureNow);
  assert.equal(p.closed,false);assert.equal(p.usable,false);assert.equal(p.needsBackup,true);

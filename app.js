@@ -109,9 +109,9 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
   let accepting=true;
   const selectedGetQuote=redundancy?redundancy.getCachedQuote:baseGetQuote;
   const alpaca=env.ALPACA_ENABLED==='1'?(providerOverrides.alpacaProvider||createAlpacaProvider({env,now,httpsGet})):null;
-  const finnhub=env.FINNHUB_TOKEN?(providerOverrides.finnhubProvider||createFinnhubProvider({token:env.FINNHUB_TOKEN,now})):null;
+  const finnhub=env.FINNHUB_TOKEN?(providerOverrides.finnhubProvider||createFinnhubProvider({token:env.FINNHUB_TOKEN,maxSymbols:config.FINNHUB_MAX_SYMBOLS,now})):null;
   realtimeProvider=alpaca&&finnhub?createStreamPair(alpaca,finnhub,{now}):alpaca||finnhub;
-  const realtime=realtimeProvider?createRealtimeQuoteService({provider:realtimeProvider,fallback:selectedGetQuote,now}):null;
+  const realtime=realtimeProvider?createRealtimeQuoteService({provider:realtimeProvider,fallback:selectedGetQuote,now,onUpdate:symbol=>engine?.poke(symbol)}):null;
   const servingGetQuote=realtime?realtime.getCachedQuote:selectedGetQuote;
   const readSourceQuote=async (...args)=>{
     if(!accepting)throw Object.assign(new Error('Application stopped'),{code:'STOPPED'});
