@@ -3,10 +3,13 @@ import {providerCapabilities,tencentCodeFor} from '../lib/instruments.js';
 import {createSnapshotService} from '../lib/snapshot-service.js';
 
 const routing=()=>{
-  for(const symbol of ['^GSPC','^DJI','^IXIC','^FTSE']){
+  for(const symbol of ['^DJI','^IXIC','^FTSE']){
     assert.equal(tencentCodeFor(symbol),null,symbol);
     assert.equal(providerCapabilities(symbol).batchGroup,null,symbol);
   }
+  assert.equal(tencentCodeFor('^GSPC'),null);
+  assert.equal(providerCapabilities('^GSPC').batchGroup,'index');
+  assert.deepEqual(providerCapabilities('^GSPC').batchProviders,['naver-index']);
   assert.equal(tencentCodeFor('000300.SS'),'sh000300');
   assert.equal(providerCapabilities('000300.SS').batchGroup,'other');
   for(const symbol of ['AAPL','QQQ','SPY'])assert.equal(providerCapabilities(symbol).batchGroup,'us');

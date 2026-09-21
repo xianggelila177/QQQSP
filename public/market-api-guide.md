@@ -98,7 +98,7 @@ CSV只允许daily、intraday、samples、corporate_actions中的单一分区，�
 
 轮换立即生效，旧密钥在24小时内成功响应带X-API-Key-Status=rotating和X-Key-Expires-At；到期后401、KEY_ROTATED。撤销会立即撤销整个轮换系列，包括宽限中的旧密钥。新报价流每秒复核密钥，撤销后关闭。托管状态最大256条（含撤销记录），到达上限明确409；不静默丢掉撤销墓碑。
 
-新SSE每连接最多10证券、同密钥系列最多2连接、该接口总计最多16连接，同时受全站32连接及写缓冲预算约束。每秒最多一次合并快照，15秒心跳，60秒租期。事件为quote/auth_error/source_error/end；断连或租期到期释放临时订阅，不修改自选。重新连接需等待至少5秒，并重新消耗所请求证券的额度。无逐笔回放、无永久Last-Event-ID日志；不承诺中间所有tick都保留。本地客户端使用带鉴权头的fetch流，不把密钥拼到EventSource URL。
+新SSE每连接最多10证券、同密钥系列最多2连接、该接口总计最多16连接，同时受全站32连接及写缓冲预算约束。每秒最多一次合并快照，15秒心跳，默认持续连接；显式配置有限租期时到期结束。事件为quote/auth_error/source_error/end；断连或租期到期释放临时订阅，不修改自选。普通断线重连等待1秒；429按Retry-After等待，并重新消耗所请求证券的额度。无逐笔回放、无永久Last-Event-ID日志；不承诺中间所有tick都保留。本地客户端使用带鉴权头的fetch流，不把密钥拼到EventSource URL。
 
 未设置弃用时间时不发送弃用头、不宣布旧接口停服。配置API_V1_DEPRECATION_AT后按RFC9745发Deprecation，Sunset按RFC8594，日期校验及先后关系检查生效；通知见/api-lifecycle.md。服务端不添加技术指标，统计分析仍由本地客户端完成。
 
