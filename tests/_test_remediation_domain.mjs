@@ -28,7 +28,7 @@ test('03 valid slow range has provenance while price/time/session stay fast', as
 });
 test('04 unsupported batch markets only use supported enrichment', async () => {
   let calls=0;const service=createSnapshotService({fetchBatch:async()=>{calls++;return {quotes:[]};},enrich:async symbol=>({symbol,price:10,quoteAt:Date.now(),src:'yahoo'})});
-  try {service.start();service.getCachedQuote('7203.T');await new Promise(r=>setTimeout(r,130));assert.equal(calls,0);assert.equal(service.getCachedQuote('7203.T').stale,undefined);} finally {service.stop();}
+  try {service.start();service.getCachedQuote('VOD.L');await new Promise(r=>setTimeout(r,130));assert.equal(calls,0);assert.equal(service.getCachedQuote('VOD.L').stale,undefined);} finally {service.stop();}
 });
 test('17 fair enrichment reaches eighty active symbols before repeating first ones', async () => {
   const original={setInterval,clearInterval,setTimeout,clearTimeout};let time=1,callback;const seen=new Set();
@@ -53,7 +53,7 @@ test('06 upstream error pages and invalid JSON cannot become fresh empty news',a
 });
 test('06,16 foreground cache hits renew activity; background refreshes expire without clients',async()=>{
   const {createNewsService}=await import('../lib/news.js');let time=1000000,calls=0;
-  const svc=createNewsService({now:()=>time,newsLoader:async()=>{calls++;return [{t:time,title:'news'}];}});
+  const svc=createNewsService({now:()=>time,newsLoader:async()=>{calls++;return [{t:time,title:'news',src:'Reuters',link:'https://example.test/news'}];}});
   await svc.requestNews('AAPL');time+=500000;await svc.requestNews('AAPL');assert.equal(svc.activeSyms.get('AAPL'),time);
   time+=50000;await svc.requestNews('AAPL');assert.equal(calls,2);assert.equal(svc.activeSyms.get('AAPL'),time);
   time+=600000;assert.equal(calls,2,'未请求时不轮转');svc.stopNews();assert.equal(svc.activeSyms.size,0);
@@ -66,7 +66,7 @@ test('08 OHLC cache is keyed by the requested trading day',async()=>{
 });
 test('12 macro retains last good items and timestamps when all sources fail',async()=>{
   const {createMacroService}=await import('../lib/macro.js');let time=2000000,fail=false;
-  const svc=createMacroService({now:()=>time,googleNewsTopic:async tp=>{if(fail)throw new Error('offline');return [{t:time,topic:tp.name,title:'Treasury yields '+tp.id,link:'https://example.test/'+tp.id}];},yahooNews:async()=>{if(fail)throw new Error('offline');return [];},httpsGet:async()=>fail?{status:503,body:'error'}:{status:200,body:JSON.stringify({result:{data:{feed:{list:[]}}}})}});
+  const svc=createMacroService({now:()=>time,googleNewsTopic:async tp=>{if(fail)throw new Error('offline');return [{t:time,topic:tp.name,src:'Reuters',title:'Treasury yields '+tp.id,link:'https://example.test/'+tp.id}];},yahooNews:async()=>{if(fail)throw new Error('offline');return [];},httpsGet:async()=>fail?{status:503,body:'error'}:{status:200,body:JSON.stringify({result:{data:{feed:{list:[]}}}})}});
   const first=await svc.getMacro();assert.equal(first.stale,false);assert.ok(first.items.length);
   time+=301000;fail=true;const second=await svc.getMacro({waitForRefresh:true});assert.deepEqual(second.items,first.items);assert.equal(second.updatedAt,first.updatedAt);assert.equal(second.stale,true);assert.ok(second.error);assert.ok(second.retryAt>time);
   const cold=createMacroService({now:()=>time,googleNewsTopic:async()=>{throw new Error('offline');},yahooNews:async()=>{throw new Error('offline');},httpsGet:async()=>({status:429,body:'limited'})});

@@ -1,5 +1,5 @@
 (() => {
-  const createNewsController = ({ network, client:PANEL, getWatchlist, getCards }) => {
+  const createNewsController = ({ network, client:PANEL, getWatchlist, getCards, now=Date.now }) => {
     const { esc, fmtTime8 } = window.PANEL_FORMAT;
     let inFlight=null, generation=0;
     const data={}, metadata={};
@@ -9,8 +9,9 @@
   }
   function renderNews(q, items, meta = {}) {
     if (!q.newslist) return;
-    if (q.newshead) q.newshead.textContent = meta.pending ? '资讯 · 正在获取' : meta.stale || meta.error ? '资讯 · 缓存/刷新暂不可用' : '相关资讯 / 市场资讯';
-    const list = (items || []).slice().sort((a, b) => b.t - a.t).slice(0, 6);
+    if (q.newshead) q.newshead.textContent = meta.pending ? '资讯 · 正在获取' : meta.stale || meta.error ? '资讯 · 缓存/刷新暂不可用' : '相关资讯 · 近7天';
+    const clock=now();
+    const list = (items || []).filter(n=>Number.isFinite(n.t)&&n.t>0&&n.t<=clock&&n.t>=clock-7*864e5&&n.title&&n.src&&/^https?:\/\//i.test(n.link||'')&&PANEL.safeURL(n.link)&&n.linkScope!=='feed'&&n.provenance?.link_scope!=='feed').slice().sort((a, b) => b.t - a.t).slice(0, 6);
     const sig = JSON.stringify([list.map(n => [n.id,n.title, n.t, n.link, n.src, n.sent, !!n.general]),!!meta.pending,!!meta.stale,!!meta.error]);
     if (sig === q._newsSig) return;
     q._newsSig = sig;
@@ -33,7 +34,7 @@
       if(box.children[index]!==row.el){if(box.insertBefore)box.insertBefore(row.el,box.children[index]||null);else box.appendChild(row.el);}index++;
     }
     for(const [key,row] of rows)if(!used.has(key)){row.el.remove();rows.delete(key);}
-    if(!used.size){const empty=doc.createElement('div');empty.className='newsempty';empty.textContent=meta.pending?'正在获取资讯…':meta.stale||meta.error?'资讯暂不可用，将自动重试':'暂无相关资讯';box.appendChild(empty);}
+    if(!used.size){const empty=doc.createElement('div');empty.className='newsempty';empty.textContent=meta.pending?'正在获取资讯…':meta.stale||meta.error?'资讯暂不可用，将自动重试':'近7天暂无可核验出处的相关资讯';box.appendChild(empty);}
     if(activeIndex>=0){
       const kept=[...rows.values()].some(row=>row.el===active);
       const links=[...rows.values()].filter(row=>row.tag==='a').map(row=>row.el);
@@ -70,7 +71,7 @@
             for(const symbol of batch){
               const items=payload?.[symbol];
               metadata[symbol]=meta[symbol] || (Array.isArray(items)?{}:{error:'未返回此标的资讯',stale:true});
-              if(Array.isArray(items) && (items.length || !metadata[symbol].error))data[symbol]=items;
+              if(Array.isArray(items))data[symbol]=items;
             }
             distribute();
           }
@@ -83,7 +84,7 @@
       })();
       inFlight=entry;return entry.promise;
     }
-    return Object.freeze({renderNews,distribute,refreshNews,invalidate,cacheSize:()=>Object.keys(data).length});
+    return Object.freeze({renderNews,distribute,tick:distribute,refreshNews,invalidate,cacheSize:()=>Object.keys(data).length});
   };
   window.PANEL_NEWS_CONTROLLER=Object.freeze({createNewsController});
 })();

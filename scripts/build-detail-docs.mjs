@@ -5,7 +5,7 @@ import {EXTRA_QUERY_KEYS} from '../lib/context-query-catalog.js';
 import {querySchema,responseSchema,orderBookSchema,sectionSchemas} from './build-context-docs.mjs';
 
 export const detailQuerySchema={type:'object',additionalProperties:false,required:['symbol'],properties:{
-  symbol:querySchema.properties.symbol,profile:{enum:['snapshot','analysis'],default:'snapshot',description:'snapshot 只读取详情；analysis 增加历史、服务器采样及缓存资讯/宏观。'},
+  symbol:querySchema.properties.symbol,profile:{enum:['snapshot','analysis'],default:'snapshot',description:'snapshot 只读取详情；analysis 增加历史、服务器采样及近期资讯/宏观。'},
   format:{enum:['objects','compact'],default:'objects'},max_wait_ms:{...querySchema.properties.max_wait_ms,description:'含排队总预算；snapshot 默认5000毫秒，analysis 默认15000毫秒，0仅查缓存。'},
   daily_bar_count:querySchema.properties.daily_bar_count,sample_trading_days:querySchema.properties.sample_trading_days,
   daily_before:querySchema.properties.daily_before,daily_series_id:querySchema.properties.daily_series_id},

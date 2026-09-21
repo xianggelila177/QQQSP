@@ -9169,7 +9169,82 @@
               "minimum": 0
             },
             "coverage": {
-              "type": "object"
+              "type": "object",
+              "properties": {
+                "returned_items": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "scope": {
+                  "const": "available_related_news"
+                },
+                "selection": {
+                  "const": "published_within_7_days"
+                },
+                "quality": {
+                  "type": "object",
+                  "properties": {
+                    "policy": {
+                      "const": "published_within_7_days"
+                    },
+                    "window_ms": {
+                      "const": 604800000
+                    },
+                    "cutoff_ms": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "minimum": 0,
+                      "description": "UTC epoch milliseconds; null when unknown"
+                    },
+                    "checked_at_ms": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "minimum": 0,
+                      "description": "UTC epoch milliseconds; null when unknown"
+                    },
+                    "accepted_items": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "rejected_items": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "rejected_by_reason": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    },
+                    "verification": {
+                      "const": "publisher_feed_metadata_only"
+                    }
+                  },
+                  "required": [
+                    "policy",
+                    "window_ms",
+                    "cutoff_ms",
+                    "checked_at_ms",
+                    "accepted_items",
+                    "rejected_items",
+                    "rejected_by_reason",
+                    "verification"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "returned_items",
+                "scope",
+                "selection",
+                "quality"
+              ],
+              "additionalProperties": false
             },
             "adjustment": {
               "type": "string"
@@ -9210,13 +9285,75 @@
                           "string",
                           "null"
                         ]
+                      },
+                      "provenance": {
+                        "type": "object",
+                        "properties": {
+                          "publisher": {
+                            "type": "string"
+                          },
+                          "publisher_url": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "article_url": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "link_scope": {
+                            "enum": [
+                              "article",
+                              "aggregator"
+                            ]
+                          },
+                          "timestamp_basis": {
+                            "const": "publisher_reported"
+                          },
+                          "verification": {
+                            "const": "feed_metadata_not_independent_fact_check"
+                          }
+                        },
+                        "required": [
+                          "publisher",
+                          "publisher_url",
+                          "article_url",
+                          "link_scope",
+                          "timestamp_basis",
+                          "verification"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "association": {
+                        "type": "object",
+                        "properties": {
+                          "symbol": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "basis": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "symbol",
+                          "basis"
+                        ],
+                        "additionalProperties": false
                       }
                     },
                     "required": [
                       "title",
                       "source",
                       "published_at_ms",
-                      "url"
+                      "url",
+                      "provenance",
+                      "association"
                     ],
                     "additionalProperties": false
                   }
@@ -9282,7 +9419,68 @@
               "minimum": 0
             },
             "coverage": {
-              "type": "object"
+              "type": "object",
+              "properties": {
+                "news_quality": {
+                  "type": "object",
+                  "properties": {
+                    "policy": {
+                      "const": "published_within_7_days"
+                    },
+                    "window_ms": {
+                      "const": 604800000
+                    },
+                    "cutoff_ms": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "minimum": 0,
+                      "description": "UTC epoch milliseconds; null when unknown"
+                    },
+                    "checked_at_ms": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "minimum": 0,
+                      "description": "UTC epoch milliseconds; null when unknown"
+                    },
+                    "accepted_items": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "rejected_items": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "rejected_by_reason": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    },
+                    "verification": {
+                      "const": "publisher_feed_metadata_only"
+                    }
+                  },
+                  "required": [
+                    "policy",
+                    "window_ms",
+                    "cutoff_ms",
+                    "checked_at_ms",
+                    "accepted_items",
+                    "rejected_items",
+                    "rejected_by_reason",
+                    "verification"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "news_quality"
+              ]
             },
             "adjustment": {
               "type": "string"
@@ -9331,7 +9529,101 @@
                 "news": {
                   "type": "array",
                   "items": {
-                    "type": "object"
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "type": "string"
+                      },
+                      "source": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "published_at_ms": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": 0,
+                        "description": "UTC epoch milliseconds; null when unknown"
+                      },
+                      "url": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "provenance": {
+                        "type": "object",
+                        "properties": {
+                          "publisher": {
+                            "type": "string"
+                          },
+                          "publisher_url": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "article_url": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "link_scope": {
+                            "enum": [
+                              "article",
+                              "aggregator"
+                            ]
+                          },
+                          "timestamp_basis": {
+                            "const": "publisher_reported"
+                          },
+                          "verification": {
+                            "const": "feed_metadata_not_independent_fact_check"
+                          }
+                        },
+                        "required": [
+                          "publisher",
+                          "publisher_url",
+                          "article_url",
+                          "link_scope",
+                          "timestamp_basis",
+                          "verification"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "association": {
+                        "type": "object",
+                        "properties": {
+                          "symbol": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "basis": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "symbol",
+                          "basis"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "title",
+                      "source",
+                      "published_at_ms",
+                      "url",
+                      "provenance",
+                      "association"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "calendar": {
