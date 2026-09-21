@@ -76,3 +76,38 @@ test('identity lookups have bounded concurrency, singleflight, cancellation and 
  limited=true;assert.equal(await batch.resolveNaverCode('TNA'),null);const before=searches;now+=119000;assert.equal(await batch.resolveNaverCode('TNA'),null);assert.equal(searches,before);
  now+=1001;await batch.resolveNaverCode('TNA');assert.equal(searches,before+1);batch.close?.();
 });
+
+test('Tencent opening-clock placeholders cannot beat a current Naver premarket trade',async()=>{
+ let now=Date.parse('2026-09-21T13:28:00Z'),naverCalls=0;
+ const future=tencentRow().replace('2026-09-18 16:00:01','2026-09-21 09:30:00');
+ const healthy=tencentRow('NVDA').replace('2026-09-18 16:00:01','2026-09-21 09:27:59');
+ const httpsGet=async url=>{
+  if(url.includes('sinajs'))return {status:200,body:''};
+  if(url.includes('qt.gtimg'))return {status:200,body:future+healthy};
+  if(url.includes('/search/autoComplete'))return json(searchResult([identity()]));
+  naverCalls++;return json({pollingInterval:7000,datas:[realtime(now-1000)]});
+ };
+ const batch=createBatchProvider({now:()=>now,httpsGet,pollMs:1000});
+ assert.deepEqual(batch.parseTencentBatch(future+healthy,['SOXL','NVDA']).map(q=>q.symbol),['NVDA'],'one future row must not poison a healthy sibling');
+ const skew=tencentRow().replace('2026-09-18 16:00:01','2026-09-21 09:28:05');
+ assert.equal(batch.parseTencentBatch(skew,['SOXL']).length,1,'provider tolerance is bounded at five seconds');
+ assert.equal(batch.parseTencentBatch(skew.replace('09:28:05','09:28:06'),['SOXL']).length,0);
+ const polling=createFastPolling({now:()=>now,httpsGet,legacy:batch,pollMs:1000});
+ const first=(await polling.fetchSnapshotBatch(['SOXL'],{group:'us'})).quotes[0];
+ assert.equal(first.src,'naver-us');assert.equal(first.price,132.38);assert.equal(first.quoteAt,now-1000);assert.equal(first.priceSession,'PRE');
+ now+=7000;const next=(await polling.fetchSnapshotBatch(['SOXL'],{group:'us'})).quotes[0];
+ assert.equal(next.quoteAt,now-1000);assert.equal(next.sourceCheckedAt,now);assert.equal(naverCalls,2);batch.close();
+});
+
+test('a future Naver extended timestamp cannot replace a valid regular quote or its sibling',async()=>{
+ const now=Date.parse('2026-09-21T13:28:00Z'),future=realtime(now+120000);
+ const batch=createBatchProvider({now:()=>now,httpsGet:async()=>json({pollingInterval:7000,datas:[
+  {...future,reutersCode:'AAPL.O',symbolCode:'AAPL'},
+  {...realtime(now-1000),reutersCode:'NVDA.O',symbolCode:'NVDA'}
+ ]})});
+ const regular=batch.parseNaverQuote(future,'SOXL',7000);
+ assert.equal(regular.price,123.67);assert.equal(regular.quoteAt,Date.parse('2026-09-18T20:00:00Z'));assert.equal(regular.ext,null);
+ const result=await batch.fetchSnapshotBatch(['AAPL','NVDA'],{group:'us'});
+ assert.equal(result.quotes.length,2);assert.equal(result.quotes.find(q=>q.symbol==='AAPL').quoteAt,regular.quoteAt);
+ assert.equal(result.quotes.find(q=>q.symbol==='NVDA').quoteAt,now-1000);assert.equal(result.quotes.find(q=>q.symbol==='NVDA').price,132.38);batch.close();
+});
