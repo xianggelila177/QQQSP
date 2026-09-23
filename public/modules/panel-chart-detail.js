@@ -57,7 +57,7 @@
       cv.addEventListener('pointerup',e=>{if(!drag||e.pointerId!==drag.id)return;
         const point=local(e,view.plot),travel=Math.hypot(point.x-drag.start.x,point.y-drag.start.y),isTap=travel<12;
         drag=null;if(isTap){const now=Date.now();if(lastTap&&now-lastTap.at<300&&
-          Math.hypot(lastTap.x-point.x,lastTap.y-point.y)<12){lastTap=null;view.followEnd=true;queueDraw();}
+          Math.hypot(lastTap.x-point.x,lastTap.y-point.y)<12){lastTap=null;view.followEnd=true;view.fullSession=false;queueDraw();}
           else lastTap={at:now,x:point.x,y:point.y};}
       });
       cv.addEventListener('pointercancel',()=>{drag=null;});
@@ -201,22 +201,22 @@
         if(range==='5d'){five=null;queueDraw();}
       }
     }
-    async function selectPeriod(value){if(!current)return;tf=value;hover=null;view={visN:{},followEnd:true,winStart:null};
+    async function selectPeriod(value){if(!current)return;tf=value;hover=null;view={visN:{},followEnd:true,winStart:null,fullSession:false};
       dialog.querySelectorAll('[data-tf]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tf===tf)));
       if(tf==='fiveDay'){five=null;queueDraw();await fetchDetail('5d');return;}
       if(tf!=='intraday'&&!current.historyStore?.getSeries(tf)?.length){const selected=current,job=current.historyStore?.load(tf);
         queueDraw();await job;if(current===selected&&tf===value)queueDraw();return;}
       queueDraw();
     }
-    function zoom(kind,e){const p=view.plot;if(!p?.n)return;let vis=view.visN?.[view.tf]||p.vis;
+    function zoom(kind,e){const p=view.plot;if(!p?.n)return;let vis=p.vis;
       vis=kind==='in'?Math.max(5,Math.round(vis/1.4)):Math.min(p.all.length,Math.round(vis*1.4));
-      if(!view.visN)view.visN={};view.visN[view.tf]=vis;
+      if(!view.visN)view.visN={};view.visN[view.tf]=vis;view.fullSession=false;
       if(e){const anchor=p.a+nearest(p,local(e,p).x);view.winStart=Math.max(0,Math.min(p.all.length-vis,Math.round(anchor-(anchor-p.a)*vis/p.vis)));view.followEnd=false;}
       queueDraw();}
     function action(value){if(value==='rotate'){manualRotate=!dialog.classList.contains('is-rotated');layout();return;}
       if(value==='in'||value==='out'){zoom(value);return;}
-      if(value==='fit'){view.visN[view.tf]=view.plot?.all?.length||1;view.followEnd=true;view.winStart=null;queueDraw();return;}
-      if(value==='latest'){view.followEnd=true;view.winStart=null;queueDraw();return;}
+      if(value==='fit'){view.visN[view.tf]=view.plot?.all?.length||1;view.followEnd=true;view.winStart=null;view.fullSession=true;queueDraw();return;}
+      if(value==='latest'){view.followEnd=true;view.winStart=null;view.fullSession=false;queueDraw();return;}
       if(value==='shot'){const canvas=dialog.querySelector('.cd-canvas'),cursor=dialog.querySelector('.cd-cursor'),out=make('canvas');
         out.width=canvas.width;out.height=canvas.height;const c=out.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,out.width,out.height);
         c.drawImage(canvas,0,0);c.drawImage(cursor,0,0);const a=make('a');a.href=out.toDataURL('image/png');
@@ -247,7 +247,7 @@
     }
     function open(q,opener){ensure();if(current)close();current=q;focusReturn=opener||q.cv;
       scrollStyle=document.body.style.overflow;document.body.style.overflow='hidden';
-      tf='intraday';remote=null;five=null;view={visN:{},followEnd:true,winStart:null};hover=null;
+      tf='intraday';remote=null;five=null;view={visN:{},followEnd:true,winStart:null,fullSession:false};hover=null;
       dialog.showModal();history.pushState({chartDetail:true},'',location.href);openedHistory=true;
       window.addEventListener('popstate',onPop);window.addEventListener('resize',layout);
       window.visualViewport?.addEventListener('resize',layout);window.visualViewport?.addEventListener('scroll',layout);

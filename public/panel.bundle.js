@@ -334,7 +334,14 @@
     const sessions=intraday&&!q._sampled?d?.regularChart?.regularSessions||[]:[];
     const full=vis>=all.length&&q.followEnd;
     const start=full?sessions[0]?.open_at_ms:bars[0]?.t*1000;
-    const end=full?sessions.at(-1)?.close_at_ms:bars.at(-1)?.t*1000;
+    const now=Date.now(),activeSession=sessions.find(s=>now>=s.open_at_ms&&now<s.close_at_ms);
+    const latestBarAt=bars.at(-1)?.t*1000;
+    const progressive=full&&!q.fullSession&&!q._fiveDay&&d?.marketState==='REGULAR'&&activeSession&&
+      Number.isFinite(d?.quoteAt)&&d.quoteAt>=start&&d.quoteAt<=activeSession.close_at_ms&&
+      Number.isFinite(latestBarAt)&&latestBarAt>=start&&latestBarAt<=activeSession.close_at_ms;
+    const end=progressive?Math.min(activeSession.close_at_ms,
+      Math.max(start+30*60000,now+5*60000,d.quoteAt+5*60000,latestBarAt+5*60000)):
+      full?sessions.at(-1)?.close_at_ms:latestBarAt;
     const visibleSessions=sessions.map(s=>({open:Math.max(start,s.open_at_ms),close:Math.min(end,s.close_at_ms)}))
       .filter(s=>Number.isFinite(s.open)&&Number.isFinite(s.close)&&s.close>s.open);
     const duration=visibleSessions.reduce((sum,s)=>sum+s.close-s.open,0);
@@ -903,7 +910,7 @@
         if(!force&&(samplesConnected||Date.now()-(q._sampleReadAt||0)<60000))return;q._sampleReadAt=Date.now();await q.sampleStore?.load(true);
       };
       el.querySelectorAll('[data-chart-mode]').forEach(b=>b.addEventListener('click',async()=>{
-        q._intradayMode=b.dataset.chartMode;q.followEnd=true;q.winStart=null;q.hoverIdx=null;
+        q._intradayMode=b.dataset.chartMode;q.followEnd=true;q.winStart=null;q.hoverIdx=null;q.fullSession=false;
         q.visN.intraday=q._intradayMode==='samples'?4500:(window.PANEL_TIMEFRAMES?.get('intraday')?.visible||80);
         drawChart(q,true);if(q._intradayMode==='samples')await q.refreshSamples(true);
       }));
@@ -915,8 +922,8 @@
         getSeries:tf=>q.d?.charts?.[tf] || (tf==='daily30'?q.d?.charts?.daily:[]) || [], getRevision:()=>0,
         getMeta:tf=>({status:(q.d?.charts?.[tf]||[]).length?'ready':'unknown'}), load:async()=>{}, abort:()=>{}
       };
-      const view=()=>q.views[q.tf] ||= {winStart:null,followEnd:true,hoverIdx:null,keyboardSelection:false};
-      for(const key of ['winStart','followEnd','hoverIdx','keyboardSelection']) Object.defineProperty(q,key,{configurable:true,get:()=>view()[key],set:value=>{view()[key]=value;}});
+      const view=()=>q.views[q.tf] ||= {winStart:null,followEnd:true,hoverIdx:null,keyboardSelection:false,fullSession:false};
+      for(const key of ['winStart','followEnd','hoverIdx','keyboardSelection','fullSession']) Object.defineProperty(q,key,{configurable:true,get:()=>view()[key],set:value=>{view()[key]=value;}});
       q.cursor=el.querySelector('.chart-cursor');
       q.cv.setAttribute('tabindex','0'); q.cv.setAttribute('aria-label',sym+' 行情图表，左右键选择历史点，Home 和 End 选择可见首尾');
       q.cv.setAttribute('aria-describedby','chart-point-'+sym);
@@ -954,7 +961,7 @@
     met.appendChild(sl); q.slider = sl;
 
     sl.addEventListener('input', async () => {
-      if (!q.d) return; q.winStart = +sl.value; q.followEnd = q.winStart >= +sl.max;
+      if (!q.d) return; q.winStart = +sl.value; q.followEnd = q.winStart >= +sl.max;q.fullSession=false;
       const tf=q.tf, savedView=view(),meta=q.historyStore?.getMeta(tf), bars=seriesFor(q,tf), anchor=bars[0]?.periodStart;
       if(q.winStart===0 && tf!=='intraday' && meta?.meta?.hasMore && anchor && !q._loadingBefore){
         q._loadingBefore=true;
@@ -977,7 +984,7 @@
       const history = seriesFor(q,q.tf); if (!history.length) return;
       const live=q.tf==='intraday'&&!q._sampled?window.PANEL_CHART_ENGINE.livePointFor(q.d):null;
       const all=live?history.concat(live):history;
-      if (z === 'latest') { q.followEnd = true; q.winStart = null; q.hoverIdx = null; q.keyboardSelection=false; drawChart(q); return; }
+      if (z === 'latest') { q.followEnd = true; q.winStart = null; q.hoverIdx = null; q.keyboardSelection=false;q.fullSession=false; drawChart(q); return; }
       if (z === 'shot') {   // 导出当前图表PNG(白底合成, 高清DPR尺寸)
         const out = document.createElement('canvas'); out.width = q.cv.width; out.height = q.cv.height;
         const c2 = out.getContext('2d'); c2.fillStyle = '#ffffff'; c2.fillRect(0, 0, out.width, out.height);
@@ -989,11 +996,14 @@
         flash('图表已导出 PNG','success');
         return;
       }
-      let vis = q.visN[q.tf] || (window.PANEL_TIMEFRAMES?.get(q.tf)?.visible || (q.tf==='yearly'?20:60));
+      let vis = q.plot?.vis || q.visN[q.tf] || (window.PANEL_TIMEFRAMES?.get(q.tf)?.visible || (q.tf==='yearly'?20:60));
       if (z === 'in') vis = Math.max(window.PANEL_TIMEFRAMES?.get(q.tf)?.minVisible || 1, Math.round(vis / 1.4));
       else if (z === 'out') vis = Math.min(all.length, Math.round(vis * 1.4));
       else vis = all.length;
-      q.visN[q.tf] = vis; if(q.followEnd) q.winStart = null; drawChart(q);
+      q.fullSession=z==='fit';q.visN[q.tf] = vis;
+      if(z==='fit')q.followEnd=true;
+      if(q.followEnd)q.winStart = null;
+      drawChart(q);
     });
 
       cards.set(q.cv,q); observer?.observe(q.cv); resize?.observe(q.cv);
@@ -1078,7 +1088,7 @@
       const gi = p.a + indexAtX(p,(e.clientX-rect.left)*(p.W/rect.width));
       let ns = Math.round(gi - (gi - p.a) * newVis / p.vis);
       ns = Math.max(0, Math.min(p.all.length - newVis, ns));
-      q.visN[q.tf] = newVis; q.winStart = ns; q.followEnd = ns >= p.all.length - newVis;
+      q.visN[q.tf] = newVis; q.winStart = ns; q.followEnd = ns >= p.all.length - newVis;q.fullSession=false;
       drawChart(q);
     }, { passive: false });
     // 拖拽平移(桌面+触摸统一): Pointer Events + setPointerCapture — 指针移出画布仍持续跟踪, 触摸端由此获得拖拽能力
@@ -1530,7 +1540,7 @@
       cv.addEventListener('pointerup',e=>{if(!drag||e.pointerId!==drag.id)return;
         const point=local(e,view.plot),travel=Math.hypot(point.x-drag.start.x,point.y-drag.start.y),isTap=travel<12;
         drag=null;if(isTap){const now=Date.now();if(lastTap&&now-lastTap.at<300&&
-          Math.hypot(lastTap.x-point.x,lastTap.y-point.y)<12){lastTap=null;view.followEnd=true;queueDraw();}
+          Math.hypot(lastTap.x-point.x,lastTap.y-point.y)<12){lastTap=null;view.followEnd=true;view.fullSession=false;queueDraw();}
           else lastTap={at:now,x:point.x,y:point.y};}
       });
       cv.addEventListener('pointercancel',()=>{drag=null;});
@@ -1674,22 +1684,22 @@
         if(range==='5d'){five=null;queueDraw();}
       }
     }
-    async function selectPeriod(value){if(!current)return;tf=value;hover=null;view={visN:{},followEnd:true,winStart:null};
+    async function selectPeriod(value){if(!current)return;tf=value;hover=null;view={visN:{},followEnd:true,winStart:null,fullSession:false};
       dialog.querySelectorAll('[data-tf]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tf===tf)));
       if(tf==='fiveDay'){five=null;queueDraw();await fetchDetail('5d');return;}
       if(tf!=='intraday'&&!current.historyStore?.getSeries(tf)?.length){const selected=current,job=current.historyStore?.load(tf);
         queueDraw();await job;if(current===selected&&tf===value)queueDraw();return;}
       queueDraw();
     }
-    function zoom(kind,e){const p=view.plot;if(!p?.n)return;let vis=view.visN?.[view.tf]||p.vis;
+    function zoom(kind,e){const p=view.plot;if(!p?.n)return;let vis=p.vis;
       vis=kind==='in'?Math.max(5,Math.round(vis/1.4)):Math.min(p.all.length,Math.round(vis*1.4));
-      if(!view.visN)view.visN={};view.visN[view.tf]=vis;
+      if(!view.visN)view.visN={};view.visN[view.tf]=vis;view.fullSession=false;
       if(e){const anchor=p.a+nearest(p,local(e,p).x);view.winStart=Math.max(0,Math.min(p.all.length-vis,Math.round(anchor-(anchor-p.a)*vis/p.vis)));view.followEnd=false;}
       queueDraw();}
     function action(value){if(value==='rotate'){manualRotate=!dialog.classList.contains('is-rotated');layout();return;}
       if(value==='in'||value==='out'){zoom(value);return;}
-      if(value==='fit'){view.visN[view.tf]=view.plot?.all?.length||1;view.followEnd=true;view.winStart=null;queueDraw();return;}
-      if(value==='latest'){view.followEnd=true;view.winStart=null;queueDraw();return;}
+      if(value==='fit'){view.visN[view.tf]=view.plot?.all?.length||1;view.followEnd=true;view.winStart=null;view.fullSession=true;queueDraw();return;}
+      if(value==='latest'){view.followEnd=true;view.winStart=null;view.fullSession=false;queueDraw();return;}
       if(value==='shot'){const canvas=dialog.querySelector('.cd-canvas'),cursor=dialog.querySelector('.cd-cursor'),out=make('canvas');
         out.width=canvas.width;out.height=canvas.height;const c=out.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,out.width,out.height);
         c.drawImage(canvas,0,0);c.drawImage(cursor,0,0);const a=make('a');a.href=out.toDataURL('image/png');
@@ -1720,7 +1730,7 @@
     }
     function open(q,opener){ensure();if(current)close();current=q;focusReturn=opener||q.cv;
       scrollStyle=document.body.style.overflow;document.body.style.overflow='hidden';
-      tf='intraday';remote=null;five=null;view={visN:{},followEnd:true,winStart:null};hover=null;
+      tf='intraday';remote=null;five=null;view={visN:{},followEnd:true,winStart:null,fullSession:false};hover=null;
       dialog.showModal();history.pushState({chartDetail:true},'',location.href);openedHistory=true;
       window.addEventListener('popstate',onPop);window.addEventListener('resize',layout);
       window.visualViewport?.addEventListener('resize',layout);window.visualViewport?.addEventListener('scroll',layout);
@@ -2951,7 +2961,7 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=103').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=104').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
         nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本','info',{label:'刷新页面',run:()=>location.reload()}); });
       });

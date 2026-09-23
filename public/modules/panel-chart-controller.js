@@ -28,7 +28,7 @@
         if(!force&&(samplesConnected||Date.now()-(q._sampleReadAt||0)<60000))return;q._sampleReadAt=Date.now();await q.sampleStore?.load(true);
       };
       el.querySelectorAll('[data-chart-mode]').forEach(b=>b.addEventListener('click',async()=>{
-        q._intradayMode=b.dataset.chartMode;q.followEnd=true;q.winStart=null;q.hoverIdx=null;
+        q._intradayMode=b.dataset.chartMode;q.followEnd=true;q.winStart=null;q.hoverIdx=null;q.fullSession=false;
         q.visN.intraday=q._intradayMode==='samples'?4500:(window.PANEL_TIMEFRAMES?.get('intraday')?.visible||80);
         drawChart(q,true);if(q._intradayMode==='samples')await q.refreshSamples(true);
       }));
@@ -40,8 +40,8 @@
         getSeries:tf=>q.d?.charts?.[tf] || (tf==='daily30'?q.d?.charts?.daily:[]) || [], getRevision:()=>0,
         getMeta:tf=>({status:(q.d?.charts?.[tf]||[]).length?'ready':'unknown'}), load:async()=>{}, abort:()=>{}
       };
-      const view=()=>q.views[q.tf] ||= {winStart:null,followEnd:true,hoverIdx:null,keyboardSelection:false};
-      for(const key of ['winStart','followEnd','hoverIdx','keyboardSelection']) Object.defineProperty(q,key,{configurable:true,get:()=>view()[key],set:value=>{view()[key]=value;}});
+      const view=()=>q.views[q.tf] ||= {winStart:null,followEnd:true,hoverIdx:null,keyboardSelection:false,fullSession:false};
+      for(const key of ['winStart','followEnd','hoverIdx','keyboardSelection','fullSession']) Object.defineProperty(q,key,{configurable:true,get:()=>view()[key],set:value=>{view()[key]=value;}});
       q.cursor=el.querySelector('.chart-cursor');
       q.cv.setAttribute('tabindex','0'); q.cv.setAttribute('aria-label',sym+' 行情图表，左右键选择历史点，Home 和 End 选择可见首尾');
       q.cv.setAttribute('aria-describedby','chart-point-'+sym);
@@ -79,7 +79,7 @@
     met.appendChild(sl); q.slider = sl;
 
     sl.addEventListener('input', async () => {
-      if (!q.d) return; q.winStart = +sl.value; q.followEnd = q.winStart >= +sl.max;
+      if (!q.d) return; q.winStart = +sl.value; q.followEnd = q.winStart >= +sl.max;q.fullSession=false;
       const tf=q.tf, savedView=view(),meta=q.historyStore?.getMeta(tf), bars=seriesFor(q,tf), anchor=bars[0]?.periodStart;
       if(q.winStart===0 && tf!=='intraday' && meta?.meta?.hasMore && anchor && !q._loadingBefore){
         q._loadingBefore=true;
@@ -102,7 +102,7 @@
       const history = seriesFor(q,q.tf); if (!history.length) return;
       const live=q.tf==='intraday'&&!q._sampled?window.PANEL_CHART_ENGINE.livePointFor(q.d):null;
       const all=live?history.concat(live):history;
-      if (z === 'latest') { q.followEnd = true; q.winStart = null; q.hoverIdx = null; q.keyboardSelection=false; drawChart(q); return; }
+      if (z === 'latest') { q.followEnd = true; q.winStart = null; q.hoverIdx = null; q.keyboardSelection=false;q.fullSession=false; drawChart(q); return; }
       if (z === 'shot') {   // 导出当前图表PNG(白底合成, 高清DPR尺寸)
         const out = document.createElement('canvas'); out.width = q.cv.width; out.height = q.cv.height;
         const c2 = out.getContext('2d'); c2.fillStyle = '#ffffff'; c2.fillRect(0, 0, out.width, out.height);
@@ -114,11 +114,14 @@
         flash('图表已导出 PNG','success');
         return;
       }
-      let vis = q.visN[q.tf] || (window.PANEL_TIMEFRAMES?.get(q.tf)?.visible || (q.tf==='yearly'?20:60));
+      let vis = q.plot?.vis || q.visN[q.tf] || (window.PANEL_TIMEFRAMES?.get(q.tf)?.visible || (q.tf==='yearly'?20:60));
       if (z === 'in') vis = Math.max(window.PANEL_TIMEFRAMES?.get(q.tf)?.minVisible || 1, Math.round(vis / 1.4));
       else if (z === 'out') vis = Math.min(all.length, Math.round(vis * 1.4));
       else vis = all.length;
-      q.visN[q.tf] = vis; if(q.followEnd) q.winStart = null; drawChart(q);
+      q.fullSession=z==='fit';q.visN[q.tf] = vis;
+      if(z==='fit')q.followEnd=true;
+      if(q.followEnd)q.winStart = null;
+      drawChart(q);
     });
 
       cards.set(q.cv,q); observer?.observe(q.cv); resize?.observe(q.cv);
@@ -203,7 +206,7 @@
       const gi = p.a + indexAtX(p,(e.clientX-rect.left)*(p.W/rect.width));
       let ns = Math.round(gi - (gi - p.a) * newVis / p.vis);
       ns = Math.max(0, Math.min(p.all.length - newVis, ns));
-      q.visN[q.tf] = newVis; q.winStart = ns; q.followEnd = ns >= p.all.length - newVis;
+      q.visN[q.tf] = newVis; q.winStart = ns; q.followEnd = ns >= p.all.length - newVis;q.fullSession=false;
       drawChart(q);
     }, { passive: false });
     // 拖拽平移(桌面+触摸统一): Pointer Events + setPointerCapture — 指针移出画布仍持续跟踪, 触摸端由此获得拖拽能力
