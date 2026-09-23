@@ -21,6 +21,7 @@ export const STATIC_INPUTS=Object.freeze([
   'public/modules/panel-chart-controller.js',
   'public/modules/panel-fundamentals.js',
   'public/modules/panel-detail.js',
+  'public/modules/panel-chart-detail.js',
   'public/modules/panel-card-view.js',
   'public/modules/panel-search-controller.js',
   'public/modules/panel-market-directory.js',

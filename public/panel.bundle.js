@@ -70,7 +70,7 @@
 ;/* public/modules/panel-timeframes.js */
 (() => {
   const TIMEFRAMES = Object.freeze([
-    Object.freeze({key:'intraday', label:'分时', kind:'quote', visible:80, prewarm:0, minVisible:1}),
+    Object.freeze({key:'intraday', label:'分时', kind:'quote', visible:1000, prewarm:0, minVisible:1}),
     Object.freeze({key:'daily30', label:'日K', kind:'history', apiPeriod:'daily', visible:60, prewarm:19, minVisible:1}),
     Object.freeze({key:'weekly', label:'周K', kind:'history', apiPeriod:'weekly', visible:60, prewarm:19, minVisible:1}),
     Object.freeze({key:'monthly', label:'月K', kind:'history', apiPeriod:'monthly', visible:60, prewarm:19, minVisible:1}),
@@ -205,9 +205,9 @@
 (() => {
   // A quote endpoint is a separate display observation, never a historical bar.
   function livePointFor(d) {
-    const point=d?.intradayLivePoint,history=d?.charts?.intraday,last=Array.isArray(history)?history.at(-1):null;
+    const point=d?.intradayLivePoint,history=d?.regularChart?.bars,last=Array.isArray(history)?history.at(-1):null;
     if(d?.intradayLiveStatus!=='ready'||!point||!last||d.error||d.pending||d.stale||d.staleInfo||d.recovery)return null;
-    if(!['REGULAR','PRE','POST','AUCTION'].includes(d.marketState))return null;
+    if(d.marketState!=='REGULAR'||d.priceSession!=='REGULAR'||d.regularChart?.source!==d.src)return null;
     if(!Number.isFinite(point.t)||point.t<=0||!Number.isFinite(point.c)||point.c<=0||point.v!==null||point.c!==d.price)return null;
     if(!Number.isFinite(last.t)||last.t<=0||!Number.isFinite(last.c)||last.c<=0||point.t<last.t||!Number.isFinite(d.quoteAt)||Math.abs(point.t-d.quoteAt/1000)>.001||d.quoteAt>Date.now()+5000)return null;
     if(typeof point.currency!=='string'||point.currency!==d.currency||typeof point.source!=='string'||!point.source||point.source!==d.src)return null;
@@ -218,30 +218,38 @@
       const localDate=t=>new Date(t*1000+d.gmtoff*1000).toISOString().slice(0,10);
       if(Math.abs(d.gmtoff)>86400||localDate(point.t)!==point.sessionDate||localDate(last.t)!==point.historyDate)return null;
     }
+    if(d.regularChart?.tradeDate!==point.sessionDate||
+      !d.regularChart?.regularSessions?.some(s=>point.t*1000>=s.open_at_ms&&point.t*1000<=s.close_at_ms))return null;
     return {...point,_live:true};
   }
   // Selection only. All sample records originate in the durable server store.
   function createObservationSeries({now=()=>Date.now()}={}) {
     const filtered=new WeakMap();
     return function select(d,mode='history',samples){
-      const history=Array.isArray(d?.charts?.intraday)?d.charts.intraday:[];
+      const history=Array.isArray(d?.regularChart?.bars)?d.regularChart.bars:[];
       if(mode==='samples'){
         let points=Array.isArray(samples?.points)?samples.points:[];
         if(d?.currency&&points.some(p=>p.currency!==d.currency)){
           let cached=filtered.get(points);if(!cached||cached.currency!==d.currency){cached={currency:d.currency,points:points.filter(p=>p.currency===d.currency)};filtered.set(points,cached);}points=cached.points;
         }
-        const coverage='已覆盖 '+(samples?.coveredDays??new Set(points.map(p=>p.tradingDate)).size)+'/3 个交易日';
+        if(d?.regularChart){const sessions=d.regularChart.recentSessions||[];
+          points=points.filter(p=>sessions.some(day=>day.date===p.tradingDate&&
+            day.sessions.some(s=>p.t*1000>=s.open_at_ms&&p.t*1000<s.close_at_ms)));}
+        const coverage='已覆盖 '+new Set(points.map(p=>p.tradingDate)).size+'/3 个交易日常规时段';
         const note=samples?.status==='loading'?'正在读取服务器采样…':samples?.supported===false?samples.reason||'暂不支持三交易日采样':samples?.enabled===false?'服务器后台采样尚未启用':
           samples?.status==='paused'?(points.length?'后台已停止采集 · '+coverage:'该标的未在后台自选中，更新自选后同步'):
           samples?.error||samples?.persistenceError?(samples.error||'采样保存异常，已有记录仍可查看'):
           !points.length?'后台采集中，等待新的有效报价；启用前的数据不会补造':coverage+' · 每分钟末次有效报价 · 非完整成交历史';
         return {bars:points,sampled:true,note};
       }
-      const tail=history.at(-1),off=d?.gmtoff,active=['REGULAR','PRE','POST','AUCTION'].includes(d?.marketState);
+      const tail=history.at(-1),off=d?.gmtoff,active=d?.marketState==='REGULAR';
       const date=tail&&Number.isFinite(off)?new Date(tail.t*1000+off*1000).toISOString().slice(0,10):'';
       const today=Number.isFinite(off)?new Date(now()+off*1000).toISOString().slice(0,10):'';
-      return {bars:history,sampled:false,note:!history.length?'历史来源暂不可用，等待后台更新；可手动查看报价采样':
-        date&&active&&date!==today?'历史分时日期 '+date+' · 当日历史尚未到达':active&&d.quoteAt-tail.t*1000>600000?'来源历史较最新报价滞后 · 可切换报价采样':''};
+      const chart=d?.regularChart,chartDate=chart?.tradeDate||date;
+      return {bars:history,sampled:false,note:!history.length?'常规分时暂不可用：'+(chart?.missingReason||'等待后台更新'):
+        chart?.missingReason?'图表日期 '+chartDate+' · '+chart.missingReason:
+        '图表日期 '+chartDate+' · 常规时段'+(chart?.volumeQuality?.status==='missing'?' · 区间成交量暂缺':'')+
+        (active&&d.quoteAt-tail.t*1000>600000?' · 来源历史较最新报价滞后':'')};
     };
   }
   const sampleGap=(a,b)=>!a||a.tradingDate!==b.tradingDate||a.source!==b.source||a.currency!==b.currency||Math.floor(b.t/60)-Math.floor(a.t/60)>1;
@@ -250,6 +258,15 @@
   // supplies formatting and series helpers explicitly at construction time.
   const createChartEngine = ({ UP, DOWN, fmtDate, formatterFor, maSeries }) => {
   const seriesCache = new WeakMap();
+  const localClock=(at,zone)=>{
+    if(!zone)return fmtDate(at/1000,true).slice(11,16);
+    try{return new Intl.DateTimeFormat('en-GB',{timeZone:zone,hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(at));}
+    catch{return fmtDate(at/1000,true).slice(11,16);}
+  };
+  const localDay=(at,zone)=>{
+    try{return new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(at));}
+    catch{return new Date(at).toISOString().slice(0,10);}
+  };
   function movingAverages(all, revision) {
     const tail = all[all.length - 1];
     const key = [revision, all.length, tail?.t, tail?.c].join(':');
@@ -275,14 +292,31 @@
     const lo = b => candle ? b.l : (b.c != null ? b.c : 0);
     const revision = q.tf === 'intraday' ? d?.intradayVer : q.historyStore?.getRevision(q.tf) ?? d?.daily30Ver ?? d?.daily30Version;
     const ma = candle ? movingAverages(history, revision) : {};
+    let vwapSeries=null;
+    if(q._estimatedVwap&&q.tf==='intraday'&&!q._sampled){
+      vwapSeries=[];let day=null,weighted=0,volume=0,broken=false;
+      for(const b of all){
+        const key=localDay(b.t*1000,d?.regularChart?.exchangeZone||q._displayZone||'America/New_York');
+        if(key!==day){day=key;weighted=0;volume=0;broken=false;}
+        if(!Number.isFinite(b.v)||b.v<0||![b.h,b.l,b.c].every(Number.isFinite)){broken=true;vwapSeries.push(null);continue;}
+        if(broken){vwapSeries.push(null);continue;}
+        weighted+=(b.h+b.l+b.c)/3*b.v;volume+=b.v;
+        vwapSeries.push(volume>0?weighted/volume:null);
+      }
+    }
+    q._vwapSeries=vwapSeries;
     const periods=[5,10,20].filter(period=>q.maEnabled?.[period]!==false);
     let maxH = -Infinity, minL = Infinity;
     for (const b of bars) { const h = hi(b), l = lo(b); if (h > maxH) maxH = h; if (l < minL) minL = l; }
     for(const period of periods)for(const value of (ma[period]||[]).slice(a,a+bars.length))if(value!=null&&Number.isFinite(value)){maxH=Math.max(maxH,value);minL=Math.min(minL,value);}
+    for(const value of (vwapSeries||[]).slice(a,a+bars.length))if(value!=null&&Number.isFinite(value)){maxH=Math.max(maxH,value);minL=Math.min(minL,value);}
+    const reference=q.tf==='intraday'&&!q._sampled&&d?.regularChart?.previousCloseReference?.value>0?
+      d.regularChart.previousCloseReference:null;
+    if(reference){maxH=Math.max(maxH,reference.value);minL=Math.min(minL,reference.value);}
     if (!isFinite(maxH)) { maxH = 1; minL = 0; }
     const rect = q._chartWidth ? {width:q._chartWidth} : q.cv?.getBoundingClientRect?.();
     q._chartWidth = rect?.width || 1000;
-    const W = Math.max(1, Number(rect?.width) || 1000), H = W < 420 ? 220 : 240, L = 8, padT = 8, padB = 24;
+    const W = Math.max(1, Number(rect?.width) || 1000), H = q._chartHeight || (W < 420 ? 220 : 240), padT = 8, padB = 24;
     const span = Math.max((maxH - minL) || 0, (maxH || 1) * 0.0005);
     const top = maxH + span * 0.08, bot = minL - span * 0.08;
     const axisFont=(W<420?12:11)+'px sans-serif', measure=q.cv?.getContext?.('2d');
@@ -290,13 +324,32 @@
     const money=formatterFor(displayData).money;
     const labels=Array.from({length:5},(_,g)=>money(top-(top-bot)*g/4)).concat(bars.map(b=>money(b.c)));
     const textWidth=Math.max(0,...labels.map(text=>measure?.measureText?.(text).width??String(text).length*7));
-    const R=Math.min(Math.max(40,W-L-100),Math.max(56,Math.ceil(textWidth)+18));
+    const intraday=q.tf==='intraday';
+    const L=intraday?Math.min(92,Math.max(54,Math.ceil(textWidth)+12)):8;
+    const R=intraday?Math.min(68,Math.max(50,W-L-80)):Math.min(Math.max(40,W-L-100),Math.max(56,Math.ceil(textWidth)+18));
     const plotW = Math.max(1,W - L - R), n = bars.length;
     const slot = plotW / Math.max(n, 1);
-    const hVol = 46, chartH = H - padT - hVol - padB, yTop = padT;
+    const hVol = q._chartHeight ? Math.max(56,Math.round(H*.2)) : 56, chartH = H - padT - hVol - padB - 8, yTop = padT;
     const y = v => yTop + ((top - v) / (top - bot)) * chartH;
-    const x = i => L + (i + 0.5) * slot;   // 蜡烛居中于槽位, 实体留间隙
-    return { ma, periods, axisFont, intraday:q.tf==='intraday', history, live, W, H, L, R, top, bot, n, slot, hVol, chartH, yTop, y, x, bars, all, candle, a, vis };
+    const sessions=intraday&&!q._sampled?d?.regularChart?.regularSessions||[]:[];
+    const full=vis>=all.length&&q.followEnd;
+    const start=full?sessions[0]?.open_at_ms:bars[0]?.t*1000;
+    const end=full?sessions.at(-1)?.close_at_ms:bars.at(-1)?.t*1000;
+    const visibleSessions=sessions.map(s=>({open:Math.max(start,s.open_at_ms),close:Math.min(end,s.close_at_ms)}))
+      .filter(s=>Number.isFinite(s.open)&&Number.isFinite(s.close)&&s.close>s.open);
+    const duration=visibleSessions.reduce((sum,s)=>sum+s.close-s.open,0);
+    const timeline=intraday&&!q._sampled&&duration>0;
+    const xAtTime=ms=>{
+      let elapsed=0;
+      for(const s of visibleSessions){if(ms>=s.close)elapsed+=s.close-s.open;
+        else if(ms>s.open){elapsed+=ms-s.open;break;}else break;}
+      return L+Math.max(0,Math.min(1,elapsed/duration))*plotW;
+    };
+    const x = i => timeline?xAtTime(bars[i].t*1000):L+(i+.5)*slot;
+    const deltas=bars.slice(1).map((b,i)=>b.t-bars[i].t).filter(v=>v>0&&v<3600).sort((a,b)=>a-b);
+    const gapSeconds=Math.max(600,(deltas[Math.floor(deltas.length/2)]||300)*3);
+    return { ma, vwapSeries, periods, axisFont, intraday, history, live, W, H, L, R, top, bot, n, slot, hVol, chartH,
+      yTop, y, x, xAtTime, timeline, visibleSessions, gapSeconds, reference,bars, all, candle, a, vis };
   }
 
   function pTicks(q, p) {
@@ -305,13 +358,18 @@
     for (let g = 0; g <= 4; g++) {
       const v = p.top - (p.top - p.bot) * g / 4;
       cx.fillStyle = CHART_THEME.axisText;
-      cx.fillText(money(v), p.W - p.R + 8, p.yTop + p.chartH * g / 4,p.R-10);
+      const yy=p.yTop+p.chartH*g/4;
+      if(p.intraday){
+        cx.textAlign='right';cx.fillText(money(v),p.L-6,yy,p.L-8);
+        if(p.reference){const pct=(v/p.reference.value-1)*100;
+          cx.textAlign='left';cx.fillText((pct>=0?'+':'')+pct.toFixed(2)+'%',p.W-p.R+5,yy,p.R-7);}
+      }else cx.fillText(money(v), p.W - p.R + 8, yy,p.R-10);
     }
     cx.textBaseline = 'alphabetic';
   }
   // 右轴价签(圆角小牌, 交易所式)
   function priceTag(cx, p, yy, text, bg) {
-    const w = p.R - 10, h = 16, x0 = p.W - p.R + 5;
+    const w = p.intraday ? p.L-8 : p.R-10, h = 16, x0 = p.intraday ? 2 : p.W-p.R+5;
     cx.fillStyle = bg;
     if (cx.roundRect) { cx.beginPath(); cx.roundRect(x0, yy - h / 2, w, h, 3); cx.fill(); }
     else cx.fillRect(x0, yy - h / 2, w, h);
@@ -337,28 +395,55 @@
     pTicks(q, p);
     // 底部时间刻度
     cx.fillStyle = CHART_THEME.axisText; cx.font = p.axisFont; cx.textAlign = 'center';
-    // Include both visible endpoints; stride-only ticks could omit the live
-    // point and leave an older time as the final label.
-    const tickCount=Math.min(n,Math.max(2,Math.floor((W-L-R)/90)));
-    let previousDate=null;
-    for (let tick=0;tick<tickCount;tick++) {
-      const i=tickCount===1?0:Math.round(tick*(n-1)/(tickCount-1));
-      const ds = fmtDate(bars[i].t, true);
-      const date=bars[i].periodStart||ds.slice(0,10),label=p.intraday?((q._sampled||previousDate&&date!==previousDate?ds.slice(5,10)+' ':'')+ds.slice(11)):q.tf==='yearly'?date.slice(0,4):q.tf==='monthly'?date.slice(0,7):q.tf==='weekly'?date:ds.slice(5,10);
-      const maxWidth=Math.min(100,W-L-R),width=Math.min(maxWidth,cx.measureText?.(label).width??label.length*7);
-      cx.fillText(label,Math.max(L+width/2,Math.min(W-R-width/2,p.x(i))),H-7,maxWidth);previousDate=date;
+    if(p.timeline){
+      const first=p.visibleSessions[0].open,last=p.visibleSessions.at(-1).close;
+      if(q._fiveDay){
+        const dates=new Set();
+        for(const s of p.visibleSessions){const date=localDay(s.open,q._displayZone||'America/New_York');
+          if(dates.has(date))continue;dates.add(date);
+          cx.fillText(date.slice(5),p.xAtTime(s.open)+15,H-7,44);
+        }
+      }else for(const at of [first,first+(last-first)/2,last]){
+        const label=localClock(at,q._displayZone);
+        cx.fillText(label,p.xAtTime(at),H-7,52);
+      }
+      cx.textAlign='left';cx.fillText(q._zoneLabel||'北京时间',L,H-18,85);
+    }else{
+      const tickCount=Math.min(n,Math.max(2,Math.floor((W-L-R)/90)));
+      let previousDate=null;
+      for (let tick=0;tick<tickCount;tick++) {
+        const i=tickCount===1?0:Math.round(tick*(n-1)/(tickCount-1));
+        const ds = fmtDate(bars[i].t, true);
+        const date=bars[i].periodStart||ds.slice(0,10),label=p.intraday?((q._sampled||previousDate&&date!==previousDate?ds.slice(5,10)+' ':'')+ds.slice(11)):q.tf==='yearly'?date.slice(0,4):q.tf==='monthly'?date.slice(0,7):q.tf==='weekly'?date:ds.slice(5,10);
+        const maxWidth=Math.min(100,W-L-R),width=Math.min(maxWidth,cx.measureText?.(label).width??label.length*7);
+        cx.fillText(label,Math.max(L+width/2,Math.min(W-R-width/2,p.x(i))),H-7,maxWidth);previousDate=date;
+      }
     }
-    // 成交量: 与蜡烛同宽同色
+    if(p.reference){const yy=Math.round(p.y(p.reference.value))+.5;
+      cx.strokeStyle='rgba(96,105,115,.6)';cx.setLineDash([4,4]);cx.beginPath();cx.moveTo(L,yy);cx.lineTo(W-R,yy);cx.stroke();cx.setLineDash([]);
+    }
+    if(q._fiveDay&&p.timeline){let lastDay=null;for(const s of p.visibleSessions){const day=localDay(s.open,q._displayZone||'America/New_York');
+      if(day===lastDay)continue;lastDay=day;const xx=p.xAtTime(s.open);
+      cx.strokeStyle='rgba(31,30,29,.12)';cx.beginPath();cx.moveTo(xx,yTop);cx.lineTo(xx,yTop+chartH);cx.stroke();}}
+    // 成交量: 仅已核验的区间量进入尺度。null 保持缺失语义。
     const col = b => b.c >= b.o ? UP : DOWN;
-    const maxV = Math.max.apply(null, bars.map(b => b.v || 0)) || 1;
+    const volumes=bars.map(b=>b.v).filter(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0);
+    const maxV = volumes.length?Math.max(1,...volumes):1;
     cx.globalAlpha = 0.45;
     for (let i = 0; i < n; i++) {
-      const b = bars[i]; const vh = Math.max(1, (b.v || 0) / maxV * hVol);
+      const b = bars[i];
       if(b._live||!Number.isFinite(b.v)||b.v<=0)continue;
-      cx.fillStyle = candle ? col(b) : (b.c >= bars[0].c ? UP : DOWN);
+      const vh=Math.max(1,b.v/maxV*hVol);
+      const prior=bars[i-1],sameSession=prior&&(!p.timeline||p.visibleSessions.some(s=>
+        prior.t*1000>=s.open&&b.t*1000<s.close));
+      cx.fillStyle = candle ? col(b) : !sameSession?'#808b99':b.c>prior.c?UP:b.c<prior.c?DOWN:'#808b99';
       cx.fillRect(Math.round(p.x(i) - bw / 2), vtop + (hVol - vh), Math.max(1, Math.round(bw)), vh);
     }
     cx.globalAlpha = 1;
+    cx.fillStyle=CHART_THEME.axisText;cx.font=p.axisFont;cx.textAlign='left';
+    const unit=q.tf==='intraday'?q.d?.regularChart?.volumeUnit:q.historyStore?.getMeta(q.tf)?.meta?.volumeUnit;
+    const unitText=unit==='shares'?'股':unit==='lots'?'手':unit==='contracts'?'张':'';
+    cx.fillText(volumes.length?'量'+(unitText?'('+unitText+')':'')+' '+(window.PANEL_FORMAT?.fmtVol?.(maxV)||maxV):'区间成交量暂缺',L,vtop+10,Math.max(70,W-L-R));
     cx.save();cx.beginPath();cx.rect(L,yTop,Math.max(1,W-L-R),chartH);cx.clip();
     if (candle) {
       for (let i = 0; i < n; i++) {
@@ -380,12 +465,31 @@
     } else {
       const lineBars=bars.filter(b=>!b._live),closes=lineBars.map(b=>b.c);
       const up = closes[closes.length - 1] >= closes[0]; const lc = up ? UP : DOWN;
-      cx.beginPath(); closes.forEach((v, i) => { const yy = p.y(v); if (i === 0 || lineBars[i]._sample&&sampleGap(lineBars[i-1],lineBars[i])) cx.moveTo(p.x(i), yy); else cx.lineTo(p.x(i), yy); });
-      cx.strokeStyle = lc; cx.lineWidth = 1.6; cx.lineJoin = 'round'; cx.stroke();
-      cx.lineTo(p.x(closes.length - 1), yTop + chartH); cx.lineTo(p.x(0), yTop + chartH); cx.closePath();
       const g = cx.createLinearGradient(0, yTop, 0, yTop + chartH); g.addColorStop(0, up ? 'rgba(214,59,59,.13)' : 'rgba(26,143,78,.13)'); g.addColorStop(1, 'rgba(0,0,0,0)');
-      cx.fillStyle = g; if(!q._sampled)cx.fill();
+      const segments=[];let segment=[];
+      lineBars.forEach((b,i)=>{
+        const prior=lineBars[i-1],sameSession=!p.timeline||p.visibleSessions.some(s=>
+          prior?.t*1000>=s.open&&b.t*1000<=s.close);
+        if(prior&&(q._sampled?sampleGap(prior,b):b.t-prior.t>p.gapSeconds||!sameSession||
+          prior.source&&b.source&&prior.source!==b.source)){
+          if(segment.length)segments.push(segment);segment=[];
+        }
+        segment.push(i);
+      });if(segment.length)segments.push(segment);
+      for(const indices of segments){
+        cx.beginPath();indices.forEach((i,j)=>{const yy=p.y(lineBars[i].c);if(j)cx.lineTo(p.x(i),yy);else cx.moveTo(p.x(i),yy);});
+        cx.strokeStyle=lc;cx.lineWidth=1.6;cx.lineJoin='round';cx.stroke();
+        if(!q._sampled){const first=indices[0],last=indices.at(-1);
+          cx.lineTo(p.x(last),yTop+chartH);cx.lineTo(p.x(first),yTop+chartH);cx.closePath();cx.fillStyle=g;cx.fill();}
+      }
       if(q._sampled||lineBars.length===1){cx.fillStyle=lc;lineBars.forEach((b,i)=>{cx.beginPath();cx.arc(p.x(i),p.y(b.c),2.5,0,Math.PI*2);cx.fill();});}
+      if(p.vwapSeries){const values=p.vwapSeries.slice(p.a,p.a+n);let drawing=false;
+        cx.beginPath();for(let i=0;i<values.length;i++){const value=values[i],b=bars[i],prior=bars[i-1];
+          const joined=prior&&b.t-prior.t<=p.gapSeconds&&(!p.timeline||p.visibleSessions.some(s=>
+            prior.t*1000>=s.open&&b.t*1000<=s.close));
+          if(value==null){drawing=false;continue;}
+          if(!drawing||!joined){cx.moveTo(p.x(i),p.y(value));drawing=true;}else cx.lineTo(p.x(i),p.y(value));
+        }cx.strokeStyle='#e0a13c';cx.lineWidth=1.5;cx.stroke();}
     }
     const liveIndex=bars.findIndex(b=>b._live);
     if(liveIndex>=0){
@@ -395,12 +499,26 @@
       cx.setLineDash([]);cx.fillStyle=cx.strokeStyle;cx.beginPath();cx.arc(p.x(liveIndex),p.y(live.c),3,0,Math.PI*2);cx.fill();
     }
     cx.restore();
+    if(q._detail&&n>1){
+      const valueHigh=b=>candle?b.h:b.c,valueLow=b=>candle?b.l:b.c;
+      let high=0,low=0;for(let i=1;i<n;i++){
+        if(valueHigh(bars[i])>valueHigh(bars[high]))high=i;
+        if(valueLow(bars[i])<valueLow(bars[low]))low=i;
+      }
+      cx.font=p.axisFont;cx.textAlign='center';cx.fillStyle='#475569';
+      const xLabel=i=>Math.max(L+44,Math.min(W-R-44,p.x(i)));
+      cx.fillText('高 '+money(valueHigh(bars[high])),xLabel(high),Math.max(yTop+11,p.y(valueHigh(bars[high]))-7),88);
+      if(low!==high)cx.fillText('低 '+money(valueLow(bars[low])),xLabel(low),
+        Math.min(yTop+chartH-2,p.y(valueLow(bars[low]))+14),88);
+      cx.textAlign='left';
+    }
     // 最新价虚线 + 右轴价签(红/绿底白字)
     const last = bars[n - 1];
     const lyp = Math.round(p.y(last.c)) + 0.5;
     cx.strokeStyle = 'rgba(31,30,29,.35)'; cx.setLineDash([4, 4]); cx.lineWidth = 1;
     cx.beginPath(); cx.moveTo(L, lyp); cx.lineTo(W - R, lyp); cx.stroke(); cx.setLineDash([]);
-    priceTag(cx, p, lyp, money(last.c), candle&&!last._live ? (last.c >= last.o ? UP : DOWN) : (last.c >= bars[0].c ? UP : DOWN));
+    priceTag(cx, p, lyp, money(last.c), candle&&!last._live ? (last.c >= last.o ? UP : DOWN) :
+      (last.c >= (p.reference?.value||bars[0].c) ? UP : DOWN));
   }
   function drawCursor(q, p, hover, cx) {
     const money = formatterFor(q._chartData||q.d).money;
@@ -904,7 +1022,7 @@
       return '<b>'+esc(pointTime(b.t))+'</b> 最新报价点 <b>'+esc(money(b.c))+'</b> · '+esc(b.source)+' · 无成交量数据'+
         ' · 历史分时截至 '+esc(pointTime(last.t))+'（早 '+Math.max(0,Math.round(b.t-last.t))+' 秒）';
     }
-    const base = p.bars[0].c;
+    const base = p.candle ? p.bars[0].c : p.reference?.value||p.bars[0].c;
     const chg = p.candle ? b.c - b.o : b.c - base;
     const chgP = p.candle ? (b.o ? chg / b.o * 100 : 0) : (base ? chg / base * 100 : 0);
     const up = chg >= 0, cl = up ? UP : DOWN, sg = up ? '+' : '';
@@ -912,9 +1030,12 @@
     const periodLabel=q.tf==='yearly'?b.periodStart?.slice(0,4):q.tf==='monthly'?b.periodStart?.slice(0,7):q.tf==='weekly'?b.periodStart:fmtDate(b.t,q.tf==='intraday');
     const quality=historyQuality(q,b)+(q.tf==='intraday'&&q._observationNote?' · '+q._observationNote:'');
     let s = '<b>' + window.PANEL_FORMAT.esc(periodLabel) + '</b>  ';
-    if (p.candle) s += '开' + c(money(b.o)) + ' 高' + c(money(b.h)) + ' 低' + c(money(b.l)) + ' 收' + c(money(b.c)) + ' 较开盘' + c(sg + money(chg) + ' (' + sg + chgP.toFixed(2) + '%)') + ' 量' + c(fmtVol(b.v)) + '  '
+    const volumeUnit=q.tf==='intraday'?q.d?.regularChart?.volumeUnit:q.historyStore?.getMeta(q.tf)?.meta?.volumeUnit;
+    const volumeLabel=window.PANEL_FORMAT.esc(volumeUnit==='shares'?'股':volumeUnit==='lots'?'手':volumeUnit||'单位待核验');
+    if (p.candle) s += '开' + c(money(b.o)) + ' 高' + c(money(b.h)) + ' 低' + c(money(b.l)) + ' 收' + c(money(b.c)) + ' 较开盘' + c(sg + money(chg) + ' (' + sg + chgP.toFixed(2) + '%)') + ' 量' + c(fmtVol(b.v)) + ' '+volumeLabel+'  '
       + p.periods.map(per => { const mc=window.PANEL_CHART_ENGINE.CHART_THEME.ma[per].text,v = p.ma[per][p.a + bi]; return '<span style="color:' + mc + '">MA' + per + ' ' + (v == null ? '—' : money(v)) + '</span>'; }).join(' ');
-    else s += '价' + c(money(b.c)) + ' 区间涨跌' + c(sg + money(chg) + ' (' + sg + chgP.toFixed(2) + '%)') + ' 量' + c(fmtVol(b.v));
+    else s += '价' + c(money(b.c)) + (p.reference?' 较昨收':' 区间涨跌') + c(sg + money(chg) + ' (' + sg + chgP.toFixed(2) + '%)') + ' 量' + c(fmtVol(b.v)) + ' '+volumeLabel+
+      ' · 来源 '+window.PANEL_FORMAT.esc(q.d?.regularChart?.source||'待核验');
     s += window.PANEL_FORMAT.esc(quality);
     return s;
   }
@@ -922,11 +1043,16 @@
   function attachHover(q) {
     if (q.hoverAttached) return; q.hoverAttached = true;
     const cv = q.cv;
-    function idxAt(clientX) {
+    function indexAtX(p,x){
+      let lo=0,hi=p.n-1;
+      while(lo<hi){const mid=(lo+hi)>>1;if(p.x(mid)<x)lo=mid+1;else hi=mid;}
+      return lo>0&&Math.abs(p.x(lo-1)-x)<Math.abs(p.x(lo)-x)?lo-1:lo;
+    }
+    function idxAt(clientX,clientY) {
       const p = q.plot; if (!p || !p.n) return null;
       const rect = q._pointerRect ||= cv.getBoundingClientRect();
-      const x0 = (clientX - rect.left) * (p.W / rect.width);
-      return Math.max(0, Math.min(p.n - 1, Math.floor((x0 - p.L) / p.slot)));
+      const x0=q._pointerMap?q._pointerMap(clientX,clientY).x:(clientX-rect.left)*(p.W/rect.width);
+      return indexAtX(p,x0);
     }
     function setHover(i) { if (!q.plot) return; q.hoverIdx = i; updatePoint(q); }
     function clearHover() { if (!q.plot || q.keyboardSelection) return; q.hoverIdx = null; updatePoint(q); }
@@ -938,10 +1064,10 @@
       setHover(e.key === 'Home' ? 0 : e.key === 'End' ? p.n-1 : e.key === 'Escape' ? null : Math.max(0,Math.min(p.n-1,current+(e.key === 'ArrowRight' ? 1 : -1))));
     });
     cv.addEventListener('pointerenter',()=>{q._pointerRect=cv.getBoundingClientRect();});
-    cv.addEventListener('mousemove', (e) => { const i = idxAt(e.clientX); if (i != null && i !== q.hoverIdx) {q.keyboardSelection=false;setHover(i);} });
+    cv.addEventListener('mousemove', (e) => { const i = idxAt(e.clientX,e.clientY); if (i != null && i !== q.hoverIdx) {q.keyboardSelection=false;setHover(i);} });
     cv.addEventListener('mouseleave', clearHover);
-    cv.addEventListener('touchstart', (e) => { const i = idxAt(e.touches[0].clientX); if (i != null) setHover(i); }, { passive: true });
-    cv.addEventListener('touchmove', (e) => { const i = idxAt(e.touches[0].clientX); if (i != null) setHover(i); }, { passive: true });
+    cv.addEventListener('touchstart', (e) => { const i = idxAt(e.touches[0].clientX,e.touches[0].clientY); if (i != null) setHover(i); }, { passive: true });
+    cv.addEventListener('touchmove', (e) => { const i = idxAt(e.touches[0].clientX,e.touches[0].clientY); if (i != null) setHover(i); }, { passive: true });
     cv.addEventListener('touchend', clearHover);
     // 滚轮缩放: 锚定光标下的那根蜡烛(交易所式)
     cv.addEventListener('wheel', (e) => {
@@ -949,7 +1075,7 @@
       const newVis = Math.max(window.PANEL_TIMEFRAMES?.get(q.tf)?.minVisible || 1, Math.min(p.all.length, Math.round(p.vis * (e.deltaY > 0 ? 1.2 : 1 / 1.2))));
       if (newVis === p.vis) return; e.preventDefault();
       const rect = cv.getBoundingClientRect();
-      const gi = p.a + Math.floor(((e.clientX - rect.left) * (p.W / rect.width) - p.L) / p.slot);
+      const gi = p.a + indexAtX(p,(e.clientX-rect.left)*(p.W/rect.width));
       let ns = Math.round(gi - (gi - p.a) * newVis / p.vis);
       ns = Math.max(0, Math.min(p.all.length - newVis, ns));
       q.visN[q.tf] = newVis; q.winStart = ns; q.followEnd = ns >= p.all.length - newVis;
@@ -1036,15 +1162,18 @@
       const last=all[all.length-1];
       const live=q.tf==='intraday'&&!q._sampled?window.PANEL_CHART_ENGINE.livePointFor(q.d):null;
       const liveKey=live?JSON.stringify(live):'';
+      const regularKey=q.tf==='intraday'?JSON.stringify([q.d?.regularChart?.tradeDate,
+        q.d?.regularChart?.previousCloseReference,q.d?.regularChart?.regularSessions,
+        q.d?.regularChart?.volumeQuality?.status]):'';
        const revision=q.tf==='intraday'?q.d.intradayVer:q.historyStore?.getRevision(q.tf)??(q.d.daily30Ver??q.d.daily30Version);
-      const key=[q.tf,idOf(all),revision,all.length,last?.t,last?.o,last?.h,last?.l,last?.c,last?.v,liveKey,q.winStart,q.followEnd,q.visN[q.tf],q._chartWidth,JSON.stringify(q.maEnabled),formatKey(chartData(q)),q.historyStore?.getMeta(q.tf)?.status].join('|');
+      const key=[q.tf,idOf(all),revision,all.length,last?.t,last?.o,last?.h,last?.l,last?.c,last?.v,liveKey,regularKey,q.winStart,q.followEnd,q.visN[q.tf],q._chartWidth,JSON.stringify(q.maEnabled),formatKey(chartData(q)),q.historyStore?.getMeta(q.tf)?.status].join('|');
       if(!force && key===q._drawKey)return;
        q._chartData=chartData(q); const p=engine.computePlot(q);
       const width=Math.round(p.W*DPR),height=Math.round(p.H*DPR);
       for(const cv of [q.cv,q.cursor]) if(cv){if(cv.width!==width)cv.width=width;if(cv.height!==height)cv.height=height;cv.style.width='100%';cv.style.height=p.H+'px';}
       p.ctx=q.cv.getContext('2d');p.ctx.setTransform(width/p.W,0,0,height/p.H,0,0);q.plot=p;
       engine.drawPlot(q,p,null); q._sig=key;
-      q._drawKey=[q.tf,idOf(all),revision,all.length,last?.t,last?.o,last?.h,last?.l,last?.c,last?.v,liveKey,q.winStart,q.followEnd,q.visN[q.tf],q._chartWidth,JSON.stringify(q.maEnabled),formatKey(chartData(q)),q.historyStore?.getMeta(q.tf)?.status].join('|');
+      q._drawKey=[q.tf,idOf(all),revision,all.length,last?.t,last?.o,last?.h,last?.l,last?.c,last?.v,liveKey,regularKey,q.winStart,q.followEnd,q.visN[q.tf],q._chartWidth,JSON.stringify(q.maEnabled),formatKey(chartData(q)),q.historyStore?.getMeta(q.tf)?.status].join('|');
       updatePoint(q);
        const summary=q.el.querySelector('.chart-summary');if(summary)summary.textContent=q.symbol+' '+(window.PANEL_TIMEFRAMES?.get(q.tf)?.label|| (q.tf==='intraday'?'分时':'日K'))+'，'+p.n+' 个数据点，末值 '+formatterFor(q._chartData).money(p.all.at(-1).c)+(live?' · 最新报价点 '+live.source+' · 历史分时截至 '+pointTime(last.t):'');
       if(q.slider){q.slider.min=0;q.slider.max=Math.max(0,p.all.length-p.vis);q.slider.value=p.a;q.slider.hidden=p.all.length-p.vis<=0;}
@@ -1057,7 +1186,11 @@
       const label=window.PANEL_TIMEFRAMES?.get(q.tf)?.label||'日K';
       const cooling=!intra&&e?.retryAt>Date.now();
       const checked=intra?q.d?.slowFields?.intraday?.updatedAt:m?.sourceCheckedAt;
-      let text=intra?(q._sampled?'报价采样 · 非完整历史':'来源分时 · '+sourceName(q.d?.slowFields?.intraday?.source||q.d?.src)):
+      const regular=q.d?.regularChart;
+      let text=intra?(q._sampled?'常规时段报价采样 · 非完整历史':
+        '常规分时 '+(regular?.tradeDate||'日期待核验')+' · '+sourceName(regular?.source||q.d?.src)+
+        (regular?.volumeQuality?.status==='missing'?' · 区间成交量暂缺':'')+
+        (regular?.missingReason?' · '+regular.missingReason:'')):
         e?.status==='loading'?label+' · 加载中…':e?.status==='error'?label+' · 历史来源暂不可用':
         m?label+' · '+sourceName(m.source)+(e.status==='stale'?' · 缓存历史':m.prewarmed?' · 后台已预备':'')+(m.refreshing?' · 后台更新中':''):label+(q.historyPrepared?' · 后台正在准备':' · 尚未加载');
       text+=intra?' · 北京时间 UTC+8':' · 交易所交易日';
@@ -1334,6 +1467,288 @@
 
 ;
 
+;/* public/modules/panel-chart-detail.js */
+(() => {
+  const createChartDetailView=({document,formatterFor,UP,DOWN})=>{
+    const engine=window.PANEL_CHART_ENGINE.createChartEngine({UP,DOWN,
+      fmtDate:window.PANEL_FORMAT.fmtDate,formatterFor,maSeries:window.PANEL_CHART.maSeries});
+    const fmt=window.PANEL_FORMAT,periods=[['intraday','一日'],['fiveDay','五日'],['daily30','日K'],['weekly','周K'],['monthly','月K'],['yearly','年K']];
+    let dialog=null,current=null,tf='intraday',five=null,remote=null,requestId=0,fetchAbort=null,poll=null,
+      drawFrame=null,resizeObserver=null,scrollStyle='',focusReturn=null,openedHistory=false,manualRotate=null,
+      hover=null,drag=null,lastTap=null,view={};
+    const make=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!=null)el.textContent=text;return el;};
+    const number=v=>typeof v==='number'&&Number.isFinite(v)?v:null;
+    const zone=()=>current?.d?.regularChart?.exchangeZone||'UTC';
+    const zoneLabel=()=>zone()==='America/New_York'?'美东':zone()==='Asia/Shanghai'?'北京时间':zone();
+    const time=(ms,selectedZone=zone())=>{
+      if(!number(ms))return '时间未提供';
+      try{return new Intl.DateTimeFormat('zh-CN',{timeZone:selectedZone,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(ms));}
+      catch{return new Date(ms).toISOString().slice(0,16);}
+    };
+    const reason={SOURCE_HAS_NO_BOOK:'来源未提供盘口',INSTRUMENT_TYPE:'该品种无盘口',RETAINED_BOOK:'盘口已过期',
+      NO_RECEIVED_TRADES:'该时段尚未收到逐笔',TRADE_STREAM_NOT_CONFIGURED:'逐笔源未配置',
+      FIVE_DAY_SOURCE_GAPS:'五日历史覆盖不足',FIVE_DAY_SOURCE_UNAVAILABLE:'五日历史来源不可用',
+      FIVE_DAY_SESSION_OPEN:'当日常规时段尚未收盘',
+      SOURCE_COOLDOWN:'五日历史来源限流冷却中',REGULAR_HISTORY_NOT_AVAILABLE:'常规历史暂不可用'};
+    function ensure(){
+      if(dialog)return;
+      dialog=make('dialog','chart-detail-dialog');dialog.setAttribute('aria-labelledby','chart-detail-title');
+      dialog.innerHTML=`<div class="chart-detail-shell">
+        <header class="chart-detail-head"><div class="chart-detail-identity"><strong id="chart-detail-title">证券行情</strong><span class="cd-status"></span></div>
+        <div class="cd-quote"><strong class="cd-price">—</strong><span class="cd-change">—</span><small class="cd-baseline"></small><small class="cd-extension"></small></div>
+        <div class="cd-facts"></div><button type="button" class="cd-close" aria-label="关闭行情详情">×</button></header>
+        <div class="chart-detail-body"><main class="cd-main"><div class="cd-chart-info" role="status"></div>
+          <div class="cd-plot"><canvas class="cd-canvas" tabindex="0" aria-label="详情行情图，左右键浏览数据点"></canvas>
+            <canvas class="cd-cursor" aria-hidden="true"></canvas></div><div class="cd-point" role="status"></div></main>
+          <aside class="cd-side"><div class="cd-book"><h3>买卖盘口 · 一档</h3><div class="cd-book-status"></div>
+            <div class="cd-book-row"><span>卖一</span><b class="cd-ask">—</b><span class="cd-ask-size">—</span></div>
+            <div class="cd-book-row"><span>买一</span><b class="cd-bid">—</b><span class="cd-bid-size">—</span></div><small class="cd-book-meta"></small></div>
+            <div class="cd-tape"><div class="cd-side-tabs"><button type="button" data-side="tape" aria-pressed="true">逐笔明细</button>
+              <button type="button" data-side="stats" aria-pressed="false">成交统计</button></div>
+              <div class="cd-tape-status"></div><div class="cd-tape-list"></div><div class="cd-tape-stats" hidden></div></div></aside></div>
+        <footer class="chart-detail-foot"><nav class="cd-periods" aria-label="行情周期"></nav>
+          <div class="cd-tools"><button type="button" data-action="in" aria-label="放大图表">＋</button><button type="button" data-action="out" aria-label="缩小图表">－</button>
+          <button type="button" data-action="fit">全览</button><button type="button" data-action="latest">最新</button>
+          <button type="button" data-action="shot">导出PNG</button><button type="button" data-action="rotate">横向显示</button></div></footer></div>`;
+      const nav=dialog.querySelector('.cd-periods');
+      for(const [key,label] of periods){const b=make('button','',label);b.type='button';b.dataset.tf=key;nav.appendChild(b);}
+      document.body.appendChild(dialog);
+      dialog.querySelector('.cd-close').addEventListener('click',()=>close());
+      dialog.addEventListener('cancel',e=>{e.preventDefault();close();});
+      dialog.querySelectorAll('[data-tf]').forEach(b=>b.addEventListener('click',()=>void selectPeriod(b.dataset.tf)));
+      dialog.querySelectorAll('[data-side]').forEach(b=>b.addEventListener('click',()=>selectSide(b.dataset.side)));
+      dialog.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>action(b.dataset.action)));
+      const cv=dialog.querySelector('.cd-canvas');
+      cv.addEventListener('pointermove',e=>pointerMove(e));cv.addEventListener('pointerleave',()=>{if(!drag){hover=null;paintCursor();}});
+      cv.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;
+        const p=view.plot;drag={id:e.pointerId,start:local(e,p),winStart:view.winStart??0,moved:false};
+        try{cv.setPointerCapture(e.pointerId);}catch{}
+      });
+      cv.addEventListener('pointerup',e=>{if(!drag||e.pointerId!==drag.id)return;
+        const point=local(e,view.plot),travel=Math.hypot(point.x-drag.start.x,point.y-drag.start.y),isTap=travel<12;
+        drag=null;if(isTap){const now=Date.now();if(lastTap&&now-lastTap.at<300&&
+          Math.hypot(lastTap.x-point.x,lastTap.y-point.y)<12){lastTap=null;view.followEnd=true;queueDraw();}
+          else lastTap={at:now,x:point.x,y:point.y};}
+      });
+      cv.addEventListener('pointercancel',()=>{drag=null;});
+      cv.addEventListener('wheel',e=>{if(!(e.ctrlKey||e.metaKey))return;e.preventDefault();zoom(e.deltaY>0?'out':'in',e);},{passive:false});
+      cv.addEventListener('keydown',e=>{const p=view.plot;if(!p?.n)return;
+        if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();hover=e.key==='Home'?0:e.key==='End'?p.n-1:
+          Math.max(0,Math.min(p.n-1,(hover??p.n-1)+(e.key==='ArrowLeft'?-1:1)));paintCursor();}
+        if(e.key==='Escape'){e.preventDefault();close();}
+      });
+    }
+    function local(e,p){
+      const rect=dialog.querySelector('.cd-canvas').getBoundingClientRect(),w=p?.W||rect.width,h=p?.H||rect.height;
+      return dialog.classList.contains('is-rotated')?
+        {x:(e.clientY-rect.top)*w/Math.max(1,rect.height),y:(rect.right-e.clientX)*h/Math.max(1,rect.width)}:
+        {x:(e.clientX-rect.left)*w/Math.max(1,rect.width),y:(e.clientY-rect.top)*h/Math.max(1,rect.height)};
+    }
+    function nearest(p,x){let lo=0,hi=p.n-1;while(lo<hi){const mid=(lo+hi)>>1;if(p.x(mid)<x)lo=mid+1;else hi=mid;}
+      return lo>0&&Math.abs(p.x(lo-1)-x)<Math.abs(p.x(lo)-x)?lo-1:lo;}
+    function pointerMove(e){const p=view.plot;if(!p?.n)return;const point=local(e,p);
+      if(drag&&drag.id===e.pointerId){const dx=point.x-drag.start.x;
+        if(Math.abs(dx)>3)drag.moved=true;
+        if(drag.moved){const max=Math.max(0,p.all.length-p.vis),step=p.timeline?Math.max(1,p.W/p.vis):p.slot;
+          const next=Math.max(0,Math.min(max,Math.round(drag.winStart-dx/step)));
+          if(next!==view.winStart){view.winStart=next;view.followEnd=next>=max;queueDraw();}}return;}
+      const idx=nearest(p,point.x);if(idx!==hover){hover=idx;paintCursor();}
+    }
+    function paintCursor(){const p=view.plot,cursor=dialog?.querySelector('.cd-cursor');if(!p||!cursor)return;
+      const c=cursor.getContext('2d');c.setTransform(cursor.width/p.W,0,0,cursor.height/p.H,0,0);
+      engine.drawCursor(view,p,hover,c);
+      const b=p.bars[hover??p.n-1];if(!b)return;
+      const money=formatterFor(view._chartData).money;
+      dialog.querySelector('.cd-point').textContent=time(b.t*1000)+' '+zoneLabel()+' · '+(p.candle?
+        '开 '+money(b.o)+' 高 '+money(b.h)+' 低 '+money(b.l)+' 收 '+money(b.c):'价 '+money(b.c))+
+        ' · 区间量 '+(number(b.v)==null?'暂缺':fmt.fmtVol(b.v)+' 股')+(view._vwapSeries?.[p.a+(hover??p.n-1)]!=null?
+        ' · 估算均价 '+money(view._vwapSeries[p.a+(hover??p.n-1)]):'');
+    }
+    function chartModel(){
+      const q=current;if(!q?.d)return null;
+      const candle=tf!=='intraday'&&tf!=='fiveDay';
+      const fiveChart=five&&{...q.d.regularChart,bars:five.bars,regularSessions:five.regularSessions,
+        previousCloseReference:five.previousCloseReference,tradeDate:five.tradeDates?.at(-1),
+        source:five.source,volumeUnit:five.volumeUnit};
+      const data=tf==='fiveDay'?{...q.d,regularChart:fiveChart,intradayLiveStatus:'unavailable'}:q.d;
+      const bars=tf==='fiveDay'?five?.bars||[]:tf==='intraday'?q.d.regularChart?.bars||[]:q.historyStore?.getSeries(tf)||[];
+      return {data,bars,candle};
+    }
+    function draw(){drawFrame=null;if(!current||!dialog?.open)return;
+      const model=chartModel(),cv=dialog.querySelector('.cd-canvas'),cursor=dialog.querySelector('.cd-cursor');
+      if(!model||!model.bars.length){view.plot=null;for(const c of [cv,cursor])c.getContext('2d').clearRect(0,0,c.width,c.height);
+        dialog.querySelector('.cd-point').textContent='该周期历史暂不可用';return;}
+      const plotBox=dialog.querySelector('.cd-plot').getBoundingClientRect();
+      const rotated=dialog.classList.contains('is-rotated');
+      const width=rotated?plotBox.height:plotBox.width,height=rotated?plotBox.width:plotBox.height;
+      const dpr=Math.min(2,Math.max(1,window.devicePixelRatio||1));
+      view={...view,d:model.data,_chartData:model.data,tf:tf==='fiveDay'?'intraday':tf,cv,
+        historyStore:current.historyStore,_displayIntraday:model.candle?null:model.bars,
+        _sampled:false,_fiveDay:tf==='fiveDay',_detail:true,_displayZone:zone(),_zoneLabel:zoneLabel(),
+        _estimatedVwap:!model.candle,maEnabled:{5:true,10:true,20:true},visN:view.visN||{},
+        followEnd:view.followEnd??true,winStart:view.winStart??null,
+        _chartWidth:Math.max(300,Math.round(width)),_chartHeight:Math.max(210,Math.round(height))};
+      const p=engine.computePlot(view);view.plot=p;
+      for(const c of [cv,cursor]){c.width=Math.round(p.W*dpr);c.height=Math.round(p.H*dpr);c.style.width=p.W+'px';c.style.height=p.H+'px';}
+      p.ctx=cv.getContext('2d');p.ctx.setTransform(cv.width/p.W,0,0,cv.height/p.H,0,0);
+      engine.drawPlot(view,p,hover);paintCursor();
+      const chart=tf==='fiveDay'?five:current.d.regularChart;
+      const label=tf==='fiveDay'?'五日 '+(five?.coveredDays||0)+'/5 个交易日':
+        tf==='intraday'?'一日 '+(chart?.tradeDate||'日期待核验'):'交易所历史K线';
+      dialog.querySelector('.cd-chart-info').textContent=label+' · '+p.all.length+' 个价格点 · '+(chart?.source||'来源待核验')+
+        (chart?.resolution?' '+chart.resolution:'')+
+        (chart?.coverage==='single-exchange'?' · 单交易所覆盖':chart?.coverage==='us-sip'?' · SIP 汇总覆盖':'')+
+        (chart?.adjustment==='source-default-unverified'?' · 价格复权口径待核验':'')+
+        (chart?.reason?' · '+(reason[chart.reason]||chart.reason):'')+
+        (chart?.volumeQuality?.status==='missing'?' · 区间成交量暂缺':'')+
+        (!model.candle?(view._vwapSeries?.some(v=>v!=null)?' · 橙线：OHLCV 估算均价':' · 均价暂缺'):' · 橙线：MA5');
+    }
+    function queueDraw(){if(drawFrame!=null)return;drawFrame=requestAnimationFrame(draw);}
+    function renderSummary(){if(!current||!dialog)return;const d=current.d;if(!d)return;
+      const money=formatterFor(d).money,change=number(d.change),pct=number(d.changePct),up=change==null?null:change>=0;
+      dialog.querySelector('#chart-detail-title').textContent=(d.displayName||d.name||current.symbol)+' · '+current.symbol;
+      dialog.querySelector('.cd-status').textContent=(d.priceSession||d.marketState||'状态待核验')+' · '+time(d.quoteAt)+' '+zoneLabel()+' · 图表 '+(d.regularChart?.tradeDate||'日期待核验');
+      dialog.querySelector('.cd-price').textContent=number(d.price)==null?'—':money(d.price);
+      const changeEl=dialog.querySelector('.cd-change');changeEl.textContent=change==null||pct==null?'涨跌基准待核验':
+        (up?'+':'')+money(change)+' ('+(up?'+':'')+pct.toFixed(2)+'%)';changeEl.style.color=up==null?'':up?UP:DOWN;
+      dialog.querySelector('.cd-baseline').textContent='较上一交易日常规收盘 '+
+        (d.previousCloseTradeDate||'日期待核验')+' · '+(number(d.prevClose)==null?'基准待核验':money(d.prevClose));
+      const ext=d.priceSession==='PRE'?d.ext?.pre:d.priceSession==='POST'?d.ext?.post:null;
+      dialog.querySelector('.cd-extension').textContent=ext?.price==null?'':
+        (d.priceSession==='PRE'?'盘前':'盘后')+' '+money(ext.price)+' · '+
+        (number(ext.change)==null?'基准待核验':(ext.change>=0?'+':'')+money(ext.change)+' ('+
+          (ext.changePct>=0?'+':'')+ext.changePct.toFixed(2)+'%)');
+      const facts=[['今开',d.open],['昨收',d.prevClose],['最高',d.dayHigh],['最低',d.dayLow],['成交量',d.volume],['成交额',null]];
+      dialog.querySelector('.cd-facts').textContent=facts.map(([label,v])=>label+' '+(number(v)==null?'—':label==='成交量'?fmt.fmtVol(v):money(v))).join('  ·  ');
+    }
+    function renderBook(){if(!dialog)return;const b=remote?.book,money=formatterFor(current?.d||{}).money;
+      dialog.querySelector('.cd-book-status').textContent=b?.status==='ready'?'实时盘口':b?.reason?reason[b.reason]||b.reason:'盘口暂不可用';
+      dialog.querySelector('.cd-ask').textContent=number(b?.ask?.price)==null?'—':money(b.ask.price);
+      dialog.querySelector('.cd-bid').textContent=number(b?.bid?.price)==null?'—':money(b.bid.price);
+      const size=b?.sizeUnit==='shares'?'股':b?.sizeUnit==='lots'?'手':'单位待核验';
+      dialog.querySelector('.cd-ask-size').textContent=number(b?.ask?.size)==null?'—':fmt.fmtVol(b.ask.size)+' '+size;
+      dialog.querySelector('.cd-bid-size').textContent=number(b?.bid?.size)==null?'—':fmt.fmtVol(b.bid.size)+' '+size;
+      dialog.querySelector('.cd-book-meta').textContent=b?.source?
+        b.source+' · '+(b.coverage||'覆盖待核验')+' · '+time(b.asOf)+' '+zoneLabel()+(b.stale?' · 已过期':''):
+        '无可用盘口来源；成交价不代替买卖报价';
+    }
+    function renderTape(){if(!dialog)return;const tape=remote?.tape,events=tape?.events||[],list=dialog.querySelector('.cd-tape-list'),stats=dialog.querySelector('.cd-tape-stats');
+      const stream=tape?.stream,streamNote=stream?.state&&stream.state!=='streaming'?
+        ' · 行情流 '+stream.state+(stream.errorCode?' ('+stream.errorCode+')':''):'',
+        duplicateNote=events.some(e=>e.quality)?' · 来源无唯一成交ID，重连可能重复':'';
+      dialog.querySelector('.cd-tape-status').textContent=(events.length?'已接收成交片段 · '+events.length+' 笔 · '+
+        time(tape.coverage?.firstAt)+' 至 '+time(tape.coverage?.lastAt)+' '+zoneLabel():reason[tape?.reason]||'逐笔暂无数据')+
+        streamNote+duplicateNote;
+      list.replaceChildren();for(const e of events.slice(-200).reverse()){
+        const row=make('div','cd-trade-row');row.textContent=time(e.at)+' · '+formatterFor(current?.d||{}).money(e.price)+
+        ' · '+fmt.fmtVol(e.size)+' 股 · '+(e.exchange||e.source)+' · 方向未知'+
+        (e.reportState!=='reported'?' · '+(e.reportState==='corrected'?'已更正，原成交量不计入统计':'已撤销'):'' );list.appendChild(row);
+      }
+      if(!events.length)list.textContent='当前目标交易日常规时段无已接收成交；不会用报价采样补造逐笔。';
+      const valid=events.filter(e=>e.reportState==='reported'),total=valid.reduce((sum,e)=>sum+(number(e.size)||0),0),
+        prices=valid.map(e=>e.price).filter(v=>number(v)!=null);
+      stats.textContent=valid.length?'已接收片段 '+valid.length+' 笔 · 片段成交量 '+fmt.fmtVol(total)+' 股 · '+
+        '片段最低 '+formatterFor(current?.d||{}).money(Math.min(...prices))+' / 最高 '+
+        formatterFor(current?.d||{}).money(Math.max(...prices))+'。不是全天成交统计；无主动买卖方向。':
+        '当前无可验证成交事件，成交统计暂缺。';
+      if(valid.length){const buckets=new Map();for(const e of valid){const start=Math.floor(e.at/1800000)*1800000;
+        buckets.set(start,(buckets.get(start)||0)+e.size);}
+        stats.textContent+=' 时间分布（已接收片段）：'+[...buckets].sort((a,b)=>a[0]-b[0])
+          .map(([at,size])=>time(at)+' '+fmt.fmtVol(size)+' 股').join('；');}
+    }
+    function selectSide(side){dialog.querySelectorAll('[data-side]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.side===side)));
+      dialog.querySelector('.cd-tape-list').hidden=side!=='tape';dialog.querySelector('.cd-tape-stats').hidden=side!=='stats';}
+    async function fetchDetail(range='1d'){
+      fetchAbort?.abort();const controller=fetchAbort=new AbortController(),id=++requestId;
+      try{const response=await fetch('/api/chart/detail?symbol='+encodeURIComponent(current.symbol)+'&range='+range,
+        {signal:controller.signal,cache:'no-store'});
+        if(!response.ok)throw new Error('HTTP '+response.status);
+        const value=await response.json();if(id!==requestId||!current||controller.signal.aborted)return;
+        remote=value;if(range==='5d')five=value.fiveDay;
+        renderBook();renderTape();queueDraw();
+      }catch(error){if(controller.signal.aborted)return;
+        dialog.querySelector('.cd-tape-status').textContent='详情接口暂不可用：'+error.message;
+        if(range==='5d'){five=null;queueDraw();}
+      }
+    }
+    async function selectPeriod(value){if(!current)return;tf=value;hover=null;view={visN:{},followEnd:true,winStart:null};
+      dialog.querySelectorAll('[data-tf]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tf===tf)));
+      if(tf==='fiveDay'){five=null;queueDraw();await fetchDetail('5d');return;}
+      if(tf!=='intraday'&&!current.historyStore?.getSeries(tf)?.length){const selected=current,job=current.historyStore?.load(tf);
+        queueDraw();await job;if(current===selected&&tf===value)queueDraw();return;}
+      queueDraw();
+    }
+    function zoom(kind,e){const p=view.plot;if(!p?.n)return;let vis=view.visN?.[view.tf]||p.vis;
+      vis=kind==='in'?Math.max(5,Math.round(vis/1.4)):Math.min(p.all.length,Math.round(vis*1.4));
+      if(!view.visN)view.visN={};view.visN[view.tf]=vis;
+      if(e){const anchor=p.a+nearest(p,local(e,p).x);view.winStart=Math.max(0,Math.min(p.all.length-vis,Math.round(anchor-(anchor-p.a)*vis/p.vis)));view.followEnd=false;}
+      queueDraw();}
+    function action(value){if(value==='rotate'){manualRotate=!dialog.classList.contains('is-rotated');layout();return;}
+      if(value==='in'||value==='out'){zoom(value);return;}
+      if(value==='fit'){view.visN[view.tf]=view.plot?.all?.length||1;view.followEnd=true;view.winStart=null;queueDraw();return;}
+      if(value==='latest'){view.followEnd=true;view.winStart=null;queueDraw();return;}
+      if(value==='shot'){const canvas=dialog.querySelector('.cd-canvas'),cursor=dialog.querySelector('.cd-cursor'),out=make('canvas');
+        out.width=canvas.width;out.height=canvas.height;const c=out.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,out.width,out.height);
+        c.drawImage(canvas,0,0);c.drawImage(cursor,0,0);const a=make('a');a.href=out.toDataURL('image/png');
+        a.download=current.symbol+'_'+tf+'_regular.png';a.click();}
+    }
+    function layout(){if(!dialog?.open)return;const vp=window.visualViewport;
+      const w=vp?.width||window.innerWidth,h=vp?.height||window.innerHeight;
+      dialog.style.setProperty('--cd-vw',w+'px');dialog.style.setProperty('--cd-vh',h+'px');
+      dialog.style.setProperty('--cd-vv-top',(vp?.offsetTop||0)+'px');
+      dialog.style.setProperty('--cd-vv-left',(vp?.offsetLeft||0)+'px');
+      const rotate=manualRotate===null?w<h&&w<700:manualRotate;
+      dialog.classList.toggle('is-rotated',rotate);dialog.querySelector('[data-action="rotate"]').textContent=rotate?'恢复竖向':'横向显示';
+      queueDraw();
+    }
+    function onPop(){if(current)close(true);}
+    function close(fromPop=false){if(!current)return;
+      current=null;requestId++;fetchAbort?.abort();fetchAbort=null;clearInterval(poll);poll=null;
+      resizeObserver?.disconnect();resizeObserver=null;
+      window.removeEventListener('resize',layout);window.visualViewport?.removeEventListener('resize',layout);
+      window.visualViewport?.removeEventListener('scroll',layout);
+      document.removeEventListener('fullscreenchange',layout);window.removeEventListener('popstate',onPop);
+      if(drawFrame!=null)cancelAnimationFrame(drawFrame);drawFrame=null;
+      if(document.fullscreenElement===dialog)void document.exitFullscreen?.().catch(()=>{});
+      try{window.screen?.orientation?.unlock?.();}catch{}
+      dialog.close();document.body.style.overflow=scrollStyle;focusReturn?.focus?.();focusReturn=null;
+      if(openedHistory&&!fromPop)history.back();openedHistory=false;
+      remote=null;five=null;view={};hover=null;drag=null;lastTap=null;manualRotate=null;
+    }
+    function open(q,opener){ensure();if(current)close();current=q;focusReturn=opener||q.cv;
+      scrollStyle=document.body.style.overflow;document.body.style.overflow='hidden';
+      tf='intraday';remote=null;five=null;view={visN:{},followEnd:true,winStart:null};hover=null;
+      dialog.showModal();history.pushState({chartDetail:true},'',location.href);openedHistory=true;
+      window.addEventListener('popstate',onPop);window.addEventListener('resize',layout);
+      window.visualViewport?.addEventListener('resize',layout);window.visualViewport?.addEventListener('scroll',layout);
+      document.addEventListener('fullscreenchange',layout);
+      resizeObserver=typeof ResizeObserver==='function'?new ResizeObserver(()=>queueDraw()):null;
+      resizeObserver?.observe(dialog.querySelector('.cd-plot'));
+      renderSummary();void selectPeriod('intraday');layout();dialog.querySelector('.cd-close').focus();
+      void fetchDetail();poll=setInterval(()=>{if(current)void fetchDetail(tf==='fiveDay'?'5d':'1d');},10000);
+      if(window.innerWidth<700&&dialog.requestFullscreen){
+        void dialog.requestFullscreen().then(()=>window.screen?.orientation?.lock?.('landscape')).catch(()=>layout());
+      }
+    }
+    function mount(q){const button=q.el.querySelector('.chart-expand'),cv=q.cv;
+      button?.addEventListener('click',()=>open(q,button));cv?.addEventListener('dblclick',e=>{e.preventDefault();open(q,cv);});
+      cv?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();open(q,cv);}});
+      let tap=null,down=null;cv?.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse')down={x:e.clientX,y:e.clientY,at:Date.now()};});
+      cv?.addEventListener('pointerup',e=>{if(e.pointerType==='mouse'||!down)return;
+        const distance=Math.hypot(e.clientX-down.x,e.clientY-down.y),duration=Date.now()-down.at;down=null;
+        if(distance>12||duration>400){tap=null;return;}
+        if(tap&&Date.now()-tap.at<300&&Math.hypot(e.clientX-tap.x,e.clientY-tap.y)<12){tap=null;open(q,cv);}
+        else tap={x:e.clientX,y:e.clientY,at:Date.now()};
+      });
+    }
+    return Object.freeze({mount,update:q=>{if(current===q){renderSummary();queueDraw();}},
+      remove:q=>{if(current===q)close();},close});
+  };
+  window.PANEL_CHART_DETAIL=Object.freeze({createChartDetailView});
+})();
+
+;
+
 ;/* public/modules/panel-card-view.js */
 (() => {
   const createCardView = ({ document, panelsEl, stripEl, chartController, formatterFor, cardCurOf, nameOf, onRemove, onRetry, onCurrency, humanizeAge, UP, DOWN, getReadIntervalMs=()=>0, quoteClock=null, onNewsToggle=()=>{} }) => {
@@ -1341,7 +1756,7 @@
     const FRIENDLY = {QQQ:'纳指100 ETF',SPY:'标普500 ETF'};
     const TF = (window.PANEL_TIMEFRAMES?.all || [['intraday','分时'],['daily30','日K'],['weekly','周K'],['monthly','月K'],['yearly','年K']]).map(t=>Array.isArray(t)?t:[t.key,t.label]);
     const cardCache=new Map(), lastPrice=new Map();
-    let fundamentalsView=null,detailView=null;
+    let fundamentalsView=null,detailView=null,chartDetailView=null;
     // Measure natural content, never the stretched card or a previous minimum.
     // A shared observer only schedules work when a band's intrinsic size changes.
     const layoutRecords = new Map(), layoutSizes = new Map();
@@ -1407,7 +1822,7 @@
         </div>
       </div>
       <div class="tabbar">${TF.map(t=>`<button class="tfbtn" data-tf="${t[0]}">${t[1]}</button>`).join('')}</div>
-      <div class="meter"><div class="chart-statusbar"><span class="chart-state" role="status"></span><span class="chart-modes"><button type="button" data-chart-mode="history">来源历史</button><button type="button" data-chart-mode="samples">报价采样</button></span><button type="button" class="chart-retry" hidden>重试历史</button></div><div class="ohlcbar">—</div><div class="chartframe"><canvas class="chart-main" role="img" aria-label="行情图表"></canvas><canvas class="chart-cursor" aria-hidden="true"></canvas></div><div class="chart-point sr-only"></div><div class="chart-summary sr-only"></div></div>
+      <div class="meter"><div class="chart-statusbar"><span class="chart-state" role="status"></span><span class="chart-modes"><button type="button" data-chart-mode="history">来源历史</button><button type="button" data-chart-mode="samples">报价采样</button></span><button type="button" class="chart-retry" hidden>重试历史</button><button type="button" class="chart-expand" title="展开图表" aria-label="展开横向行情详情">⛶</button></div><div class="ohlcbar">—</div><div class="chartframe"><canvas class="chart-main" role="img" aria-label="行情图表"></canvas><canvas class="chart-cursor" aria-hidden="true"></canvas></div><div class="chart-point sr-only"></div><div class="chart-summary sr-only"></div></div>
       ${window.PANEL_FUNDAMENTALS.markup()}
       <details class="newsbox"><summary class="newshead">相关资讯</summary><div class="newslist"><div class="newsempty">加载中…</div></div></details>
     </section>`;
@@ -1449,6 +1864,8 @@
     fundamentalsView.mount(q);
     detailView ||= window.PANEL_DETAIL.createDetailView({document});
     detailView.mount(q);
+    chartDetailView ||= window.PANEL_CHART_DETAIL.createChartDetailView({document,formatterFor,UP,DOWN});
+    chartDetailView.mount(q);
     mountBands(q);
     q.ccybtns.forEach(b => b.addEventListener('click', () => onCurrency(sym, b.dataset.ccy)));
     q.ccybtns.forEach(b => {b.classList.toggle('on', b.dataset.ccy === cardCurOf(sym));b.setAttribute('aria-pressed',String(b.dataset.ccy === cardCurOf(sym)));});
@@ -1463,14 +1880,15 @@
   }
 
   function extHTML(label, s, money, data) {
-    const up = (s.change ?? 0) >= 0; const cl = up ? UP : DOWN; const sg = up ? '+' : '';
-    const chg = s.change == null ? '' : sg + money(s.change) + ' (' + sg + (s.changePct || 0).toFixed(2) + '%)';
-    const base=s.price!=null&&s.change!=null?s.price-s.change:null;
+    const up = s.change == null ? null : s.change >= 0; const cl = up==null ? 'inherit' : up ? UP : DOWN; const sg = up ? '+' : '';
+    const chg = s.change == null ? '涨跌暂缺' : sg + money(s.change) + ' (' + sg + s.changePct.toFixed(2) + '%)';
+    const base=s.referencePrice??(s.price!=null&&s.change!=null?s.price-s.change:null);
     const matches=value=>base!=null&&value!=null&&Math.abs(base-value)<.02;
     const venueDate=value=>{const at=quoteTimeMs(value);return at&&Number.isFinite(data.gmtoff)?new Date(at+data.gmtoff*1000).toISOString().slice(0,10):null;};
     const quoteDay=venueDate(data.quoteAt),regularDay=venueDate(data.regularQuoteAt);
     const sameDay=quoteDay&&regularDay&&quoteDay===regularDay;
-    const baseline=matches(data.regularPrice)?(label==='盘后'&&sameDay?'较本交易日常规收盘':'较常规收盘'):matches(data.prevClose)?'较昨收基准':'较来源基准';
+    const baseline=s.referenceTradeDate?(label==='盘前'?'较上一交易日常规收盘':'较本交易日常规收盘')+' '+s.referenceTradeDate:
+      matches(data.regularPrice)?(label==='盘后'&&sameDay?'较本交易日常规收盘':'较常规收盘'):matches(data.prevClose)?'较昨收基准':'基准待核验';
     const details=[s.high!=null?'高 '+esc(money(s.high)):null,s.low!=null?'低 '+esc(money(s.low)):null,s.volume!=null?'量 '+esc(fmtVol(s.volume)):null].filter(Boolean);
     const html='<span class="exttag">' + label + '变化</span>'
       + '<b style="color:' + cl + '">' + money(s.price) + '</b>'
@@ -1612,7 +2030,7 @@
     const calendar=window.PANEL_STATE.calendarStatus(d);
     const stName={REGULAR:(calendarEstimate ? '常规时段·节假日未核验' : '交易中'),PRE:'盘前',POST:'盘后',AUCTION:'集合竞价',BREAK:'午间休市',CLOSED:'已收盘',UNKNOWN:calendar.pending?'交易时段待公布':'时段未核验'}[d.marketState]||'时段未核验';
     q.marketLabel=stName;q.marketTitle=calendar.message||(calendarEstimate ? '交易日历覆盖不足，此时段状态仅为估计' : '');applyRequestState(q);
-    if(q.changeBaseline){q.changeBaseline.textContent=(d.changeBasis==='previous-settlement'?'较前结算基准':d.instrumentType==='FUTURE'?'较来源基准':'较昨收基准')+(d.prevClose!=null?' '+money(d.prevClose):'（基准暂缺）');q.changeBaseline.title=d.instrumentType==='FUTURE'?'期货以前结算或来源给出的前值比较，不等同股票昨收。':'主涨跌以来源返回的昨收为分母；盘前或盘后行可能采用另一常规收盘基准，金额在各行注明。';}
+    if(q.changeBaseline){q.changeBaseline.textContent=(d.changeBasis==='previous-settlement'?'较前结算基准':d.instrumentType==='FUTURE'?'较来源基准':'较上一交易日常规收盘')+(d.previousCloseTradeDate?' '+d.previousCloseTradeDate:'')+(d.prevClose!=null?' '+money(d.prevClose):'（基准待核验）');q.changeBaseline.title=d.previousCloseMissingReason||d.previousCloseStatus||'主涨跌相对报价交易日的上一交易日常规收盘；盘后行相对本交易日常规收盘。';}
 
     // 盘前/盘后独立报价行
     if (q.extRow) {
@@ -1631,6 +2049,7 @@
     fundamentalsView?.render(q);
 
     chartController.drawChart(q);
+    chartDetailView?.update(q);
   }
 
   function renderStrip(d) {
@@ -1657,7 +2076,7 @@
       applyRequestState(q);
     }
 
-    function remove(symbol) { const q=cardCache.get(symbol);if(!q)return;fundamentalsView?.remove(q);detailView?.remove(q);chartController.unmount(q);for(const content of q.layoutContents||[]){bandObserver?.unobserve(content);layoutRecords.delete(content);}scheduleBands();q.el.remove();q.strip?.remove();cardCache.delete(symbol);lastPrice.delete(symbol); }
+    function remove(symbol) { const q=cardCache.get(symbol);if(!q)return;fundamentalsView?.remove(q);detailView?.remove(q);chartDetailView?.remove(q);chartController.unmount(q);for(const content of q.layoutContents||[]){bandObserver?.unobserve(content);layoutRecords.delete(content);}scheduleBands();q.el.remove();q.strip?.remove();cardCache.delete(symbol);lastPrice.delete(symbol); }
     return Object.freeze({ ensureCard, render, renderStrip, updateQuoteMeta, setFetchStatus, cardCache, remove });
   };
   window.PANEL_CARD_VIEW=Object.freeze({createCardView});
@@ -2494,7 +2913,7 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=99').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=100').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
         nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本','info',{label:'刷新页面',run:()=>location.reload()}); });
       });

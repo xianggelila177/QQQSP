@@ -40,6 +40,8 @@
 | news | 仅导出现有相关资讯缓存：标题、来源、发布时间、链接；本接口不启动资讯后台采集或抓正文。 |
 | macro | 现有宏观缓存的因子、观测、新闻和日历；范围为全球宏观，不冒充该股票的直接事件。 |
 
+股票和 ETF 的 `quote.data.previous_close_trade_date` 是主涨跌基准所属交易日，`previous_close_status`、`previous_close_source_id`、`previous_close_as_of_ms` 和 `previous_close_missing_reason` 解释其依据。主涨跌按最新报价相对该日期的常规收盘计算。盘前的 `pre.reference_trade_date` 为上一交易日；盘后的 `post.reference_trade_date` 为本交易日。无法核对基准时仍保留价格，涨跌与百分比为 `null`，quote 状态为 `partial`；不能把 `generated_at_ms` 当成行情时刻。
+
 所有分区共有 `status`、`source_ids`、`as_of_ms`、`source_checked_at_ms`、`delay_minutes`、`coverage`、`adjustment`、`missing_reason`。数据在 `data` 或紧凑时序 `rows` 中。
 
 时序提供 `columns`、`column_units`、`column_descriptions`，一一对应每行数组。时间均为 UTC 毫秒；**日线 time_ms 是日期标签，不是成交时刻**，日期分析应直接使用 `trade_date`。交易时区在 `instrument.time_zone`。价格不按网页偏好换汇，不四舍五入为“万/亿”；百分比值 2 表示 2%。指数即使标明参考币种，价格单位仍为 points。
