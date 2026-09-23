@@ -130,7 +130,14 @@
     const sessions=intraday&&!q._sampled?d?.regularChart?.regularSessions||[]:[];
     const full=vis>=all.length&&q.followEnd;
     const start=full?sessions[0]?.open_at_ms:bars[0]?.t*1000;
-    const end=full?sessions.at(-1)?.close_at_ms:bars.at(-1)?.t*1000;
+    const now=Date.now(),activeSession=sessions.find(s=>now>=s.open_at_ms&&now<s.close_at_ms);
+    const latestBarAt=bars.at(-1)?.t*1000;
+    const progressive=full&&!q.fullSession&&!q._fiveDay&&d?.marketState==='REGULAR'&&activeSession&&
+      Number.isFinite(d?.quoteAt)&&d.quoteAt>=start&&d.quoteAt<=activeSession.close_at_ms&&
+      Number.isFinite(latestBarAt)&&latestBarAt>=start&&latestBarAt<=activeSession.close_at_ms;
+    const end=progressive?Math.min(activeSession.close_at_ms,
+      Math.max(start+30*60000,now+5*60000,d.quoteAt+5*60000,latestBarAt+5*60000)):
+      full?sessions.at(-1)?.close_at_ms:latestBarAt;
     const visibleSessions=sessions.map(s=>({open:Math.max(start,s.open_at_ms),close:Math.min(end,s.close_at_ms)}))
       .filter(s=>Number.isFinite(s.open)&&Number.isFinite(s.close)&&s.close>s.open);
     const duration=visibleSessions.reduce((sum,s)=>sum+s.close-s.open,0);

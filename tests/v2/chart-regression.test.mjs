@@ -17,7 +17,7 @@ export function sourceRows(){
  }
  return rows.reverse();
 }
-function engineSandbox(){const s={window:{},Date};vm.runInNewContext(fs.readFileSync(new URL('../../public/modules/panel-chart-engine.js',import.meta.url),'utf8'),s);return s.window.PANEL_CHART_ENGINE;}
+function engineSandbox(clock=Date){const s={window:{},Date:clock};vm.runInNewContext(fs.readFileSync(new URL('../../public/modules/panel-chart-engine.js',import.meta.url),'utf8'),s);return s.window.PANEL_CHART_ENGINE;}
 function historySandbox(){const s={window:{},URLSearchParams,AbortController,AbortSignal,setTimeout,clearTimeout,Date};for(const f of ['panel-timeframes.js','panel-scheduler.js','panel-network.js','panel-history-store.js'])vm.runInNewContext(fs.readFileSync(new URL('../../public/modules/'+f,import.meta.url),'utf8'),s);return s.window;}
 
 test('REGRESSION: Yahoo 429 cannot disable US daily/weekly/monthly/yearly at the real HTTP boundary',async t=>{
@@ -52,6 +52,23 @@ test('REGRESSION: intraday OHLC provider payload must still render as a line, ne
  const api=engineSandbox(),engine=api.createChartEngine({UP:'red',DOWN:'green',fmtDate:()=>'',formatterFor:()=>({money:n=>String(n)}),maSeries:a=>a.map(()=>null)});
  const q={tf:'intraday',d:{charts:{intraday:[{t:100,o:90,h:104,l:89,c:100},{t:160,o:100,h:101,l:97,c:99}]}},followEnd:true,_chartWidth:400};
  const p=engine.computePlot(q);assert.equal(p.candle,false);
+});
+
+test('REGRESSION: early regular-session points fill the live viewport; full view still shows the closing bell',()=>{
+ const open=Date.parse('2026-09-23T13:30:00Z'),close=open+390*60000,now=open+21*60000;
+ class Clock extends Date {static now(){return now;}}
+ const api=engineSandbox(Clock),engine=api.createChartEngine({UP:'red',DOWN:'green',fmtDate:()=>'',formatterFor:()=>({money:n=>String(n)}),maSeries:a=>a.map(()=>null)});
+ const bars=Array.from({length:5},(_,i)=>({t:(open+i*5*60000)/1000,c:100+i,v:10}));
+ const q={tf:'intraday',d:{marketState:'REGULAR',quoteAt:now,regularChart:{bars,regularSessions:[{open_at_ms:open,close_at_ms:close}]}},
+  _displayIntraday:bars,followEnd:true,_chartWidth:450};
+ let p=engine.computePlot(q),plotW=p.W-p.L-p.R;
+ assert.equal(p.visibleSessions.at(-1).close,open+30*60000);
+ assert.ok(p.x(4)>p.L+plotW*.55,'last available point should occupy most of the early-session chart');
+ q.fullSession=true;p=engine.computePlot(q);
+ assert.equal(p.visibleSessions.at(-1).close,close);
+ assert.ok(p.x(4)<p.L+plotW*.1,'explicit full view retains the full trading session');
+ q.fullSession=false;q.d.marketState='CLOSED';p=engine.computePlot(q);
+ assert.equal(p.visibleSessions.at(-1).close,close,'completed days keep a full-session axis');
 });
 
 test('REGRESSION: exhausted older history page must not erase already displayed candles',async()=>{
