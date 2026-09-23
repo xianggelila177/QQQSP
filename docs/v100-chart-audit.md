@@ -1,6 +1,6 @@
 # v100 图表与昨收修复交付记录
 
-状态：源码与资源已构建；本地验证完成；**未部署到生产**。实施起点是生产 v99、完整 Git 仓库基线 `8a4e28e`。`qqqsp-prevclose-audit/source` 是审计副本，本次修改位于完整仓库。
+状态：源码与资源已构建；本地验证完成；**已于 2026-09-23 部署到生产 v100**。实施起点是生产 v99、完整 Git 仓库基线 `8a4e28e`。`qqqsp-prevclose-audit/source` 是审计副本，本次修改位于完整仓库。
 
 ## 已实现
 
@@ -25,4 +25,11 @@
 
 ## 发布与回滚
 
-发布时沿用现有 `releases/`、`current`、`previous` 和 `shared` 状态布局。构建产物与 `VERSION=100` 同步部署；先备份共享状态，保留 v99 可回滚目录及符号链接。不要删除历史缓存、采样、凭据或共享状态。上线后分别核对版本、静态资源、AAOI/LITE/NVDA 主价与常规图、日线量、盘口/逐笔缺失态及上游时间戳；`ready=true` 仅说明服务就绪。若回滚，切回先前 release 并重启服务，保留共享状态，再验证版本和报价来源健康。尚未执行任何生产写入或切换。
+发布沿用现有 `releases/`、`current`、`previous` 和 `shared` 状态布局。回滚时切回先前 release 并重启服务，保留共享状态，再验证版本和报价来源健康。`ready=true` 仅说明服务就绪。
+
+## 生产部署核对（2026-09-23）
+
+- 部署源码提交 `115c1f2`，Linux 临时目录重建静态资源后通过 509 项脚本、版本、资源和配置校验。生产 `current` 指向 `/opt/qqqsp-v2/releases/20260923T030639Z-4Nm8Tb`，`previous` 指向 v99 `/opt/qqqsp-v2/releases/20260923T005932Z-v99`。
+- 部署前将共享 `.env` 与 `state` 备份至 root 专用的 `/opt/qqqsp-v2/backups/v99-before-v100-20260923T030117.tar.gz`。安装前后 `.env` 与 `state/api-keys.json` 的 SHA-256 均未变化；既有公网地址 `https://qqqsp.digital-reality.shop` 与 API 密钥继续有效，使用该密钥调用公网 `/api/v1/market-context` 返回 HTTP 200。
+- `qqqsp-v2.service` 与 `qqqsp-cloudflared.service` 均 active、enabled；应用监听 8569，现有 nginx 在 8568 代理到应用，隧道仍指向 8568。两个本地端口的 `/readyz` 均报告 `version=100`、`ready=true`、`dataReady=true`。公网首页引用 `panel.bundle.js?v=100`，公网脚本与部署文件 SHA-256 一致。
+- 盘口、完整五日历史和历史逐笔的供应商权限限制仍如上节所述；本次上线检查没有将服务就绪等同于这些数据能力已可用。手机真机方向锁与触控验收仍未完成。
