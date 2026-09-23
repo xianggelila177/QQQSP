@@ -1179,7 +1179,10 @@
       if(q.slider){q.slider.min=0;q.slider.max=Math.max(0,p.all.length-p.vis);q.slider.value=p.a;q.slider.hidden=p.all.length-p.vis<=0;}
     }
 
-    const sourceName=source=>({'nasdaq-history':'Nasdaq 历史','nasdaq-intraday':'Nasdaq 分时','eastmoney-history':'东方财富历史','naver-index-history':'Naver 指数历史','naver-fchart':'Naver 韩国历史','yahoo':'Yahoo','sina':'新浪','tencent':'腾讯'})[source]||source||'未知来源';
+    const sourceName=source=>({'finnhub-candle':'Finnhub K 线','finnhub-quote':'Finnhub 报价',
+      'naver-world-chart':'Naver 美股分时','nasdaq-history':'Nasdaq 历史','nasdaq-intraday':'Nasdaq 分时',
+      'eastmoney-history':'东方财富历史','naver-index-history':'Naver 指数历史','naver-fchart':'Naver 韩国历史',
+      'yahoo':'Yahoo','sina':'新浪','tencent':'腾讯'})[source]||source||'未知来源';
     function updateChartStatus(q){
       if(q._unmounted)return;
       const e=q.historyStore?.getMeta(q.tf),intra=q.tf==='intraday',m=e?.meta;
@@ -1944,7 +1947,7 @@
   function updateQuoteMeta(q, now = quoteClock ? quoteClock.now() : Date.now()) {
     const d = q.d; if (!d || !q.quoteMeta) return;
     const freshness=applyStaleBadge(q,d,now);
-    const sourceNames = { 'yahoo-futures':'Yahoo · 期货', 'eastmoney-futures':'东方财富 · 期货', 'eastmoney-futures-list':'东方财富 · 期货目录（成交时间未知）', 'alpaca-iex':'Alpaca · IEX 单一交易所', 'alpaca-sip':'Alpaca · 美国 SIP 数据源', 'sina-batch':'新浪批量报价',yahoo: 'Yahoo', 'tx-cn': '腾讯', 'tx-us': '腾讯', 'tx-batch': '腾讯批量报价', 'naver-index': 'Naver 指数', 'naver-us': 'Naver 美股', 'naver-kr': 'Naver 韩股', 'em-cn': '东方财富', finnhub:'Finnhub · 覆盖依账户权限',fixture: '测试数据' };
+    const sourceNames = { 'yahoo-futures':'Yahoo · 期货', 'eastmoney-futures':'东方财富 · 期货', 'eastmoney-futures-list':'东方财富 · 期货目录（成交时间未知）', 'alpaca-iex':'Alpaca · IEX 单一交易所', 'alpaca-sip':'Alpaca · 美国 SIP 数据源', 'sina-batch':'新浪批量报价',yahoo: 'Yahoo', 'tx-cn': '腾讯', 'tx-us': '腾讯', 'tx-batch': '腾讯批量报价', 'naver-index': 'Naver 指数', 'naver-us': 'Naver 美股', 'naver-kr': 'Naver 韩股', 'em-cn': '东方财富', finnhub:'Finnhub · 覆盖依账户权限','finnhub-quote':'Finnhub 报价',fixture: '测试数据' };
     const sessionNames = { SOURCE_SNAPSHOT:'统计来自独立快照，非逐笔同步', CACHED_REGULAR: '常规时段统计', REGULAR: '常规时段统计', PRE: '盘前统计', POST: '盘后统计', CN_SNAPSHOT: '交易日快照', UNKNOWN: '统计时段未核验' };
     const at = quoteTimeMs(d.quoteAt ?? d.ts), checked = quoteTimeMs(d.sourceCheckedAt);
     const parts = ['报价 ' + (at ? fmtTime8(at) : '时刻未知'), sourceNames[d.src] || '来源未标明'];
@@ -2918,7 +2921,7 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=101').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=102').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
         nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本','info',{label:'刷新页面',run:()=>location.reload()}); });
       });

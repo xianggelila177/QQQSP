@@ -57,6 +57,9 @@ import {createHistoryPrewarm} from './lib/history-prewarm.js';
 import {createAlpacaProvider} from './lib/providers/alpaca-stream.js';
 import {createFinnhubProvider} from './lib/providers/finnhub-stream.js';
 import {createFinnhubRestPool,parseFinnhubTokens} from './lib/providers/finnhub-rest.js';
+import {createFinnhubHistory} from './lib/providers/finnhub-history.js';
+import {createNaverWorldHistory} from './lib/providers/naver-world-history.js';
+import {createFinnhubQuotes} from './lib/providers/finnhub-quotes.js';
 import {createStreamPair} from './lib/stream-pair.js';
 import {createRealtimeQuoteService} from './lib/realtime-quote-service.js';
 import {createQuoteSamples} from './lib/quote-samples.js';
@@ -69,6 +72,9 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
   const {httpsGet}=transport,slowMap=new Map();
   const finnhubTokens=parseFinnhubTokens(config.FINNHUB_TOKEN,config.FINNHUB_TOKENS);
   const finnhubRest=finnhubTokens.length?createFinnhubRestPool({httpsGet,tokens:finnhubTokens,now}):null;
+  const finnhubHistory=finnhubRest?createFinnhubHistory({request:finnhubRest.request,now}):null;
+  const finnhubQuotes=finnhubRest?createFinnhubQuotes({request:finnhubRest.request,now}):null;
+  let batch;
   const providerOptions={httpsGet,slowMap,now,log:telemetry.log,slowTtl:config.SLOW_TTL};
   const tx=createTencentProvider(providerOptions),nasdaq=createNasdaqProvider(providerOptions),sina=createSinaProvider(providerOptions),em=createEastmoneyProvider(providerOptions);
   const breaker=gate.yahooPolicy;
@@ -80,7 +86,12 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
   const yahooNews=createYahooNews({httpsGet,yGated:yahoo.yGated,getCrumb:auth.getCrumb,onRateLimit:breaker.hit});
   const naverHistory=createNaverHistory({httpsGet,now});
   const indexProvider=createNaverIndexProvider({httpsGet,now});
-  const fetchHistory=createHistorySource({index:providerOverrides.fetchChart?null:indexProvider.fetchChart,primary:providerOverrides.fetchChart || yahoo.fetchChart,sina:sina.getSinaDaily,naver:providerOverrides.fetchChart?null:naverHistory,alternative:providerOverrides.fetchChart?null:createPublicHistory({httpsGet,now}),now});
+  const worldHistory=providerOverrides.fetchChart?null:createNaverWorldHistory({httpsGet,resolveCode:(...args)=>batch.resolveNaverCode(...args),now});
+  const fetchHistory=createHistorySource({index:providerOverrides.fetchChart?null:indexProvider.fetchChart,
+    primary:providerOverrides.fetchChart || yahoo.fetchChart,sina:sina.getSinaDaily,
+    naver:providerOverrides.fetchChart?null:naverHistory,
+    alternative:providerOverrides.fetchChart?null:createPublicHistory({httpsGet,now}),
+    finnhub:providerOverrides.fetchChart?null:finnhubHistory,world:worldHistory,now});
   const history=createHistoryService({fetchChart:fetchHistory,now,cacheTtl:60000,maxEntries:config.HISTORY_MAX_SYMBOLS,maxConcurrent:config.HISTORY_MAX_ACTIVE,maxQueued:config.HISTORY_MAX_QUEUE,deadlineMs:config.HISTORY_EXECUTION_DEADLINE_MS,totalDeadlineMs:config.HISTORY_TOTAL_DEADLINE_MS,maxBytes:config.HISTORY_MAX_BYTES});
   const historyPrewarm=createHistoryPrewarm({history,now,enabled:config.HISTORY_BACKGROUND_ENABLED==='1',statePath:config.HISTORY_STATE_PATH,refreshMs:config.HISTORY_REFRESH_MS,maxSymbols:config.HISTORY_MAX_SYMBOLS,expandAfterMs:config.HISTORY_EXPAND_AFTER_MS,canExpand:()=>Object.values(gate.diagnostics()).every(s=>!s.queued),log:telemetry.log});
   const futures=createFuturesProvider({httpsGet,fetchChart:providerOverrides.fetchChart||yahoo.fetchChart,now});
@@ -102,9 +113,10 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
   quote=createQuoteService({now,log:telemetry.log,...yahoo,...tx,...nasdaq,...em,...fx,extSessions,providers});
   const cacheMs=config.CACHE_MS,upstreamTimeout=config.UPSTREAM_TIMEOUT;
   const quoteCache=createQuoteCache({...quote,now,cacheSet,fetchQuote:providerOverrides.fetchQuote || quote.fetchQuote,breaker,cacheMs,quoteMaxAge:config.QUOTE_MAX_AGE,stats:telemetry.stats,log:telemetry.log});
-  const batch=createBatchProvider({httpsGet,now,indexProvider,fallbackQuote:quoteCache.getCachedQuote,pollMs:config.POLL_MS});
-  const polling=createFastPolling({httpsGet,legacy:batch,now,pollMs:config.POLL_MS,preferred:config.POLL_PRIMARY});
-  const enrichCharts=createChartEnricher({fetchChart:fetchHistory,fetchHistoricalChart:providerOverrides.fetchChart||yahoo.fetchChart,
+  batch=createBatchProvider({httpsGet,now,indexProvider,fallbackQuote:quoteCache.getCachedQuote,pollMs:config.POLL_MS});
+  const polling=createFastPolling({httpsGet,legacy:batch,finnhubQuotes:providerOverrides.fetchSnapshotBatch?null:finnhubQuotes,
+    now,pollMs:config.POLL_MS,preferred:config.POLL_PRIMARY});
+  const enrichCharts=createChartEnricher({fetchChart:fetchHistory,fetchHistoricalChart:fetchHistory,
     fallback:quoteCache.getCachedQuote,tx,now,includeDaily:false});
   let realtimeProvider,engine;
   const fundamentals=createFundamentalsService({...(providerOverrides.fetchFundamentals?{fetchFundamentals:providerOverrides.fetchFundamentals}:{sources:createFinancialSources({httpsGet,batch,fetchYahooSummary:yahoo.fetchQuoteSummary,finnhubRequest:finnhubRest?.request,now,statementTtlMs:config.FUNDAMENTALS_TTL_MS})}),now,
@@ -132,9 +144,10 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
   realtimeProvider?.subscribe?.(symbol=>engine.poke(symbol));
   const getCachedQuote=symbol=>engine.read([symbol])[0];
   const samples=createQuoteSamples({engine,getWatchlist:()=>historyPrewarm.status().persistentWatchlist,now,directory:config.SAMPLES_STATE_PATH,enabled:config.SAMPLES_BACKGROUND_ENABLED==='1',maxBytes:config.SAMPLES_MAX_BYTES});
-  const advancedMarketData=providerOverrides.advancedMarketData||createAdvancedMarketData({httpsGet,fetchChart:yahoo.fetchChart,apiKey:config.APCA_API_KEY_ID,apiSecret:config.APCA_API_SECRET_KEY,feed:config.ALPACA_FEED,now});
+  const advancedMarketData=providerOverrides.advancedMarketData||createAdvancedMarketData({httpsGet,fetchChart:fetchHistory,
+    fetchActionsChart:yahoo.fetchChart,apiKey:config.APCA_API_KEY_ID,apiSecret:config.APCA_API_SECRET_KEY,feed:config.ALPACA_FEED,now});
   const chartDetail=createChartDetailService({readQuote:symbol=>engine.read([symbol],{lease:false})[0],
-    fetchChart:providerOverrides.fetchChart||yahoo.fetchChart,advanced:advancedMarketData,tape:realtimeProvider?tradeTape:null,
+    fetchChart:fetchHistory,advanced:advancedMarketData,tape:realtimeProvider?tradeTape:null,
     streamState:symbol=>{const state=realtimeProvider?.read(symbol);return {state:state?.state||'unavailable',
       healthy:state?.connectionHealthy===true,source:state?.source||null,
       checkedAt:state?.connectionCheckedAt||null,errorCode:state?.errorCode||null};},now});

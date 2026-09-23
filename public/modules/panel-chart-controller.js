@@ -304,7 +304,10 @@
       if(q.slider){q.slider.min=0;q.slider.max=Math.max(0,p.all.length-p.vis);q.slider.value=p.a;q.slider.hidden=p.all.length-p.vis<=0;}
     }
 
-    const sourceName=source=>({'nasdaq-history':'Nasdaq 历史','nasdaq-intraday':'Nasdaq 分时','eastmoney-history':'东方财富历史','naver-index-history':'Naver 指数历史','naver-fchart':'Naver 韩国历史','yahoo':'Yahoo','sina':'新浪','tencent':'腾讯'})[source]||source||'未知来源';
+    const sourceName=source=>({'finnhub-candle':'Finnhub K 线','finnhub-quote':'Finnhub 报价',
+      'naver-world-chart':'Naver 美股分时','nasdaq-history':'Nasdaq 历史','nasdaq-intraday':'Nasdaq 分时',
+      'eastmoney-history':'东方财富历史','naver-index-history':'Naver 指数历史','naver-fchart':'Naver 韩国历史',
+      'yahoo':'Yahoo','sina':'新浪','tencent':'腾讯'})[source]||source||'未知来源';
     function updateChartStatus(q){
       if(q._unmounted)return;
       const e=q.historyStore?.getMeta(q.tf),intra=q.tf==='intraday',m=e?.meta;
