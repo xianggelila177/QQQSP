@@ -2818,7 +2818,11 @@
           const q = ensureCard(d.symbol);
           setFetchStatus(q,'pending');
         });
-        const incoming=arrived.filter(d=>!d.error && !d.pending && d.symbol);
+        const incoming=arrived.filter(d=>!d.error && !d.pending && d.symbol).filter(d=>{
+          const held=cardCache.get(d.symbol)?.d;
+          const nextAt=Number(d.quoteAt??d.ts)||0,heldAt=Number(held?.quoteAt??held?.ts)||0;
+          return !held||nextAt>=heldAt;
+        });
         lastRefresh=Date.now();
         const errors = arrived.filter(d => d.error && !d.pending);
         markFetchErrors(errors, current);
@@ -2868,7 +2872,28 @@
     })();
     return marketInFlight;
   }
-  // 手动刷新按钮: 立即拉全量(行情+新闻+宏观), 在途防重入, 按钮旋转反馈, 结果 flash
+  async function forceMarketRefresh(){
+    if(!watchlist.length)return refresh(false);
+    const readResult=await refresh(false);
+    const snapshot=readResult.superseded?{ok:true,data:lastData}:readResult;
+    if(!snapshot.ok||snapshot.pending)return snapshot;
+    const requested=watchlist.filter(symbol=>{
+      const card=cardCache.get(symbol);
+      return !card?.d||card.fetchStatus==='error'||quoteIsStale(card.d);
+    });
+    if(!requested.length)return snapshot;
+    ++marketGeneration;
+    const url=window.PANEL_LIVE_STORE.symbolsUrl('/api/market/refresh',requested,cvParam());
+    try{
+      const clockStarted=quoteClock.monotonic();
+      const response=await panelNetwork.request('market-force',url,{method:'POST',headers:{'X-QQQSP-Refresh':'1'}});
+      if(!response.ok)throw Object.assign(new Error(response.retryAt>Date.now()?'来源查询限流，约 '+Math.ceil((response.retryAt-Date.now())/1000)+' 秒后重试':'HTTP '+response.status),{retryAt:response.retryAt});
+      const payload=await response.json();
+      quoteClock.sync(response.headers?.get?.('X-Server-Now-Ms'),clockStarted);
+      return {...applyQuotes(PANEL.normalizeList(payload.quotes).filter(Boolean),requested),outcomes:payload.outcomes||{}};
+    }catch(error){return {ok:false,error};}
+  }
+  // 手动刷新要求服务器重新查询行情源；旧报价不会因点击按钮而伪装成新报价。
   async function manualRefresh(){
     if(refreshInFlight) return;
     refreshInFlight = true;
@@ -2876,13 +2901,18 @@
     if(btn) btn.classList.add('spinning');
     try{
       const [market, news, macro] = await PANEL.withDeadline(
-        Promise.all([refresh(false), refreshNews(), refreshMacro()]), 20000,
+        Promise.all([forceMarketRefresh(), refreshNews(), refreshMacro()]), 20000,
         abortActiveRequests
       );
       if(market.superseded)return;
       if (!market.ok) { flash('手动刷新失败: ' + (market.error && market.error.message || '行情暂不可用'), 'error'); return; }
       if (market.partial) { flash('行情部分刷新失败，请稍后重试', 'warn'); return; }
       if (market.pending) { flash('正在等待报价，将自动更新', 'warn'); return; }
+      const staleSymbols=market.data.filter(d=>quoteIsStale(d)).map(d=>d.symbol);
+      if(staleSymbols.length){
+        const shown=staleSymbols.slice(0,3).join('、');
+        flash('已重新查询来源；'+shown+(staleSymbols.length>3?' 等 '+staleSymbols.length+' 只':'')+'仍无更新报价，保留原时间', 'warn');return;
+      }
       if (!news || !macro) { flash('已刷新，部分资讯暂不可用', 'warn'); return; }
       flash('已刷新', 'success');
     }catch(e){ flash('手动刷新失败: ' + (e && e.message || e), 'error'); }
@@ -2921,7 +2951,7 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=102').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=103').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
         nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本','info',{label:'刷新页面',run:()=>location.reload()}); });
       });
@@ -3076,7 +3106,7 @@
   window.addEventListener('pageshow',resumeQuotes);window.addEventListener('online',resumeQuotes);
   startHeartbeat();
   setInterval(watchdogTick, 5000);   // 看门狗: 主线程 5s 一拍(冻结恢复后立即可用)
-  // 手动刷新按钮(顶栏 ↻): 立即全量拉取, 与自动心跳共用去重/缓存
+  // 手动刷新按钮(顶栏 ↻): 先读最新快照，再对旧报价要求上游复查。
   $('btnRefresh').addEventListener('click', () => { manualRefresh(); });
   watchlist.forEach(ensureCard);updateEmptyState();
   const displayTicker=window.PANEL_SCHEDULER.createDisplayTicker(tickClock);

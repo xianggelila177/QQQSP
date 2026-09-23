@@ -75,6 +75,21 @@ test('batch polling selects an available Finnhub quote before website backups',a
   polling.reset();
 });
 
+test('manual source check bypasses a cached Finnhub quote and compares newer backup timestamps',async()=>{
+  const live=Date.parse('2026-09-22T15:00:00Z');let calls=0;
+  const finnhubQuotes=async()=>{
+    calls++;return [normalizeFinnhubQuote('AAOI',{c:107,t:live/1000,pc:105},{now:live})];
+  };
+  const polling=createFastPolling({now:()=>live,pollMs:1000,httpsGet:async()=>({status:503,headers:{},body:''}),finnhubQuotes,
+    legacy:{tencent:async()=>[],fetchSnapshotBatch:async()=>({quotes:[]})}});
+  await polling.fetchSnapshotBatch(['AAOI'],{group:'us'});
+  await polling.fetchSnapshotBatch(['AAOI'],{group:'us'});
+  assert.equal(calls,1,'ordinary reads respect the source cache');
+  await polling.fetchSnapshotBatch(['AAOI'],{group:'us',force:true});
+  assert.equal(calls,2,'manual refresh rechecks the upstream');
+  polling.reset();
+});
+
 test('US chart sequence prefers Finnhub; if denied, verified Naver interval volume beats Nasdaq price points',async()=>{
   const calls=[];
   const nasdaq={source:'nasdaq-intraday',retrievalLimited:true,meta:{symbol:'AAOI',currency:'USD',dataGranularity:'1m'},
