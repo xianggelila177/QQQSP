@@ -2,6 +2,11 @@
   const createCardView = ({ document, panelsEl, stripEl, chartController, formatterFor, cardCurOf, nameOf, onRemove, onRetry, onCurrency, humanizeAge, UP, DOWN, getReadIntervalMs=()=>0, quoteClock=null, onNewsToggle=()=>{} }) => {
     const { esc, fmtVol, pct, fmtTime8 } = window.PANEL_FORMAT;
     const FRIENDLY = {QQQ:'纳指100 ETF',SPY:'标普500 ETF'};
+    const visibleName=d=>{
+      const us=String(d.market||'').startsWith('美股')||d.src==='naver-us';
+      const valid=value=>typeof value==='string'&&value.trim()&&(!us||!/\p{Script=Hangul}/u.test(value));
+      return ([nameOf(d.symbol),d.displayName,d.symbol].find(valid)||d.symbol).trim();
+    };
     const TF = (window.PANEL_TIMEFRAMES?.all || [['intraday','分时'],['daily30','日K'],['weekly','周K'],['monthly','月K'],['yearly','年K']]).map(t=>Array.isArray(t)?t:[t.key,t.label]);
     const cardCache=new Map(), lastPrice=new Map();
     let fundamentalsView=null,detailView=null,chartDetailView=null;
@@ -271,7 +276,7 @@
     q.change.className = 'change c' + (up==null?'':(up?' up':' down'));
     q.pct.className = 'pct c' + (up==null?'':(up?' up':' down'));
 
-    if (q.friendly) q.friendly.textContent = FRIENDLY[d.symbol] || ((nameOf(d.symbol) || (d.displayName !== d.symbol ? d.displayName : '') || d.symbol) + (d.instrumentType === 'ETF' ? ' ETF' : ''));
+    if (q.friendly) q.friendly.textContent = FRIENDLY[d.symbol] || (visibleName(d) + (d.instrumentType === 'ETF' ? ' ETF' : ''));
     if (q.mkttag) { const mk = d.market || '市场未核验'; q.mkttag.dataset.mkt = mk; q.mkttag.textContent = mk; }
     applyStaleBadge(q, d);   // T2: stale 徽标分级 — 上游限流(含重试倒计时)/冷却重试/旧后端 d.stale 兼容
     const calendarEstimate = d.calendarCoverage && d.calendarCoverage.known === false;
