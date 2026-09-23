@@ -136,7 +136,7 @@
     function queueDraw(){if(drawFrame!=null)return;drawFrame=requestAnimationFrame(draw);}
     function renderSummary(){if(!current||!dialog)return;const d=current.d;if(!d)return;
       const money=formatterFor(d).money,change=number(d.change),pct=number(d.changePct),up=change==null?null:change>=0;
-      dialog.querySelector('#chart-detail-title').textContent=(d.displayName||d.name||current.symbol)+' · '+current.symbol;
+      dialog.querySelector('#chart-detail-title').textContent=(current.friendly?.textContent?.trim()||d.displayName||current.symbol)+' · '+current.symbol;
       dialog.querySelector('.cd-status').textContent=(d.priceSession||d.marketState||'状态待核验')+' · '+time(d.quoteAt)+' '+zoneLabel()+' · 图表 '+(d.regularChart?.tradeDate||'日期待核验');
       dialog.querySelector('.cd-price').textContent=number(d.price)==null?'—':money(d.price);
       const changeEl=dialog.querySelector('.cd-change');changeEl.textContent=change==null||pct==null?'涨跌基准待核验':
