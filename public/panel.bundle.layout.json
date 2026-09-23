@@ -75,67 +75,67 @@
     {
       "path": "public/modules/panel-chart-controller.js",
       "startOffset": 57127,
-      "endOffset": 84278
+      "endOffset": 84391
     },
     {
       "path": "public/modules/panel-fundamentals.js",
-      "startOffset": 84326,
-      "endOffset": 98793
+      "startOffset": 84439,
+      "endOffset": 98906
     },
     {
       "path": "public/modules/panel-detail.js",
-      "startOffset": 98835,
-      "endOffset": 109380
+      "startOffset": 98948,
+      "endOffset": 109493
     },
     {
       "path": "public/modules/panel-chart-detail.js",
-      "startOffset": 109428,
-      "endOffset": 132196
+      "startOffset": 109541,
+      "endOffset": 132309
     },
     {
       "path": "public/modules/panel-card-view.js",
-      "startOffset": 132241,
-      "endOffset": 156813
+      "startOffset": 132354,
+      "endOffset": 156954
     },
     {
       "path": "public/modules/panel-search-controller.js",
-      "startOffset": 156866,
-      "endOffset": 163672
+      "startOffset": 157007,
+      "endOffset": 163813
     },
     {
       "path": "public/modules/panel-market-directory.js",
-      "startOffset": 163724,
-      "endOffset": 169832
+      "startOffset": 163865,
+      "endOffset": 169973
     },
     {
       "path": "public/modules/panel-news-controller.js",
-      "startOffset": 169883,
-      "endOffset": 175603
+      "startOffset": 170024,
+      "endOffset": 175744
     },
     {
       "path": "public/modules/panel-macro-context.js",
-      "startOffset": 175652,
-      "endOffset": 184591
+      "startOffset": 175793,
+      "endOffset": 184732
     },
     {
       "path": "public/modules/panel-macro-controller.js",
-      "startOffset": 184643,
-      "endOffset": 196407
+      "startOffset": 184784,
+      "endOffset": 196548
     },
     {
       "path": "public/modules/panel-market-store.js",
-      "startOffset": 196455,
-      "endOffset": 199219
+      "startOffset": 196596,
+      "endOffset": 199360
     },
     {
       "path": "public/modules/panel-live-store.js",
-      "startOffset": 199265,
-      "endOffset": 203456
+      "startOffset": 199406,
+      "endOffset": 203597
     },
     {
       "path": "public/app.js",
-      "startOffset": 203481,
-      "endOffset": 232137
+      "startOffset": 203622,
+      "endOffset": 232278
     }
   ]
 }
