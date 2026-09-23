@@ -61,7 +61,9 @@ test('malformed successful history payload triggers a backup without weakening s
 test('same-day lagging source history stays visible; samples/history are explicit user choices',()=>{
  const sandbox={window:{}};vm.runInNewContext(fs.readFileSync(new URL('../../public/modules/panel-chart-engine.js',import.meta.url),'utf8'),sandbox);
  const select=sandbox.window.PANEL_CHART_ENGINE.createObservationSeries({now:()=>at});const history=[{t:at/1000-1800,c:100,v:100}];
- const q={symbol:'NVDA',src:'test',currency:'USD',gmtoff:-14400,quoteAt:at,price:102,marketState:'REGULAR',priceSession:'REGULAR',charts:{intraday:history}};
+ const q={symbol:'NVDA',src:'test',currency:'USD',gmtoff:-14400,quoteAt:at,price:102,marketState:'REGULAR',priceSession:'REGULAR',
+  charts:{intraday:[{t:at/1000-7200,c:90,v:null},...history]},
+  regularChart:{tradeDate:'2026-09-10',bars:history,regularSessions:[{open_at_ms:Date.parse('2026-09-10T13:30:00Z'),close_at_ms:Date.parse('2026-09-10T20:00:00Z')}]}};
  assert.strictEqual(select(q).bars,history);assert.equal(select(q,'samples').sampled,true);assert.strictEqual(select(q,'history').bars,history);
 });
 test('production lazy history enrichment fetches only intraday; daily/weekly use the history API on demand',async()=>{

@@ -2295,6 +2295,44 @@
                               "null"
                             ]
                           },
+                          "previous_close_trade_date": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "previous_close_source_id": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "previous_close_as_of_ms": {
+                            "type": [
+                              "number",
+                              "null"
+                            ],
+                            "minimum": 0,
+                            "description": "UTC epoch milliseconds; null when unknown"
+                          },
+                          "previous_close_status": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "previous_close_missing_reason": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "change_basis": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
                           "change": {
                             "type": [
                               "number",
@@ -2377,13 +2415,27 @@
                                   "number",
                                   "null"
                                 ]
+                              },
+                              "reference_price": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ]
+                              },
+                              "reference_trade_date": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
                               }
                             },
                             "required": [
                               "price",
                               "quote_at_ms",
                               "change",
-                              "change_percent"
+                              "change_percent",
+                              "reference_price",
+                              "reference_trade_date"
                             ],
                             "additionalProperties": false
                           },
@@ -2415,13 +2467,27 @@
                                   "number",
                                   "null"
                                 ]
+                              },
+                              "reference_price": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ]
+                              },
+                              "reference_trade_date": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
                               }
                             },
                             "required": [
                               "price",
                               "quote_at_ms",
                               "change",
-                              "change_percent"
+                              "change_percent",
+                              "reference_price",
+                              "reference_trade_date"
                             ],
                             "additionalProperties": false
                           },
@@ -2453,13 +2519,27 @@
                                   "number",
                                   "null"
                                 ]
+                              },
+                              "reference_price": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ]
+                              },
+                              "reference_trade_date": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
                               }
                             },
                             "required": [
                               "price",
                               "quote_at_ms",
                               "change",
-                              "change_percent"
+                              "change_percent",
+                              "reference_price",
+                              "reference_trade_date"
                             ],
                             "additionalProperties": false
                           },
@@ -2716,6 +2796,12 @@
                           "currency",
                           "price_unit",
                           "previous_close",
+                          "previous_close_trade_date",
+                          "previous_close_source_id",
+                          "previous_close_as_of_ms",
+                          "previous_close_status",
+                          "previous_close_missing_reason",
+                          "change_basis",
                           "change",
                           "change_percent",
                           "quote_at_ms",

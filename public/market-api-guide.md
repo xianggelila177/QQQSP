@@ -14,6 +14,7 @@
 | --- | --- | --- |
 | `/api/v1/market-context` | POST、GET、HEAD | 按请求分区校验权限；单证券／批量／CSV |
 | `/api/v2/market-detail` | POST | 原详情接口；analysis档可选择高级参数 |
+| `/api/chart/detail` | GET | 浏览器只读图表详情；`range=1d/5d`，说明见 `/chart-detail.md` |
 | `/api/v1/market-status?exchange=US` | GET、HEAD | quote-only；现金证券市场会话与下次正常交易段开市 |
 | `/api/v1/trading-calendar?exchange=US&start=2026-09-01&end=2026-09-30` | GET、HEAD | history；交易日、周末、节假日和半日市 |
 | `/api/v1/movers?market=us&range=1d&top=10` | GET、HEAD | quote-only；上涨、下跌、按成交量活跃三个独立列表 |

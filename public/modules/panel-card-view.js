@@ -4,7 +4,7 @@
     const FRIENDLY = {QQQ:'纳指100 ETF',SPY:'标普500 ETF'};
     const TF = (window.PANEL_TIMEFRAMES?.all || [['intraday','分时'],['daily30','日K'],['weekly','周K'],['monthly','月K'],['yearly','年K']]).map(t=>Array.isArray(t)?t:[t.key,t.label]);
     const cardCache=new Map(), lastPrice=new Map();
-    let fundamentalsView=null,detailView=null;
+    let fundamentalsView=null,detailView=null,chartDetailView=null;
     // Measure natural content, never the stretched card or a previous minimum.
     // A shared observer only schedules work when a band's intrinsic size changes.
     const layoutRecords = new Map(), layoutSizes = new Map();
@@ -70,7 +70,7 @@
         </div>
       </div>
       <div class="tabbar">${TF.map(t=>`<button class="tfbtn" data-tf="${t[0]}">${t[1]}</button>`).join('')}</div>
-      <div class="meter"><div class="chart-statusbar"><span class="chart-state" role="status"></span><span class="chart-modes"><button type="button" data-chart-mode="history">来源历史</button><button type="button" data-chart-mode="samples">报价采样</button></span><button type="button" class="chart-retry" hidden>重试历史</button></div><div class="ohlcbar">—</div><div class="chartframe"><canvas class="chart-main" role="img" aria-label="行情图表"></canvas><canvas class="chart-cursor" aria-hidden="true"></canvas></div><div class="chart-point sr-only"></div><div class="chart-summary sr-only"></div></div>
+      <div class="meter"><div class="chart-statusbar"><span class="chart-state" role="status"></span><span class="chart-modes"><button type="button" data-chart-mode="history">来源历史</button><button type="button" data-chart-mode="samples">报价采样</button></span><button type="button" class="chart-retry" hidden>重试历史</button><button type="button" class="chart-expand" title="展开图表" aria-label="展开横向行情详情">⛶</button></div><div class="ohlcbar">—</div><div class="chartframe"><canvas class="chart-main" role="img" aria-label="行情图表"></canvas><canvas class="chart-cursor" aria-hidden="true"></canvas></div><div class="chart-point sr-only"></div><div class="chart-summary sr-only"></div></div>
       ${window.PANEL_FUNDAMENTALS.markup()}
       <details class="newsbox"><summary class="newshead">相关资讯</summary><div class="newslist"><div class="newsempty">加载中…</div></div></details>
     </section>`;
@@ -112,6 +112,8 @@
     fundamentalsView.mount(q);
     detailView ||= window.PANEL_DETAIL.createDetailView({document});
     detailView.mount(q);
+    chartDetailView ||= window.PANEL_CHART_DETAIL.createChartDetailView({document,formatterFor,UP,DOWN});
+    chartDetailView.mount(q);
     mountBands(q);
     q.ccybtns.forEach(b => b.addEventListener('click', () => onCurrency(sym, b.dataset.ccy)));
     q.ccybtns.forEach(b => {b.classList.toggle('on', b.dataset.ccy === cardCurOf(sym));b.setAttribute('aria-pressed',String(b.dataset.ccy === cardCurOf(sym)));});
@@ -126,14 +128,15 @@
   }
 
   function extHTML(label, s, money, data) {
-    const up = (s.change ?? 0) >= 0; const cl = up ? UP : DOWN; const sg = up ? '+' : '';
-    const chg = s.change == null ? '' : sg + money(s.change) + ' (' + sg + (s.changePct || 0).toFixed(2) + '%)';
-    const base=s.price!=null&&s.change!=null?s.price-s.change:null;
+    const up = s.change == null ? null : s.change >= 0; const cl = up==null ? 'inherit' : up ? UP : DOWN; const sg = up ? '+' : '';
+    const chg = s.change == null ? '涨跌暂缺' : sg + money(s.change) + ' (' + sg + s.changePct.toFixed(2) + '%)';
+    const base=s.referencePrice??(s.price!=null&&s.change!=null?s.price-s.change:null);
     const matches=value=>base!=null&&value!=null&&Math.abs(base-value)<.02;
     const venueDate=value=>{const at=quoteTimeMs(value);return at&&Number.isFinite(data.gmtoff)?new Date(at+data.gmtoff*1000).toISOString().slice(0,10):null;};
     const quoteDay=venueDate(data.quoteAt),regularDay=venueDate(data.regularQuoteAt);
     const sameDay=quoteDay&&regularDay&&quoteDay===regularDay;
-    const baseline=matches(data.regularPrice)?(label==='盘后'&&sameDay?'较本交易日常规收盘':'较常规收盘'):matches(data.prevClose)?'较昨收基准':'较来源基准';
+    const baseline=s.referenceTradeDate?(label==='盘前'?'较上一交易日常规收盘':'较本交易日常规收盘')+' '+s.referenceTradeDate:
+      matches(data.regularPrice)?(label==='盘后'&&sameDay?'较本交易日常规收盘':'较常规收盘'):matches(data.prevClose)?'较昨收基准':'基准待核验';
     const details=[s.high!=null?'高 '+esc(money(s.high)):null,s.low!=null?'低 '+esc(money(s.low)):null,s.volume!=null?'量 '+esc(fmtVol(s.volume)):null].filter(Boolean);
     const html='<span class="exttag">' + label + '变化</span>'
       + '<b style="color:' + cl + '">' + money(s.price) + '</b>'
@@ -275,7 +278,7 @@
     const calendar=window.PANEL_STATE.calendarStatus(d);
     const stName={REGULAR:(calendarEstimate ? '常规时段·节假日未核验' : '交易中'),PRE:'盘前',POST:'盘后',AUCTION:'集合竞价',BREAK:'午间休市',CLOSED:'已收盘',UNKNOWN:calendar.pending?'交易时段待公布':'时段未核验'}[d.marketState]||'时段未核验';
     q.marketLabel=stName;q.marketTitle=calendar.message||(calendarEstimate ? '交易日历覆盖不足，此时段状态仅为估计' : '');applyRequestState(q);
-    if(q.changeBaseline){q.changeBaseline.textContent=(d.changeBasis==='previous-settlement'?'较前结算基准':d.instrumentType==='FUTURE'?'较来源基准':'较昨收基准')+(d.prevClose!=null?' '+money(d.prevClose):'（基准暂缺）');q.changeBaseline.title=d.instrumentType==='FUTURE'?'期货以前结算或来源给出的前值比较，不等同股票昨收。':'主涨跌以来源返回的昨收为分母；盘前或盘后行可能采用另一常规收盘基准，金额在各行注明。';}
+    if(q.changeBaseline){q.changeBaseline.textContent=(d.changeBasis==='previous-settlement'?'较前结算基准':d.instrumentType==='FUTURE'?'较来源基准':'较上一交易日常规收盘')+(d.previousCloseTradeDate?' '+d.previousCloseTradeDate:'')+(d.prevClose!=null?' '+money(d.prevClose):'（基准待核验）');q.changeBaseline.title=d.previousCloseMissingReason||d.previousCloseStatus||'主涨跌相对报价交易日的上一交易日常规收盘；盘后行相对本交易日常规收盘。';}
 
     // 盘前/盘后独立报价行
     if (q.extRow) {
@@ -294,6 +297,7 @@
     fundamentalsView?.render(q);
 
     chartController.drawChart(q);
+    chartDetailView?.update(q);
   }
 
   function renderStrip(d) {
@@ -320,7 +324,7 @@
       applyRequestState(q);
     }
 
-    function remove(symbol) { const q=cardCache.get(symbol);if(!q)return;fundamentalsView?.remove(q);detailView?.remove(q);chartController.unmount(q);for(const content of q.layoutContents||[]){bandObserver?.unobserve(content);layoutRecords.delete(content);}scheduleBands();q.el.remove();q.strip?.remove();cardCache.delete(symbol);lastPrice.delete(symbol); }
+    function remove(symbol) { const q=cardCache.get(symbol);if(!q)return;fundamentalsView?.remove(q);detailView?.remove(q);chartDetailView?.remove(q);chartController.unmount(q);for(const content of q.layoutContents||[]){bandObserver?.unobserve(content);layoutRecords.delete(content);}scheduleBands();q.el.remove();q.strip?.remove();cardCache.delete(symbol);lastPrice.delete(symbol); }
     return Object.freeze({ ensureCard, render, renderStrip, updateQuoteMeta, setFetchStatus, cardCache, remove });
   };
   window.PANEL_CARD_VIEW=Object.freeze({createCardView});

@@ -43,6 +43,8 @@ import {createSearchService,ALIAS,ALIAS_SYM,IDX_NAME} from './lib/search.js';
 import {classifyMarket} from './lib/instruments.js';
 import {calendarCoverageStatus,marketStateFor} from './mkt.mjs';
 import {createHttp} from './lib/http.js';
+import {createTradeTape} from './lib/trade-tape.js';
+import {createChartDetailService} from './lib/chart-detail-service.js';
 import {createReferenceFx} from './lib/providers/reference-fx.js';
 import {createOfficialFeeds,MACRO_OFFICIAL_FEEDS} from './lib/providers/official-feeds.js';
 import {createFxService} from './lib/fx-service.js';
@@ -102,7 +104,8 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
   const quoteCache=createQuoteCache({...quote,now,cacheSet,fetchQuote:providerOverrides.fetchQuote || quote.fetchQuote,breaker,cacheMs,quoteMaxAge:config.QUOTE_MAX_AGE,stats:telemetry.stats,log:telemetry.log});
   const batch=createBatchProvider({httpsGet,now,indexProvider,fallbackQuote:quoteCache.getCachedQuote,pollMs:config.POLL_MS});
   const polling=createFastPolling({httpsGet,legacy:batch,now,pollMs:config.POLL_MS,preferred:config.POLL_PRIMARY});
-  const enrichCharts=createChartEnricher({fetchChart:fetchHistory,fallback:quoteCache.getCachedQuote,tx,now,includeDaily:false});
+  const enrichCharts=createChartEnricher({fetchChart:fetchHistory,fetchHistoricalChart:providerOverrides.fetchChart||yahoo.fetchChart,
+    fallback:quoteCache.getCachedQuote,tx,now,includeDaily:false});
   let realtimeProvider,engine;
   const fundamentals=createFundamentalsService({...(providerOverrides.fetchFundamentals?{fetchFundamentals:providerOverrides.fetchFundamentals}:{sources:createFinancialSources({httpsGet,batch,fetchYahooSummary:yahoo.fetchQuoteSummary,finnhubRequest:finnhubRest?.request,now,statementTtlMs:config.FUNDAMENTALS_TTL_MS})}),now,
     enabled:config.FUNDAMENTALS_ENABLED==='1',ttlMs:config.FUNDAMENTALS_TTL_MS,retryMs:config.FUNDAMENTALS_RETRY_MS,maxAgeMs:config.FUNDAMENTALS_MAX_AGE_MS,onUpdate:symbol=>engine?.poke(symbol)});
@@ -112,9 +115,11 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
   const redundancy=fx?createRedundancy({getQuote:baseGetQuote,fx,recovery,now}):null;
   let accepting=true;
   const selectedGetQuote=redundancy?redundancy.getCachedQuote:baseGetQuote;
-  const alpaca=env.ALPACA_ENABLED==='1'?(providerOverrides.alpacaProvider||createAlpacaProvider({env,now,httpsGet})):null;
+  const tradeTape=createTradeTape({now});
+  const alpaca=env.ALPACA_ENABLED==='1'?(providerOverrides.alpacaProvider||createAlpacaProvider({env,now,httpsGet,
+    onTrade:event=>tradeTape.record(event),onTradeInvalidation:event=>tradeTape.invalidate(event)})):null;
   const finnhubToken=env.FINNHUB_TOKEN||finnhubTokens[0]||'';
-  const finnhub=finnhubToken?(providerOverrides.finnhubProvider||createFinnhubProvider({token:finnhubToken,maxSymbols:config.FINNHUB_MAX_SYMBOLS,now})):null;
+  const finnhub=finnhubToken?(providerOverrides.finnhubProvider||createFinnhubProvider({token:finnhubToken,maxSymbols:config.FINNHUB_MAX_SYMBOLS,now,onTrade:event=>tradeTape.record(event)})):null;
   realtimeProvider=alpaca&&finnhub?createStreamPair(alpaca,finnhub,{now}):alpaca||finnhub;
   const realtime=realtimeProvider?createRealtimeQuoteService({provider:realtimeProvider,fallback:selectedGetQuote,now,onUpdate:symbol=>engine?.poke(symbol)}):null;
   const servingGetQuote=realtime?realtime.getCachedQuote:selectedGetQuote;
@@ -123,14 +128,19 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
     const value=await (isFutureSymbol(args[0])?futures.getQuote(args[0]):servingGetQuote(...args));
     return refreshIndexSession(value,now());
   };
-  engine=createQuoteEngine({readQuote:readSourceQuote,decorateQuote:fundamentals.decorate,now,onMembership:list=>{fundamentals.retain(list);snapshots?.retain(list.filter(s=>!isFutureSymbol(s)));realtimeProvider?.retain?.(list.filter(s=>!isFutureSymbol(s)));}});
+  engine=createQuoteEngine({readQuote:readSourceQuote,decorateQuote:fundamentals.decorate,now,onMembership:list=>{fundamentals.retain(list);tradeTape.retain(list.filter(s=>!isFutureSymbol(s)));snapshots?.retain(list.filter(s=>!isFutureSymbol(s)));realtimeProvider?.retain?.(list.filter(s=>!isFutureSymbol(s)));}});
   realtimeProvider?.subscribe?.(symbol=>engine.poke(symbol));
   const getCachedQuote=symbol=>engine.read([symbol])[0];
   const samples=createQuoteSamples({engine,getWatchlist:()=>historyPrewarm.status().persistentWatchlist,now,directory:config.SAMPLES_STATE_PATH,enabled:config.SAMPLES_BACKGROUND_ENABLED==='1',maxBytes:config.SAMPLES_MAX_BYTES});
   const advancedMarketData=providerOverrides.advancedMarketData||createAdvancedMarketData({httpsGet,fetchChart:yahoo.fetchChart,apiKey:config.APCA_API_KEY_ID,apiSecret:config.APCA_API_SECRET_KEY,feed:config.ALPACA_FEED,now});
+  const chartDetail=createChartDetailService({readQuote:symbol=>engine.read([symbol],{lease:false})[0],
+    fetchChart:providerOverrides.fetchChart||yahoo.fetchChart,advanced:advancedMarketData,tape:realtimeProvider?tradeTape:null,
+    streamState:symbol=>{const state=realtimeProvider?.read(symbol);return {state:state?.state||'unavailable',
+      healthy:state?.connectionHealthy===true,source:state?.source||null,
+      checkedAt:state?.connectionCheckedAt||null,errorCode:state?.errorCode||null};},now});
   const marketContext=createMarketContextService({engine,history,samples,news,macro:macroMonitor,advanced:advancedMarketData,now});
   function cacheSizes(){return {advancedMarketData:advancedMarketData.diagnostics?.()||null,marketContext:marketContext.diagnostics(),fundamentals:fundamentals.diagnostics(),finnhubRest:finnhubRest?.diagnostics()||{enabled:false,tokenCount:0},samples:samples.diagnostics(),budget:{cacheBytes:config.CACHE_BUDGET_BYTES,historyBytes:config.HISTORY_MAX_BYTES,recoveryBytes:config.RECOVERY_MAX_BYTES,sseBytes:config.SSE_MAX_BUFFER_BYTES,sampleBytes:config.SAMPLES_MAX_BYTES,totalReservedBytes:config.CACHE_BUDGET_BYTES+config.SAMPLES_MAX_BYTES,scope:"cache reservations plus independent sample store, not a process heap limit"},history:history.diagnostics(),historyPrewarm:historyPrewarm.status(),macroMonitor:macroMonitor.status(),macroSources:macroQuotes.diagnostics(),macroContext:macroContext.snapshot(),futures:futures.diagnostics(),hosts:gate.diagnostics(),engine:engine.diagnostics(),quote:quote.cacheMap.size,slow:slowMap.size,news:news.newsCache.size,search:search.searchCache.size,sina:sina.sinaCache.size,macro:macro.macroCache.size,cnSnap:quote.cnSnapCache.size,activeSyms:news.activeSyms.size,static:httpLayer.staticCache.size,failAt:quote.failAt.size,sinaFailAt:sina.sinaFailAt.size,yahoo429Ms:Math.max(0,breaker.state().until-now()),usSnap:tx.usSnapCache.size,realtime:snapshots?.diagnostics(),alpaca:realtime?.diagnostics(),redundancy:redundancy?.diagnostics(),referenceFx:referenceFx?.diagnostics(),officialNews:officialNews?.diagnostics(),calendar:calendarCoverageStatus(now())};}
-  const httpLayer=createHttp({advancedMarketData,marketContext,samples,getCachedQuote,macroMonitor,getMacro:()=>config.MACRO_BACKGROUND_ENABLED==='1'?macroMonitor.snapshot().news:macro.getMacro(),getMacroContext:()=>config.MACRO_BACKGROUND_ENABLED==='1'?macroMonitor.snapshot().context:({...macroContext.requestContext(),calendar:macroCalendar.requestCalendar()}),cacheSizes,requestNews:news.requestNews,activateNews:news.activateNews,finnhubSearch:search.finnhubSearch,yahooSearch:search.yahooSearch,tencentSuggest:search.tencentSuggest,koreanSearch,futuresSearch:futures.search,classifyMarket,ALIAS,ALIAS_SYM,IDX_NAME,cacheMs,upstreamTimeout,history,historyPrewarm,engine,sourceHealth:()=>({fundamentals:fundamentals.diagnostics(),finnhubRest:finnhubRest?.diagnostics()||{enabled:false,tokenCount:0},polling:polling.diagnostics(),hosts:gate.diagnostics(),stream:realtime?.diagnostics()||{enabled:false,status:'website-polling'}})},{env,telemetry,now,monitorCore:false});
+  const httpLayer=createHttp({advancedMarketData,marketContext,chartDetail,samples,getCachedQuote,macroMonitor,getMacro:()=>config.MACRO_BACKGROUND_ENABLED==='1'?macroMonitor.snapshot().news:macro.getMacro(),getMacroContext:()=>config.MACRO_BACKGROUND_ENABLED==='1'?macroMonitor.snapshot().context:({...macroContext.requestContext(),calendar:macroCalendar.requestCalendar()}),cacheSizes,requestNews:news.requestNews,activateNews:news.activateNews,finnhubSearch:search.finnhubSearch,yahooSearch:search.yahooSearch,tencentSuggest:search.tencentSuggest,koreanSearch,futuresSearch:futures.search,classifyMarket,ALIAS,ALIAS_SYM,IDX_NAME,cacheMs,upstreamTimeout,history,historyPrewarm,engine,sourceHealth:()=>({fundamentals:fundamentals.diagnostics(),finnhubRest:finnhubRest?.diagnostics()||{enabled:false,tokenCount:0},polling:polling.diagnostics(),hosts:gate.diagnostics(),stream:realtime?.diagnostics()||{enabled:false,status:'website-polling'}})},{env,telemetry,now,monitorCore:false});
   let started=false,reporterTimer=null,stopping=null,samplesInit=null;
   function start(){if(stopping)throw new Error('Application stop in progress');if(started)return httpLayer.httpServer;accepting=true;advancedMarketData.reopen?.();marketContext.reopen();transport.reopen?.();batch.reopen();indexProvider.reopen();yahoo.reopen();auth.reopen();fetchHistory.reopen?.();history.reopen();futures.reopen();macroQuotes.reopen();macroContext.reopen();macroCalendar.reopen();quoteCache.reopen();for(const service of [tx,nasdaq,sina,quote])service.reopen();started=true;fundamentals.start();news.startNews();redundancy?.start();snapshots?.start();realtime?.start();engine.start();samplesInit=historyPrewarm.start().then(()=>{if(accepting)return samples.start();});void macroMonitor.start();httpLayer.startListen();telemetry.log.info('[topology]',{mode:'single-user',delivery:'sse',macroBackground:config.MACRO_BACKGROUND_ENABLED==='1',snapshots:!!snapshots,alpaca:!!alpaca,finnhub:!!finnhub,fx:config.FX_MODE,recovery:!!recovery});reporterTimer=telemetry.startStatsReporter(cacheSizes);return httpLayer.httpServer;}
   function stop(){
