@@ -1,4 +1,5 @@
 import {MAX_WATCHLIST_SYMBOLS} from './lib/watchlist-limits.js';
+import {parseFinnhubTokens} from './lib/providers/finnhub-rest.js';
 // Only the composition root supplies process.env. Modules receive explicit values.
 export const DEFAULTS=Object.freeze({
   HOST:'127.0.0.1',PORT:8567,SYMBOLS:'QQQ,SPY',PUBLIC_ORIGIN:'',STATS_TOKEN:'',LLM_API_KEY:'',LLM_KEY_STORE_PATH:'./state/api-keys.json',API_V1_DEPRECATION_AT:'',API_V1_SUNSET_AT:'',
@@ -20,7 +21,7 @@ export const DEFAULTS=Object.freeze({
   HISTORY_BACKGROUND_ENABLED:'1',HISTORY_STATE_PATH:'./state/history.json',HISTORY_REFRESH_MS:60000,
   SAMPLES_BACKGROUND_ENABLED:'1',SAMPLES_STATE_PATH:'./state/samples',SAMPLES_MAX_BYTES:100663296,
   MACRO_BACKGROUND_ENABLED:'1',MACRO_STATE_PATH:'./state/macro.json',MACRO_CONTEXT_MS:30000,MACRO_NEWS_MS:60000,
-  MACRO_WEBHOOK_URL:'',MACRO_WEBHOOK_TOKEN:'',TE_API_KEY:'',FINNHUB_TOKEN:'',FINNHUB_MAX_SYMBOLS:30,LOG_LEVEL:'info',LOG_FILE:'./logs/panel.log',LOG_MAX_BYTES:10485760,LOG_MAX_FILES:3
+  MACRO_WEBHOOK_URL:'',MACRO_WEBHOOK_TOKEN:'',TE_API_KEY:'',FINNHUB_TOKEN:'',FINNHUB_TOKENS:'',FINNHUB_MAX_SYMBOLS:30,LOG_LEVEL:'info',LOG_FILE:'./logs/panel.log',LOG_MAX_BYTES:10485760,LOG_MAX_FILES:3
 });
 export function loadConfig(input={}){
   const result={...DEFAULTS};
@@ -38,6 +39,7 @@ export function loadConfig(input={}){
   if(result.POLL_MS<1000||result.POLL_MS>60000)throw new TypeError('POLL_MS 必须为 1000～60000');
   if(!['sina','tencent'].includes(result.POLL_PRIMARY))throw new TypeError('POLL_PRIMARY 必须为 sina 或 tencent');
   if(result.PORT>65535)throw new TypeError('PORT 超出范围');
+  parseFinnhubTokens(result.FINNHUB_TOKEN,result.FINNHUB_TOKENS);
   if(result.FINNHUB_MAX_SYMBOLS<1||result.FINNHUB_MAX_SYMBOLS>100)throw new TypeError('FINNHUB_MAX_SYMBOLS 必须为 1～100；以账户实际权限为准');
   if(!['reference','market'].includes(result.FX_MODE))throw new TypeError('FX_MODE 必须为 reference 或 market');
   for(const key of ['FUNDAMENTALS_ENABLED','TRUST_PROXY_LOOPBACK','REALTIME_SNAPSHOTS','PUBLIC_SOURCE_REDUNDANCY','ALPACA_ENABLED','MACRO_BACKGROUND_ENABLED','HISTORY_BACKGROUND_ENABLED','SAMPLES_BACKGROUND_ENABLED'])if(!['0','1'].includes(result[key]))throw new TypeError(key+' 必须为 0 或 1');
