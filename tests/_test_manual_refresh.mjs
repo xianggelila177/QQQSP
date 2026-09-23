@@ -16,7 +16,7 @@ const mkQuote = (sym, extra = {}) => ({
   symbol: sym, price: 480, change: 1.2, changePct: 0.25,
   open: 479, dayHigh: 482, dayLow: 477, prevClose: 478.8,
   volume: 3131131, week52High: 620, week52Low: 210,
-  marketState: 'REGULAR', currency: 'USD', name: 'X', ts: Date.now(),
+  marketState: 'REGULAR', currency: 'USD', name: 'X', ts: Date.now(), quoteAt:Date.now(),sourceCheckedAt:Date.now(),
   charts: { intraday: [{ t: Math.floor(Date.now() / 1000) - 30, c: 480, v: 900 }] }, ...extra,
 });
 
@@ -50,6 +50,24 @@ async function main() {
   await drain(env); await drain(env);
   ok(!env.byId('btnRefresh').classList.contains('spinning'), '完成后 spinning 移除', String(env.byId('btnRefresh').className));
 
+  console.log('[A3] 旧报价要求上游检查，只有新报价才撤销提示');
+  const oldAt=Date.now()-20*60000;
+  H().cardCache.get('QQQ').d=mkQuote('QQQ',{quoteAt:oldAt,ts:oldAt});
+  env.fetch.push('market',{body:[mkQuote('QQQ',{quoteAt:oldAt,ts:oldAt})]});
+  env.fetch.push('market',{body:{quotes:[mkQuote('QQQ')],outcomes:{QQQ:'updated'}}});
+  clickRefresh();
+  for(let i=0;i<5;i++)await drain(env);
+  ok(env.countFetch('/api/market/refresh')===1,'旧报价触发服务器强制检查');
+  ok(H().cardCache.get('QQQ').staleWarn.hidden===true,'新报价到达后延迟提示隐藏');
+
+  H().cardCache.get('QQQ').d=mkQuote('QQQ',{quoteAt:oldAt,ts:oldAt});
+  env.fetch.push('market',{body:[mkQuote('QQQ',{quoteAt:oldAt,ts:oldAt})]});
+  env.fetch.push('market',{body:{quotes:[mkQuote('QQQ',{quoteAt:oldAt,ts:oldAt})],outcomes:{QQQ:'unchanged'}}});
+  clickRefresh();
+  for(let i=0;i<5;i++)await drain(env);
+  ok(H().cardCache.get('QQQ').staleWarn.hidden===false,'上游未更新时保留真实的旧报价提示');
+  ok(bodyTexts().some(t=>t.includes('仍无更新报价')),'手动刷新说明来源已查但仍无新报价');
+
   // ===== B. 心跳死亡自愈 =====
   console.log('[B] 看门狗自愈');
   ok(H().heartbeatMode() === 'worker', '初始 worker 模式', H().heartbeatMode());
@@ -65,7 +83,7 @@ async function main() {
   const n2 = env.countFetch('/api/market');
   const verdict = H().watchdogTick(Date.now());
   await drain(env);
-  ok(env.countFetch('/api/market') === n2 + 1 && verdict === 'refreshed', '>30s 无成功刷新 → 强制补刷', 'n=' + env.countFetch('/api/market') + '/' + n2 + ' v=' + verdict);
+  ok(env.countFetch('/api/market') === n2 && verdict === 'ok', 'liveStore 持有行情连接时看门狗不重复补刷', 'n=' + env.countFetch('/api/market') + '/' + n2 + ' v=' + verdict);
   const n3 = env.countFetch('/api/market');
   H().watchdogTick(Date.now());
   await drain(env);

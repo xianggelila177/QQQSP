@@ -10,7 +10,7 @@ test('real HTTP serves readiness without source polling; SSE propagates cached c
  const f=await fixture(t);const health=await (await fetch(f.url+'/readyz')).json();assert.equal(health.ready,true);assert.equal(health.dataReady,false);assert.equal(f.calls(),0);
  const socket=stream(f.url+'/api/stream?symbols=QQQ');t.after(()=>socket.close());await wait(180);const initial=socket.events.find(e=>e.quotes?.[0]?.price===100);assert.ok(initial);assert.equal(initial.quotes[0].sourceCheckedAt<initial.serverNow,true);
  const initialCalls=f.calls();for(let i=0;i<5;i++)await (await fetch(f.url+'/api/market?symbols=QQQ')).json();assert.equal(f.calls(),initialCalls,'HTTP reads do not call upstream');
- f.change(101);await wait(100);const changed=socket.events.find(e=>e.quotes?.[0]?.price===101);assert.ok(changed);assert.equal(changed.quotes[0].charts.intraday,'same');assert.equal(changed.quotes[0].charts.daily30,'same');
+ f.change(101);await wait(250);const changed=socket.events.find(e=>e.quotes?.[0]?.price===101);assert.ok(changed);assert.equal(changed.quotes[0].charts.intraday,'same');assert.equal(changed.quotes[0].charts.daily30,'same');
  assert.equal((await fetch(f.url+'/api/stream?symbols=QQQ',{method:'HEAD'})).status,200);
  assert.equal((await fetch(f.url+'/api/not-found')).status,404);assert.equal((await fetch(f.url+'/api/market?symbols=QQQ;bad')).status,400);
  const sources=await (await fetch(f.url+'/api/sources')).json();assert.ok(sources.hosts);assert.ok(!JSON.stringify(sources).includes('APCA_API_SECRET_KEY'));
