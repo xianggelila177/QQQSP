@@ -23,6 +23,16 @@ test('instrument identity and price units distinguish ETF, cash index and A shar
   assert.equal(result.instrument.type,type);assert.equal(result.instrument.currency,currency);assert.equal(result.instrument.market,market);assert.equal(result.instrument.time_zone,zone);assert.equal(result.instrument.price_unit,type==='INDEX'?'points':currency);assert.equal(result.sections.quote.data.price,12345.6789);assert.equal(result.sections.quote.data.volume,type==='INDEX'?null:123);
  }
 });
+test('known listings retain their identity and native currency when quote and history are unavailable',()=>{
+ for(const [symbol,currency,exchange] of [['TSM','USD','NYSE'],['2330.TW','TWD','TWSE']]){
+  const result=build({query:query(['quote'],{symbol}),quote:null,daily:null});
+  assert.equal(result.sections.quote.status,'unavailable');
+  assert.equal(result.instrument.symbol,symbol);
+  assert.notEqual(result.instrument.name,symbol);
+  assert.equal(result.instrument.currency,currency);
+  assert.ok(result.instrument.exchange?.includes(exchange));
+ }
+});
 
 test('intraday source history stays independent, sorted and deduplicated with UTC ms, dates and truthful unknown volume',()=>{
  const input=quote({charts:{intraday:[{t:TRADE/1000,c:187,v:null},{t:TRADE/1000-120,c:186,v:null},{t:TRADE/1000,c:187.5,v:100},{t:NaN,c:9},{t:TRADE/1000-60,c:Infinity}]}});
@@ -122,5 +132,5 @@ test('quote freshness derives overdue successful checks even without stale flags
 test('unknown and invalid source check timestamps are partial while old closed quotes with fresh confirmation remain ready',()=>{
  for(const sourceCheckedAt of [undefined,null]){const result=build({quote:quote({sourceCheckedAt})});assert.equal(result.sections.quote.status,'partial');assert.equal(result.sections.quote.missing_reason,'UNKNOWN_SOURCE_CHECK');assert.equal(result.sections.quote.source_checked_at_ms,null);}
  for(const sourceCheckedAt of [0,-1,'1780000000000',Infinity,NOW+1]){const result=build({quote:quote({sourceCheckedAt})});assert.equal(result.sections.quote.status,'partial');assert.equal(result.sections.quote.missing_reason,'SOURCE_TIME_INVALID');if(sourceCheckedAt===NOW+1)assert.equal(result.sections.quote.source_checked_at_ms,NOW+1);}
- const old=build({quote:quote({quoteAt:NOW-3*86400000,sourceCheckedAt:NOW-1000,marketState:'CLOSED'})});assert.equal(old.sections.quote.status,'ready');assert.equal(old.sections.quote.data.quote_at_ms,NOW-3*86400000);
+ const oldAt=NOW-3*86400000,old=build({quote:quote({quoteAt:oldAt,regularQuoteAt:oldAt-3*3600000,sourceCheckedAt:NOW-1000,marketState:'CLOSED'})});assert.equal(old.sections.quote.status,'ready');assert.equal(old.sections.quote.data.quote_at_ms,oldAt);
 });

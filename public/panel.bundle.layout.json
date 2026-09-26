@@ -25,117 +25,117 @@
     {
       "path": "public/modules/panel-history-store.js",
       "startOffset": 4098,
-      "endOffset": 9830
+      "endOffset": 10747
     },
     {
       "path": "public/modules/panel-sample-store.js",
-      "startOffset": 9878,
-      "endOffset": 12627
+      "startOffset": 10795,
+      "endOffset": 13544
     },
     {
       "path": "public/modules/panel-chart-engine.js",
-      "startOffset": 12675,
-      "endOffset": 35250
+      "startOffset": 13592,
+      "endOffset": 37057
     },
     {
       "path": "public/modules/panel-scheduler.js",
-      "startOffset": 35295,
-      "endOffset": 36492
+      "startOffset": 37102,
+      "endOffset": 38299
     },
     {
       "path": "public/modules/panel-network.js",
-      "startOffset": 36535,
-      "endOffset": 39799
+      "startOffset": 38342,
+      "endOffset": 41606
     },
     {
       "path": "public/modules/panel-watchlist-sync.js",
-      "startOffset": 39849,
-      "endOffset": 42128
+      "startOffset": 41656,
+      "endOffset": 43935
     },
     {
       "path": "public/modules/panel-admin.js",
-      "startOffset": 42169,
-      "endOffset": 44463
+      "startOffset": 43976,
+      "endOffset": 46270
     },
     {
       "path": "public/modules/panel-state.js",
-      "startOffset": 44504,
-      "endOffset": 54320
+      "startOffset": 46311,
+      "endOffset": 56127
     },
     {
       "path": "public/modules/panel-utils.js",
-      "startOffset": 54361,
-      "endOffset": 55029
+      "startOffset": 56168,
+      "endOffset": 56836
     },
     {
       "path": "public/modules/panel-format.js",
-      "startOffset": 55071,
-      "endOffset": 57631
+      "startOffset": 56878,
+      "endOffset": 60044
     },
     {
       "path": "public/modules/panel-chart-controller.js",
-      "startOffset": 57683,
-      "endOffset": 85136
+      "startOffset": 60096,
+      "endOffset": 89251
     },
     {
       "path": "public/modules/panel-fundamentals.js",
-      "startOffset": 85184,
-      "endOffset": 99651
+      "startOffset": 89299,
+      "endOffset": 103766
     },
     {
       "path": "public/modules/panel-detail.js",
-      "startOffset": 99693,
-      "endOffset": 110238
+      "startOffset": 103808,
+      "endOffset": 114353
     },
     {
       "path": "public/modules/panel-chart-detail.js",
-      "startOffset": 110286,
-      "endOffset": 133159
+      "startOffset": 114401,
+      "endOffset": 145702
     },
     {
       "path": "public/modules/panel-card-view.js",
-      "startOffset": 133204,
-      "endOffset": 157804
+      "startOffset": 145747,
+      "endOffset": 170494
     },
     {
       "path": "public/modules/panel-search-controller.js",
-      "startOffset": 157857,
-      "endOffset": 164663
+      "startOffset": 170547,
+      "endOffset": 177483
     },
     {
       "path": "public/modules/panel-market-directory.js",
-      "startOffset": 164715,
-      "endOffset": 170823
+      "startOffset": 177535,
+      "endOffset": 183643
     },
     {
       "path": "public/modules/panel-news-controller.js",
-      "startOffset": 170874,
-      "endOffset": 176594
+      "startOffset": 183694,
+      "endOffset": 189414
     },
     {
       "path": "public/modules/panel-macro-context.js",
-      "startOffset": 176643,
-      "endOffset": 185582
+      "startOffset": 189463,
+      "endOffset": 198402
     },
     {
       "path": "public/modules/panel-macro-controller.js",
-      "startOffset": 185634,
-      "endOffset": 197398
+      "startOffset": 198454,
+      "endOffset": 210218
     },
     {
       "path": "public/modules/panel-market-store.js",
-      "startOffset": 197446,
-      "endOffset": 200210
+      "startOffset": 210266,
+      "endOffset": 213611
     },
     {
       "path": "public/modules/panel-live-store.js",
-      "startOffset": 200256,
-      "endOffset": 204447
+      "startOffset": 213657,
+      "endOffset": 217906
     },
     {
       "path": "public/app.js",
-      "startOffset": 204472,
-      "endOffset": 234867
+      "startOffset": 217931,
+      "endOffset": 248419
     }
   ]
 }

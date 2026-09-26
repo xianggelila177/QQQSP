@@ -2274,8 +2274,7 @@
                         "type": "object",
                         "properties": {
                           "price": {
-                            "type": "number",
-                            "exclusiveMinimum": 0
+                            "type": "number"
                           },
                           "currency": {
                             "type": [
@@ -2949,8 +2948,7 @@
                               ]
                             },
                             {
-                              "type": "number",
-                              "exclusiveMinimum": 0
+                              "type": "number"
                             },
                             {
                               "type": [
@@ -3081,20 +3079,16 @@
                               "type": "string"
                             },
                             {
-                              "type": "number",
-                              "exclusiveMinimum": 0
+                              "type": "number"
                             },
                             {
-                              "type": "number",
-                              "exclusiveMinimum": 0
+                              "type": "number"
                             },
                             {
-                              "type": "number",
-                              "exclusiveMinimum": 0
+                              "type": "number"
                             },
                             {
-                              "type": "number",
-                              "exclusiveMinimum": 0
+                              "type": "number"
                             },
                             {
                               "type": [
@@ -3397,20 +3391,16 @@
                               "type": "string"
                             },
                             {
-                              "type": "number",
-                              "exclusiveMinimum": 0
+                              "type": "number"
                             },
                             {
-                              "type": "number",
-                              "exclusiveMinimum": 0
+                              "type": "number"
                             },
                             {
-                              "type": "number",
-                              "exclusiveMinimum": 0
+                              "type": "number"
                             },
                             {
-                              "type": "number",
-                              "exclusiveMinimum": 0
+                              "type": "number"
                             },
                             {
                               "type": [
@@ -3554,20 +3544,16 @@
                               "type": "string"
                             },
                             {
-                              "type": "number",
-                              "exclusiveMinimum": 0
+                              "type": "number"
                             },
                             {
-                              "type": "number",
-                              "exclusiveMinimum": 0
+                              "type": "number"
                             },
                             {
-                              "type": "number",
-                              "exclusiveMinimum": 0
+                              "type": "number"
                             },
                             {
-                              "type": "number",
-                              "exclusiveMinimum": 0
+                              "type": "number"
                             },
                             {
                               "type": [
@@ -3730,8 +3716,7 @@
                               "type": "string"
                             },
                             {
-                              "type": "number",
-                              "exclusiveMinimum": 0
+                              "type": "number"
                             },
                             {
                               "type": [
@@ -10780,7 +10765,741 @@
           "quality",
           "definitions"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "$comment": "instrument-price-domain",
+            "if": {
+              "properties": {
+                "instrument": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "const": "FUTURE"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                }
+              },
+              "required": [
+                "instrument"
+              ]
+            },
+            "else": {
+              "properties": {
+                "sections": {
+                  "type": "object",
+                  "properties": {
+                    "quote": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "properties": {
+                            "price": {
+                              "type": "number",
+                              "exclusiveMinimum": 0
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "intraday": {
+                      "type": "object",
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "columns": {
+                                "const": [
+                                  "time_ms",
+                                  "trade_date",
+                                  "price",
+                                  "volume",
+                                  "session"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "columns"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "rows": {
+                                "type": "array",
+                                "items": {
+                                  "type": "array",
+                                  "prefixItems": [
+                                    {},
+                                    {},
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {},
+                                    {}
+                                  ],
+                                  "minItems": 5,
+                                  "maxItems": 5
+                                }
+                              },
+                              "records": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "price": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "if": {
+                            "properties": {
+                              "columns": {
+                                "const": [
+                                  "time_ms",
+                                  "trade_date",
+                                  "open",
+                                  "high",
+                                  "low",
+                                  "close",
+                                  "volume",
+                                  "session"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "columns"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "rows": {
+                                "type": "array",
+                                "items": {
+                                  "type": "array",
+                                  "prefixItems": [
+                                    {},
+                                    {},
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {},
+                                    {}
+                                  ],
+                                  "minItems": 8,
+                                  "maxItems": 8
+                                }
+                              },
+                              "records": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "open": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    "high": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    "low": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    "close": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "if": {
+                            "properties": {
+                              "columns": {
+                                "const": [
+                                  "time_ms",
+                                  "trade_date",
+                                  "open",
+                                  "high",
+                                  "low",
+                                  "close",
+                                  "volume",
+                                  "session",
+                                  "sample_count",
+                                  "source_id"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "columns"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "rows": {
+                                "type": "array",
+                                "items": {
+                                  "type": "array",
+                                  "prefixItems": [
+                                    {},
+                                    {},
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {},
+                                    {},
+                                    {},
+                                    {}
+                                  ],
+                                  "minItems": 10,
+                                  "maxItems": 10
+                                }
+                              },
+                              "records": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "open": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    "high": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    "low": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    "close": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "daily": {
+                      "type": "object",
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "columns": {
+                                "const": [
+                                  "time_ms",
+                                  "trade_date",
+                                  "open",
+                                  "high",
+                                  "low",
+                                  "close",
+                                  "volume",
+                                  "period_state",
+                                  "coverage_status"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "columns"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "rows": {
+                                "type": "array",
+                                "items": {
+                                  "type": "array",
+                                  "prefixItems": [
+                                    {},
+                                    {},
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {},
+                                    {},
+                                    {}
+                                  ],
+                                  "minItems": 9,
+                                  "maxItems": 9
+                                }
+                              },
+                              "records": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "open": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    "high": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    "low": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    "close": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "if": {
+                            "properties": {
+                              "columns": {
+                                "const": [
+                                  "time_ms",
+                                  "trade_date",
+                                  "open",
+                                  "high",
+                                  "low",
+                                  "close",
+                                  "volume",
+                                  "period_state",
+                                  "coverage_status",
+                                  "adjusted_close",
+                                  "period_start",
+                                  "last_trading_date"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "columns"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "rows": {
+                                "type": "array",
+                                "items": {
+                                  "type": "array",
+                                  "prefixItems": [
+                                    {},
+                                    {},
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {},
+                                    {},
+                                    {},
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {},
+                                    {}
+                                  ],
+                                  "minItems": 12,
+                                  "maxItems": 12
+                                }
+                              },
+                              "records": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "open": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    "high": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    "low": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    "close": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    "adjusted_close": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "samples": {
+                      "type": "object",
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "columns": {
+                                "const": [
+                                  "time_ms",
+                                  "trade_date",
+                                  "price",
+                                  "observed_at_ms",
+                                  "source_checked_at_ms",
+                                  "source_id",
+                                  "currency",
+                                  "session",
+                                  "delay_minutes"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "columns"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "rows": {
+                                "type": "array",
+                                "items": {
+                                  "type": "array",
+                                  "prefixItems": [
+                                    {},
+                                    {},
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {},
+                                    {},
+                                    {},
+                                    {},
+                                    {},
+                                    {}
+                                  ],
+                                  "minItems": 9,
+                                  "maxItems": 9
+                                }
+                              },
+                              "records": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "price": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "if": {
+                            "properties": {
+                              "columns": {
+                                "const": [
+                                  "time_ms",
+                                  "trade_date",
+                                  "open",
+                                  "high",
+                                  "low",
+                                  "close",
+                                  "volume",
+                                  "session",
+                                  "sample_count",
+                                  "source_id"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "columns"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "rows": {
+                                "type": "array",
+                                "items": {
+                                  "type": "array",
+                                  "prefixItems": [
+                                    {},
+                                    {},
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    {},
+                                    {},
+                                    {},
+                                    {}
+                                  ],
+                                  "minItems": 10,
+                                  "maxItems": 10
+                                }
+                              },
+                              "records": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "open": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    "high": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    "low": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    },
+                                    "close": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ],
+                                      "exclusiveMinimum": 0
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
       },
       "Batch": {
         "type": "object",

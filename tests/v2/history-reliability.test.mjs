@@ -31,11 +31,68 @@ test('empty Nasdaq table uses Eastmoney, then identical requests use the shared 
  let calls=[];const source=createPublicHistory({now:()=>at,httpsGet:async url=>{calls.push(url);return url.includes('nasdaq')?ok({data:{symbol:'MRVL',tradesTable:{rows:[]}}}):ok(east());}});
  const first=await source('MRVL','?interval=1d&range=2y');const second=await source('MRVL','?interval=1d&range=2y');assert.strictEqual(first,second);assert.equal(first.source,'eastmoney-history');assert.equal(calls.length,2);
 });
-test('daily to yearly while source request is in flight fetches the wider range once, not undersized cache',async()=>{
- let release,calls=[];const source=createPublicHistory({now:()=>at,httpsGet:async url=>{calls.push(url);if(calls.length===1)await new Promise(r=>release=r);return ok(ndq());}});
+test('daily to yearly while source request is in flight uses bounded Nasdaq pages, not undersized cache',async()=>{
+ let release,calls=[];const dates=['09/09/2026','09/04/2026','09/05/2025'];
+ const source=createPublicHistory({now:()=>at,httpsGet:async url=>{calls.push(url);if(calls.length===1)await new Promise(r=>release=r);return ok(ndq('NVDA',dates[calls.length-1]));}});
  const short=source('NVDA','?interval=1d&period1='+Date.parse('2025-01-01')/1000);
  const long=source('NVDA','?interval=1d&period1='+Date.parse('1990-01-01')/1000);
- release();await Promise.all([short,long]);assert.equal(calls.length,2);assert.match(calls[1],/fromdate=1990-01-01/);
+ release();const [recent,wider]=await Promise.all([short,long]);
+ assert.equal(calls.length,3);assert.equal(recent.coverage.pages,1);assert.equal(wider.coverage.pages,2);
+ assert.equal(wider.retrievalLimited,true);assert.equal(wider.coverage.stopReason,'bounded-pages');
+ assert.equal(wider.timestamp.length,3);
+ assert.ok(calls.every(url=>Number(new URL(url).searchParams.get('limit'))<=300));
+ assert.ok(calls.every(url=>new URL(url).searchParams.get('fromdate')>'1990-01-01'));
+});
+test('a failed older Nasdaq page preserves the recent daily bars with explicit partial coverage',async()=>{
+ const calls=[];const source=createPublicHistory({now:()=>at,httpsGet:async url=>{
+  calls.push(url);if(calls.length===2)throw Object.assign(new Error('upstream timeout'),{code:'ETIMEDOUT'});
+  return ok(ndq('TSM'));
+ }});
+ const query='?interval=1d&period1='+Date.parse('2000-01-01')/1000;
+ const first=await source('TSM',query);assert.equal(first.timestamp.length,1);
+ assert.equal(first.retrievalLimited,true);assert.equal(first.coverage.stopReason,'page-error');
+ assert.equal(first.coverage.firstTradingDate,'2026-09-09');
+ assert.deepEqual(source.diagnostics().recentFailures[0].range,{from:new URL(calls[1]).searchParams.get('fromdate'),
+  through:new URL(calls[1]).searchParams.get('todate')});
+ assert.equal(source.diagnostics().recentFailures[0].code,'ETIMEDOUT');
+ assert.strictEqual(await source('TSM',query),first);assert.equal(calls.length,2);
+});
+test('wide history failure cools that range but permits a narrower TSM read',async()=>{
+ let calls=0;const service=createHistoryService({now:()=>at,fetchChart:async(_symbol,query)=>{
+  calls++;if(new URLSearchParams(query).get('period1')<Date.parse('2010-01-01')/1000)
+   throw Object.assign(new Error('large range timed out'),{code:'HISTORY_TIMEOUT',statusCode:504});
+  return raw('TSM');
+ }});
+ try{
+  await assert.rejects(service.get('TSM','yearly',{count:20}),{code:'HISTORY_TIMEOUT'});
+  const recent=await service.get('TSM','daily',{count:30});
+  assert.equal(recent.symbol,'TSM');assert.equal(recent.bars.length,1);assert.equal(calls,2);
+ }finally{service.close();}
+});
+test('a true 429 keeps narrower requests in cooldown, while targeted invalidation can reread one symbol',async()=>{
+ let calls=0,limited=true;const service=createHistoryService({now:()=>at,fetchChart:async symbol=>{
+  calls++;if(symbol==='TSM'&&limited)throw Object.assign(new Error('429'),{code:'HISTORY_RATE_LIMITED',status:429,retryAt:at+120000});
+  return raw(symbol);
+ }});
+ try{
+  await assert.rejects(service.get('TSM','yearly',{count:20}));
+  await assert.rejects(service.get('TSM','daily',{count:1}));assert.equal(calls,1);
+  const other=await service.get('NVDA','daily',{count:1});assert.equal(other.bars.length,1);
+  limited=false;service.invalidate('TSM');
+  const recovered=await service.get('TSM','daily',{count:1});assert.equal(recovered.bars.length,1);
+  await service.get('NVDA','daily',{count:1});assert.equal(calls,3);
+ }finally{service.close();}
+});
+test('bounded source coverage keeps the requested range distinct from retrieved bars',async()=>{
+ let calls=0;const service=createHistoryService({now:()=>at,fetchChart:async()=>{
+  calls++;return {...raw('TSM'),retrievalLimited:true,retrievedFrom:'2026-09-09'};
+ }});
+ try{
+  const first=await service.get('TSM','daily',{count:30});
+  assert.ok(first.coverage.requestedFrom<'2026-09-09');
+  assert.equal(first.coverage.firstTradingDate,'2026-09-09');assert.equal(first.hasMore,null);
+  await service.get('TSM','daily',{count:30});assert.equal(calls,1);
+ }finally{service.close();}
 });
 test('history timeout starts when a queued job executes; queueing cards cannot expire healthy work',async()=>{
  const service=createHistoryService({now:()=>at,maxConcurrent:1,deadlineMs:100,fetchChart:async symbol=>{await new Promise(r=>setTimeout(r,60));return raw(symbol);}});

@@ -477,11 +477,44 @@
   {
     "market": "tw",
     "symbol": "2330.TW",
-    "name": "TAIWAN SEMICONDUCTOR MANUFACTUR",
+    "name": "台积电（台股）",
+    "aliases": [
+      "台积电",
+      "台積電",
+      "TSMC",
+      "TAIWAN SEMICONDUCTOR MANUFACTUR"
+    ],
     "type": "EQUITY",
     "providerType": "EQUITY",
+    "exchange": "TWSE",
+    "currency": "TWD",
     "verifiedAt": "2026-09-06T06:20:55.447Z",
     "source": "Yahoo Finance"
+  },
+  {
+    "market": "us",
+    "symbol": "TSM",
+    "name": "台积电 ADR",
+    "aliases": [
+      "台积电",
+      "台積電",
+      "TSMC",
+      "Taiwan Semiconductor Manufacturing Company"
+    ],
+    "type": "EQUITY",
+    "providerType": "EQUITY",
+    "typeSource": "catalog",
+    "exchange": "NYSE",
+    "currency": "USD",
+    "naverCode": "TSM",
+    "identitySource": "TSMC / Naver",
+    "verifiedAt": "2026-09-25",
+    "source": "TSMC / Naver",
+    "sources": [
+      "https://www.tsmc.com/english/aboutTSMC/company_profile",
+      "https://m.stock.naver.com/front-api/search/autoComplete?query=TSM&target=stock",
+      "https://polling.finance.naver.com/api/realtime/worldstock/stock/TSM"
+    ]
   },
   {
     "market": "tw",

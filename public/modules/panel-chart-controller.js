@@ -17,6 +17,37 @@
     const resize = typeof ResizeObserver === 'function' ? new ResizeObserver(entries => {
       for(const entry of entries) { const q=cards.get(entry.target); if(!q)continue; const width=entry.contentRect.width; if(width>0 && width!==q._chartWidth){q._chartWidth=width;scheduleResize(q);} }
     }) : null;
+    function olderPage(q){
+      const tf=q.tf,spec=window.PANEL_TIMEFRAMES?.get(tf),entry=q.historyStore?.getMeta(tf);
+      const anchor=seriesFor(q,tf)[0]?.periodStart;
+      return spec?.kind==='history'&&entry?.meta?.hasMore===true&&
+        /^\d{4}-\d{2}-\d{2}$/.test(anchor||'')&&typeof q.historyStore?.load==='function'?{tf,anchor,entry,spec}:null;
+    }
+    function updateOlderButton(q){
+      if(!q.loadOlderButton)return;
+      const page=olderPage(q);
+      q.loadOlderButton.hidden=!page;
+      q.loadOlderButton.disabled=!!page&&(!!q._loadingBefore||page.entry.status==='loading'||page.entry.retryAt>Date.now());
+    }
+    async function loadOlder(q,{reveal=false}={}){
+      const page=olderPage(q);
+      if(!page||q._loadingBefore||page.entry.status==='loading'||page.entry.retryAt>Date.now())return false;
+      const {tf,anchor,spec}=page,savedView=q.views[tf],visible=q.plot?.vis||q.visN[tf]||spec.visible;
+      q._loadingBefore=true;drawChart(q,true);
+      try{
+        await q.historyStore.load(tf,{before:anchor});
+        if(q._unmounted)return true;
+        const idx=seriesFor(q,tf).findIndex(b=>b.periodStart===anchor);
+        if(idx>=0&&savedView){
+          savedView.winStart=reveal?Math.max(0,idx-Math.max(1,visible-1)):idx;
+          savedView.followEnd=false;
+        }
+      }finally{
+        q._loadingBefore=false;
+        if(!q._unmounted)drawChart(q,true);
+      }
+      return true;
+    }
     function mount(q) {
       const el=q.el, sym=q.symbol;
       q._observe=window.PANEL_CHART_ENGINE.createObservationSeries?.();
@@ -48,7 +79,7 @@
       q.point=el.querySelector('.chart-point'); q.point.id='chart-point-'+sym; q.point.setAttribute('aria-live','off');
       q.refreshHistory=async()=>{
         if(q.tf==='intraday'){await q.refreshSamples();return;}
-        if(q.historyPreparedAt&&Date.now()-q.historyPreparedAt<120000)return;
+        if(!q.historyStore.getMeta(q.tf)?.loadedDirect&&q.historyPreparedAt&&Date.now()-q.historyPreparedAt<120000)return;
         if(q._unmounted||q.visible===false||document.hidden||q.tf==='intraday'||!q.d||q._loadingBefore)return;
         const tf=q.tf;
         if(q.historyStore.getMeta(tf)?.status==='loading')return;
@@ -68,7 +99,7 @@
       q.tf = b.dataset.tf; const tf=q.tf; q.tabs.forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',String(x===b));});
       const spec=window.PANEL_TIMEFRAMES?.get(tf) || {kind:tf==='intraday'?'quote':'history',visible:tf==='yearly'?20:60};
       let job;
-      if(spec?.kind==='history' && (!q.historyStore.getSeries(tf).length||['error','stale'].includes(q.historyStore.getMeta(tf)?.status)))job=q.historyStore.load(tf);
+      if(spec?.kind==='history' && (q.historyStore.needsLoad?.(tf)||!q.historyStore.getSeries(tf).length||['error','stale'].includes(q.historyStore.getMeta(tf)?.status)))job=q.historyStore.load(tf);
       if(q.d)drawChart(q,true);
       if(tf==='intraday'&&q._intradayMode==='samples')await q.refreshSamples(true);
       if(job){await job;if(!q._unmounted&&q.tf===tf&&q.d)drawChart(q,true);}
@@ -80,25 +111,17 @@
 
     sl.addEventListener('input', async () => {
       if (!q.d) return; q.winStart = +sl.value; q.followEnd = q.winStart >= +sl.max;q.fullSession=false;
-      const tf=q.tf, savedView=view(),meta=q.historyStore?.getMeta(tf), bars=seriesFor(q,tf), anchor=bars[0]?.periodStart;
-      if(q.winStart===0 && tf!=='intraday' && meta?.meta?.hasMore && anchor && !q._loadingBefore){
-        q._loadingBefore=true;
-        try{
-          await q.historyStore.load(tf,{before:anchor});
-          if(q._unmounted)return;
-          const next=seriesFor(q,tf),idx=next.findIndex(b=>b.periodStart===anchor);
-          if(idx>=0){savedView.winStart=idx;savedView.followEnd=false;}
-        }finally{q._loadingBefore=false;}
-        if(q.tf!==tf)return;
-      }
+      if(q.winStart===0&&await loadOlder(q))return;
       drawChart(q);
     });
     // 缩放按钮(移动端友好): + / − / 全部
     const zb = document.createElement('div'); zb.className = 'zoombar';
-    zb.innerHTML = '<button data-z="in" aria-label="放大">+</button><button data-z="out" aria-label="缩小">−</button><button data-z="fit" aria-label="全部">全览</button><button data-z="latest" aria-label="跟随最新">最新</button><button data-z="shot" aria-label="导出图表PNG">导出</button>';
+    zb.innerHTML = '<button data-z="older" aria-label="加载更早历史" hidden>加载更早</button><button data-z="in" aria-label="放大">+</button><button data-z="out" aria-label="缩小">−</button><button data-z="fit" aria-label="全部">全览</button><button data-z="latest" aria-label="跟随最新">最新</button><button data-z="shot" aria-label="导出图表PNG">导出</button>';
     met.appendChild(zb);
+    q.loadOlderButton=zb.querySelector('[data-z="older"]');
     zb.addEventListener('click', (e) => {
       const z = e.target && e.target.dataset && e.target.dataset.z; if (!z || !q.d) return;
+      if(z==='older'){void loadOlder(q,{reveal:true});return;}
       const history = seriesFor(q,q.tf); if (!history.length) return;
       const live=q.tf==='intraday'&&!q._sampled?window.PANEL_CHART_ENGINE.livePointFor(q.d):null;
       const all=live?history.concat(live):history;
@@ -150,9 +173,10 @@
       return '<b>'+esc(pointTime(b.t))+'</b> 最新报价点 <b>'+esc(money(b.c))+'</b> · '+esc(b.source)+' · 无成交量数据'+
         ' · 历史分时截至 '+esc(pointTime(last.t))+'（早 '+Math.max(0,Math.round(b.t-last.t))+' 秒）';
     }
-    const base = p.candle ? p.bars[0].c : p.reference?.value||p.bars[0].c;
+    const base = p.candle ? p.bars[0].c : p.reference?.value??p.bars[0].c;
     const chg = p.candle ? b.c - b.o : b.c - base;
-    const chgP = p.candle ? (b.o ? chg / b.o * 100 : 0) : (base ? chg / base * 100 : 0);
+    const divisor=p.candle?b.o:base,chgP=divisor===0?null:chg/Math.abs(divisor)*100;
+    const percent=chgP==null?'—':(chgP>=0?'+':'')+chgP.toFixed(2)+'%';
     const up = chg >= 0, cl = up ? UP : DOWN, sg = up ? '+' : '';
     const c = v => '<b style="color:' + cl + '">' + window.PANEL_FORMAT.esc(v) + '</b>';
     const periodLabel=q.tf==='yearly'?b.periodStart?.slice(0,4):q.tf==='monthly'?b.periodStart?.slice(0,7):q.tf==='weekly'?b.periodStart:fmtDate(b.t,q.tf==='intraday');
@@ -160,9 +184,9 @@
     let s = '<b>' + window.PANEL_FORMAT.esc(periodLabel) + '</b>  ';
     const volumeUnit=q.tf==='intraday'?q.d?.regularChart?.volumeUnit:q.historyStore?.getMeta(q.tf)?.meta?.volumeUnit;
     const volumeLabel=window.PANEL_FORMAT.esc(volumeUnit==='shares'?'股':volumeUnit==='lots'?'手':volumeUnit||'单位待核验');
-    if (p.candle) s += '开' + c(money(b.o)) + ' 高' + c(money(b.h)) + ' 低' + c(money(b.l)) + ' 收' + c(money(b.c)) + ' 较开盘' + c(sg + money(chg) + ' (' + sg + chgP.toFixed(2) + '%)') + ' 量' + c(fmtVol(b.v)) + ' '+volumeLabel+'  '
+    if (p.candle) s += '开' + c(money(b.o)) + ' 高' + c(money(b.h)) + ' 低' + c(money(b.l)) + ' 收' + c(money(b.c)) + ' 较开盘' + c(sg + money(chg) + ' (' + percent + ')') + ' 量' + c(fmtVol(b.v)) + ' '+volumeLabel+'  '
       + p.periods.map(per => { const mc=window.PANEL_CHART_ENGINE.CHART_THEME.ma[per].text,v = p.ma[per][p.a + bi]; return '<span style="color:' + mc + '">MA' + per + ' ' + (v == null ? '—' : money(v)) + '</span>'; }).join(' ');
-    else s += '价' + c(money(b.c)) + (p.reference?' 较昨收':' 区间涨跌') + c(sg + money(chg) + ' (' + sg + chgP.toFixed(2) + '%)') + ' 量' + c(fmtVol(b.v)) + ' '+volumeLabel+
+    else s += '价' + c(money(b.c)) + (p.reference?' 较'+window.PANEL_FORMAT.esc(window.PANEL_FORMAT.quoteBaseline?.(q.d)?.shortLabel||'昨收'):' 区间涨跌') + c(sg + money(chg) + ' (' + percent + ')') + ' 量' + c(fmtVol(b.v)) + ' '+volumeLabel+
       ' · 来源 '+window.PANEL_FORMAT.esc(q.d?.regularChart?.source||'待核验');
     s += window.PANEL_FORMAT.esc(quality);
     return s;
@@ -273,6 +297,7 @@
       if(q.d&&q._observe){const view=q._observe(q.d,q._intradayMode,q.sampleStore?.snapshot());q._displayIntraday=view.bars;q._sampled=view.sampled;q._observationNote=view.note;}
       const all=seriesFor(q,q.tf);
       updateChartStatus(q);
+      updateOlderButton(q);
       // Reserve the same geometry for empty/offscreen charts before deferring paint.
       // Otherwise an unpainted default 300x150 canvas changes the next row's layout.
       if(q.chartFrame){const width=q._chartWidth||q.cv?.getBoundingClientRect?.().width||0,height=(width<420?220:240)+'px';if(q.chartFrame.style.height!==height)q.chartFrame.style.height=height;}
@@ -292,7 +317,8 @@
       const liveKey=live?JSON.stringify(live):'';
       const regularKey=q.tf==='intraday'?JSON.stringify([q.d?.regularChart?.tradeDate,
         q.d?.regularChart?.previousCloseReference,q.d?.regularChart?.regularSessions,
-        q.d?.regularChart?.volumeQuality?.status]):'';
+        q.d?.regularChart?.exchangeZone,q.d?.regularChart?.source,q.d?.regularChart?.pointKind,
+        q.d?.regularChart?.volumeUnit,q.d?.regularChart?.volumeQuality?.status]):'';
        const revision=q.tf==='intraday'?q.d.intradayVer:q.historyStore?.getRevision(q.tf)??(q.d.daily30Ver??q.d.daily30Version);
       const key=[q.tf,idOf(all),revision,all.length,last?.t,last?.o,last?.h,last?.l,last?.c,last?.v,liveKey,regularKey,q.winStart,q.followEnd,q.visN[q.tf],q._chartWidth,JSON.stringify(q.maEnabled),formatKey(chartData(q)),q.historyStore?.getMeta(q.tf)?.status].join('|');
       if(!force && key===q._drawKey)return;
@@ -316,15 +342,17 @@
       const e=q.historyStore?.getMeta(q.tf),intra=q.tf==='intraday',m=e?.meta;
       const label=window.PANEL_TIMEFRAMES?.get(q.tf)?.label||'日K';
       const cooling=!intra&&e?.retryAt>Date.now();
-      const checked=intra?q.d?.slowFields?.intraday?.updatedAt:m?.sourceCheckedAt;
       const regular=q.d?.regularChart;
+      const checked=intra?regular?.sourceCheckedAt??q.d?.slowFields?.intraday?.updatedAt:m?.sourceCheckedAt;
       let text=intra?(q._sampled?'常规时段报价采样 · 非完整历史':
         '常规分时 '+(regular?.tradeDate||'日期待核验')+' · '+sourceName(regular?.source||q.d?.src)+
         (regular?.volumeQuality?.status==='missing'?' · 区间成交量暂缺':'')+
-        (regular?.missingReason?' · '+regular.missingReason:'')):
+        (regular?.stale?' · 来源暂不可用，保留旧图':regular?.missingReason?' · '+(regular.missingReason==='CLOSING_PRINT_COVERAGE_UNVERIFIED'?'收盘成交覆盖待核验':regular.missingReason):'')):
         e?.status==='loading'?label+' · 加载中…':e?.status==='error'?label+' · 历史来源暂不可用':
         m?label+' · '+sourceName(m.source)+(e.status==='stale'?' · 缓存历史':m.prewarmed?' · 后台已预备':'')+(m.refreshing?' · 后台更新中':''):label+(q.historyPrepared?' · 后台正在准备':' · 尚未加载');
       text+=intra?' · 北京时间 UTC+8':' · 交易所交易日';
+      if(!intra&&m?.closeConsistency?.status==='conflict')text+=' · 同日收盘冲突，已隔离该日';
+      else if(!intra&&e?.errorCode==='HISTORY_CLOSE_CONFLICT')text+=' · 同日收盘冲突，等待独立来源确认';
       if(intra&&q.d?.slowFields?.intraday?.timeBasis==='epoch-unverified')text+=' · 来源时间口径待核验';
       if(cooling)text+=' · '+Math.ceil((e.retryAt-Date.now())/1000)+' 秒后可重试';
       if(q.chartState&&q.chartState.textContent!==text){q.chartState.textContent=text;q.chartState.title=checked?'来源检查 '+pointTime(checked/1000):'';}

@@ -2,6 +2,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+export function syncReadmeVersion(root,{check=false}={}) {
+  const file=path.join(root,'README.md'),text=fs.readFileSync(file,'utf8');
+  const version=fs.readFileSync(path.join(root,'VERSION'),'utf8').trim();
+  const marker=/静态资源版本 \*\*\d+\*\*/g;
+  if((text.match(marker)||[]).length!==1)throw new Error('README resource version marker missing or ambiguous');
+  const updated=text.replace(marker,'静态资源版本 **'+version+'**');
+  if(check&&updated!==text)throw new Error('README resource version is stale; run npm run build');
+  if(!check&&updated!==text)fs.writeFileSync(file,updated);
+}
+
 function inputs(root) {
   const version = fs.readFileSync(path.join(root, 'VERSION'), 'utf8').trim();
   if (!/^\d+$/.test(version) || !Number.isSafeInteger(Number(version))) throw new Error('VERSION must be an integer');

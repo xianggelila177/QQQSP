@@ -86,7 +86,7 @@
 (() => {
   const createHistoryStore = ({fetchImpl = window.fetch.bind(window), symbol, timeoutMs = 22000, network}) => {
     const transport = network || window.PANEL_NETWORK.createNetwork({fetchImpl, timeoutMs});
-    const entries=Object.create(null), controllers=Object.create(null), generations=Object.create(null);
+    const entries=Object.create(null), controllers=Object.create(null), generations=Object.create(null),prewarmBuffers=Object.create(null);
     const entry=tf=>entries[tf] ||= {bars:[],revision:0,status:'unknown',warnings:[],meta:null};
     const validDate=date=>typeof date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(date)&&Number.isFinite(Date.parse(date+'T00:00:00Z'))&&new Date(date+'T00:00:00Z').toISOString().slice(0,10)===date;
     const normalize=bar=>{
@@ -97,7 +97,7 @@
     };
     function merge(tf,response,{before}={}){
       const e=entry(tf),same=e.meta?.seriesId===response.seriesId;
-      if(same&&e.revision===String(response.revision)&&e.bars.length){e.meta=response;e.status=response.status||'ready';e.retryAt=response.retryAt||null;return e;}
+      if(same&&e.revision===String(response.revision)&&e.bars.length){e.meta=response;e.status=response.status||'ready';e.retryAt=response.retryAt||null;e.errorCode=response.errorCode||null;e.warnings=response.warnings||[];return e;}
 
       const map=same?new Map(e.bars.map(b=>[b.periodStart,b])):new Map();
       const first=response.bars[0]?.periodStart,last=response.bars.at(-1)?.periodStart;
@@ -116,9 +116,18 @@
     }
     function hydrate(tf,response){
       const spec=window.PANEL_TIMEFRAMES.get(tf);
-      if(!response||response.schemaVersion!==1||response.symbol!==symbol||response.period!==spec.apiPeriod||typeof response.seriesId!=='string'||typeof response.revision!=='string'||!Array.isArray(response.bars)||response.bars.some(b=>!normalize(b))||response.bars.some((b,i,a)=>i&&b.t<=a[i-1].t))return false;
+      const unchanged=response?.bars==='same';
+      if(unchanged){
+        const saved=prewarmBuffers[tf];
+        if(!saved||saved.seriesId!==response.seriesId||(saved.barsRevision||saved.revision)!==(response.barsRevision||response.revision))return false;
+        response={...response,bars:saved.bars};
+      }
+      if(!response||response.schemaVersion!==1||response.symbol!==symbol||response.period!==spec.apiPeriod||typeof response.seriesId!=='string'||typeof response.revision!=='string'||!Array.isArray(response.bars)||!unchanged&&(response.bars.some(b=>!normalize(b))||response.bars.some((b,i,a)=>i&&b.t<=a[i-1].t)))return false;
       const old=entry(tf).meta;
       if(old?.sourceCheckedAt>response.sourceCheckedAt)return false;
+      prewarmBuffers[tf]=response;
+      // Near daily aggregates cannot replace a complete requested month/year.
+      if(response.prewarmScope==='near'&&spec.apiPeriod!=='daily'&&(entry(tf).loadedDirect||controllers[tf]))return true;
       // A prewarm arriving during a first load supersedes it, but never abort an older-page request.
       if(controllers[tf]&&!entry(tf).loadingBefore){generations[tf]=(generations[tf]||0)+1;controllers[tf].abort();delete controllers[tf];}
       merge(tf,response);return true;
@@ -140,14 +149,15 @@
           if(!r.ok)throw Object.assign(new Error(j.error||'历史来源暂不可用'),{code:j.code||'HISTORY_SOURCE_UNAVAILABLE',retryAt:j.retryAt||r.retryAt||null});
           if(j.schemaVersion!==1||j.symbol!==symbol||j.period!==spec.apiPeriod||typeof j.seriesId!=='string'||!j.seriesId||typeof j.revision!=='string'||!Array.isArray(j.bars))throw new Error(j.error||'invalid history response');
           if(j.bars.some(b=>!normalize(b))||j.bars.some((b,i,a)=>i&&b.t<=a[i-1].t))throw new Error('invalid history bars');
-          return merge(tf,j,{before});
+          const value=merge(tf,j,{before});value.loadedDirect=true;return value;
         }
       }catch(err){if(current()){e.status=e.bars.length?'stale':'error';e.warnings=[String(err.message||err)];e.errorCode=err.code||'HISTORY_BAD_RESPONSE';e.retryAt=Number(err.retryAt)||null;}}
       finally{if(controllers[tf]===ac)delete controllers[tf];}
       return e;
     }
     function abort(){for(const tf of Object.keys(controllers)){generations[tf]=(generations[tf]||0)+1;controllers[tf].abort();delete controllers[tf];const e=entry(tf);e.status=e.bars.length?'stale':'unknown';e.loadingBefore=null;}}
-    return Object.freeze({getSeries:tf=>entry(tf).bars,getRevision:tf=>entry(tf).revision,getMeta:entry,load,hydrate,abort});
+    const needsLoad=tf=>{const spec=window.PANEL_TIMEFRAMES.get(tf),e=entry(tf);return spec.kind==='history'&&(!e.bars.length||!e.loadedDirect&&e.meta?.prewarmScope==='near'&&spec.apiPeriod!=='daily');};
+    return Object.freeze({getSeries:tf=>entry(tf).bars,getRevision:tf=>entry(tf).revision,getMeta:entry,needsLoad,load,hydrate,abort});
   };
   window.PANEL_HISTORY_STORE=Object.freeze({createHistoryStore});
 })();
@@ -208,8 +218,9 @@
     const point=d?.intradayLivePoint,history=d?.regularChart?.bars,last=Array.isArray(history)?history.at(-1):null;
     if(d?.intradayLiveStatus!=='ready'||!point||!last||d.error||d.pending||d.stale||d.staleInfo||d.recovery)return null;
     if(d.marketState!=='REGULAR'||d.priceSession!=='REGULAR'||d.regularChart?.source!==d.src)return null;
-    if(!Number.isFinite(point.t)||point.t<=0||!Number.isFinite(point.c)||point.c<=0||point.v!==null||point.c!==d.price)return null;
-    if(!Number.isFinite(last.t)||last.t<=0||!Number.isFinite(last.c)||last.c<=0||point.t<last.t||!Number.isFinite(d.quoteAt)||Math.abs(point.t-d.quoteAt/1000)>.001||d.quoteAt>Date.now()+5000)return null;
+    const validPrice=value=>Number.isFinite(value)&&(d.instrumentType==='FUTURE'||value>0);
+    if(!Number.isFinite(point.t)||point.t<=0||!validPrice(point.c)||point.v!==null||point.c!==d.price)return null;
+    if(!Number.isFinite(last.t)||last.t<=0||!validPrice(last.c)||point.t<last.t||!Number.isFinite(d.quoteAt)||Math.abs(point.t-d.quoteAt/1000)>.001||d.quoteAt>Date.now()+5000)return null;
     if(typeof point.currency!=='string'||point.currency!==d.currency||typeof point.source!=='string'||!point.source||point.source!==d.src)return null;
     if(typeof point.sessionDate!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(point.sessionDate)||point.sessionDate!==point.historyDate)return null;
     const dateAt=Date.parse(point.sessionDate+'T00:00:00Z');
@@ -258,15 +269,37 @@
   // supplies formatting and series helpers explicitly at construction time.
   const createChartEngine = ({ UP, DOWN, fmtDate, formatterFor, maSeries }) => {
   const seriesCache = new WeakMap();
+  const vwapCache = new WeakMap(), timeFormats = new Map();
+  function timeFormat(zone,kind){
+    const key=zone+':'+kind;
+    if(!timeFormats.has(key)){
+      let formatter=null;
+      try{formatter=new Intl.DateTimeFormat(kind==='day'?'en-CA':'en-GB',{timeZone:zone,...(kind==='day'?{year:'numeric',month:'2-digit',day:'2-digit'}:{hour:'2-digit',minute:'2-digit',hour12:false})});}catch{}
+      if(timeFormats.size>=64)timeFormats.delete(timeFormats.keys().next().value);
+      timeFormats.set(key,formatter);
+    }
+    return timeFormats.get(key);
+  }
   const localClock=(at,zone)=>{
     if(!zone)return fmtDate(at/1000,true).slice(11,16);
-    try{return new Intl.DateTimeFormat('en-GB',{timeZone:zone,hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(at));}
-    catch{return fmtDate(at/1000,true).slice(11,16);}
+    return timeFormat(zone,'clock')?.format(new Date(at))||fmtDate(at/1000,true).slice(11,16);
   };
   const localDay=(at,zone)=>{
-    try{return new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(at));}
-    catch{return new Date(at).toISOString().slice(0,10);}
+    return timeFormat(zone,'day')?.format(new Date(at))||new Date(at).toISOString().slice(0,10);
   };
+  function estimatedVwap(history,revision,zone){
+    const tail=history.at(-1),key=[revision,zone,history.length,tail?.t,tail?.h,tail?.l,tail?.c,tail?.v].join(':');
+    const cached=vwapCache.get(history);if(cached?.key===key)return cached.values;
+    const values=[];let day=null,weighted=0,volume=0,broken=false;
+    for(const b of history){
+      const date=localDay(b.t*1000,zone);
+      if(date!==day){day=date;weighted=0;volume=0;broken=false;}
+      if(!Number.isFinite(b.v)||b.v<0||![b.h,b.l,b.c].every(Number.isFinite))broken=true;
+      if(broken){values.push(null);continue;}
+      weighted+=(b.h+b.l+b.c)/3*b.v;volume+=b.v;values.push(volume>0?weighted/volume:null);
+    }
+    vwapCache.set(history,{key,values});return values;
+  }
   function movingAverages(all, revision) {
     const tail = all[all.length - 1];
     const key = [revision, all.length, tail?.t, tail?.c].join(':');
@@ -294,15 +327,8 @@
     const ma = candle ? movingAverages(history, revision) : {};
     let vwapSeries=null;
     if(q._estimatedVwap&&q.tf==='intraday'&&!q._sampled){
-      vwapSeries=[];let day=null,weighted=0,volume=0,broken=false;
-      for(const b of all){
-        const key=localDay(b.t*1000,d?.regularChart?.exchangeZone||q._displayZone||'America/New_York');
-        if(key!==day){day=key;weighted=0;volume=0;broken=false;}
-        if(!Number.isFinite(b.v)||b.v<0||![b.h,b.l,b.c].every(Number.isFinite)){broken=true;vwapSeries.push(null);continue;}
-        if(broken){vwapSeries.push(null);continue;}
-        weighted+=(b.h+b.l+b.c)/3*b.v;volume+=b.v;
-        vwapSeries.push(volume>0?weighted/volume:null);
-      }
+      const values=estimatedVwap(history,revision,d?.regularChart?.exchangeZone||q._displayZone||'America/New_York');
+      vwapSeries=live?values.concat(null):values;
     }
     q._vwapSeries=vwapSeries;
     const periods=[5,10,20].filter(period=>q.maEnabled?.[period]!==false);
@@ -310,14 +336,13 @@
     for (const b of bars) { const h = hi(b), l = lo(b); if (h > maxH) maxH = h; if (l < minL) minL = l; }
     for(const period of periods)for(const value of (ma[period]||[]).slice(a,a+bars.length))if(value!=null&&Number.isFinite(value)){maxH=Math.max(maxH,value);minL=Math.min(minL,value);}
     for(const value of (vwapSeries||[]).slice(a,a+bars.length))if(value!=null&&Number.isFinite(value)){maxH=Math.max(maxH,value);minL=Math.min(minL,value);}
-    const reference=q.tf==='intraday'&&!q._sampled&&d?.regularChart?.previousCloseReference?.value>0?
-      d.regularChart.previousCloseReference:null;
+    const ref=d?.regularChart?.previousCloseReference,reference=q.tf==='intraday'&&!q._sampled&&Number.isFinite(ref?.value)&&(d?.instrumentType==='FUTURE'||ref.value>0)?ref:null;
     if(reference){maxH=Math.max(maxH,reference.value);minL=Math.min(minL,reference.value);}
     if (!isFinite(maxH)) { maxH = 1; minL = 0; }
     const rect = q._chartWidth ? {width:q._chartWidth} : q.cv?.getBoundingClientRect?.();
     q._chartWidth = rect?.width || 1000;
     const W = Math.max(1, Number(rect?.width) || 1000), H = q._chartHeight || (W < 420 ? 220 : 240), padT = 8, padB = 24;
-    const span = Math.max((maxH - minL) || 0, (maxH || 1) * 0.0005);
+    const span = Math.max((maxH - minL) || 0, Math.max(Math.abs(maxH),Math.abs(minL),1) * 0.0005);
     const top = maxH + span * 0.08, bot = minL - span * 0.08;
     const axisFont=(W<420?12:11)+'px sans-serif', measure=q.cv?.getContext?.('2d');
     if(measure)measure.font=axisFont;
@@ -368,7 +393,7 @@
       const yy=p.yTop+p.chartH*g/4;
       if(p.intraday){
         cx.textAlign='right';cx.fillText(money(v),p.L-6,yy,p.L-8);
-        if(p.reference){const pct=(v/p.reference.value-1)*100;
+        if(p.reference&&p.reference.value!==0){const pct=(v-p.reference.value)/Math.abs(p.reference.value)*100;
           cx.textAlign='left';cx.fillText((pct>=0?'+':'')+pct.toFixed(2)+'%',p.W-p.R+5,yy,p.R-7);}
       }else cx.fillText(money(v), p.W - p.R + 8, yy,p.R-10);
     }
@@ -525,7 +550,7 @@
     cx.strokeStyle = 'rgba(31,30,29,.35)'; cx.setLineDash([4, 4]); cx.lineWidth = 1;
     cx.beginPath(); cx.moveTo(L, lyp); cx.lineTo(W - R, lyp); cx.stroke(); cx.setLineDash([]);
     priceTag(cx, p, lyp, money(last.c), candle&&!last._live ? (last.c >= last.o ? UP : DOWN) :
-      (last.c >= (p.reference?.value||bars[0].c) ? UP : DOWN));
+      (last.c >= (p.reference?.value??bars[0].c) ? UP : DOWN));
   }
   function drawCursor(q, p, hover, cx) {
     const money = formatterFor(q._chartData||q.d).money;
@@ -863,6 +888,13 @@
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
   const fmtDate = (t, withTime = true) => { const d = new Date((t + 8 * 3600) * 1000), pad = n => String(n).padStart(2, '0'); const date = d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()); return withTime ? date + ' ' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) : date; };
   const fmtTime8 = t => fmtDate(t / 1000).slice(5).replace(/^0/, '');
+  const quoteBaseline = (data = {}, money = String) => {
+    const settlement=data.changeBasis==='previous-settlement',future=data.instrumentType==='FUTURE';
+    const label=settlement?'较前结算基准':future?'较来源基准':'较上一交易日常规收盘';
+    return Object.freeze({label,shortLabel:settlement?'前结算':future?'来源前值':'昨收',
+      text:label+(data.previousCloseTradeDate?' '+data.previousCloseTradeDate:'')+(data.prevClose!=null?' '+money(data.prevClose):'（基准待核验）'),
+      title:data.previousCloseMissingReason||data.previousCloseStatus||(future?'期货涨跌按来源声明的结算价或前值计算。':'主涨跌相对报价交易日的上一交易日常规收盘；盘后行相对本交易日常规收盘。')});
+  };
   const createFormatter = ({ data = {}, displayCurrency = 'USD', fxMap = {} } = {}) => {
     const sourceInfo = window.PANEL_CURRENCY.currencyUnit(data.currency), source = sourceInfo.unit, index = data.instrumentType === 'INDEX' || data.priceUnit === 'POINTS';
     const rates=data.fxKind?data.fxMap||{}:fxMap;
@@ -874,7 +906,7 @@
     const sourceDescription = !index && sourceInfo.scale !== 1 ? '报价原币 '+source+'（100 '+source+' = 1 '+sourceInfo.base+'）' : '';
     return Object.freeze({ money, convert, canConvert, unit, referenceConversion, sourceDescription });
   };
-  window.PANEL_FORMAT = Object.freeze({ createFormatter, fmtNum, fmtVol, pct, esc, fmtDate, fmtTime8 });
+  window.PANEL_FORMAT = Object.freeze({ createFormatter, quoteBaseline, fmtNum, fmtVol, pct, esc, fmtDate, fmtTime8 });
 })();
 
 ;
@@ -899,6 +931,37 @@
     const resize = typeof ResizeObserver === 'function' ? new ResizeObserver(entries => {
       for(const entry of entries) { const q=cards.get(entry.target); if(!q)continue; const width=entry.contentRect.width; if(width>0 && width!==q._chartWidth){q._chartWidth=width;scheduleResize(q);} }
     }) : null;
+    function olderPage(q){
+      const tf=q.tf,spec=window.PANEL_TIMEFRAMES?.get(tf),entry=q.historyStore?.getMeta(tf);
+      const anchor=seriesFor(q,tf)[0]?.periodStart;
+      return spec?.kind==='history'&&entry?.meta?.hasMore===true&&
+        /^\d{4}-\d{2}-\d{2}$/.test(anchor||'')&&typeof q.historyStore?.load==='function'?{tf,anchor,entry,spec}:null;
+    }
+    function updateOlderButton(q){
+      if(!q.loadOlderButton)return;
+      const page=olderPage(q);
+      q.loadOlderButton.hidden=!page;
+      q.loadOlderButton.disabled=!!page&&(!!q._loadingBefore||page.entry.status==='loading'||page.entry.retryAt>Date.now());
+    }
+    async function loadOlder(q,{reveal=false}={}){
+      const page=olderPage(q);
+      if(!page||q._loadingBefore||page.entry.status==='loading'||page.entry.retryAt>Date.now())return false;
+      const {tf,anchor,spec}=page,savedView=q.views[tf],visible=q.plot?.vis||q.visN[tf]||spec.visible;
+      q._loadingBefore=true;drawChart(q,true);
+      try{
+        await q.historyStore.load(tf,{before:anchor});
+        if(q._unmounted)return true;
+        const idx=seriesFor(q,tf).findIndex(b=>b.periodStart===anchor);
+        if(idx>=0&&savedView){
+          savedView.winStart=reveal?Math.max(0,idx-Math.max(1,visible-1)):idx;
+          savedView.followEnd=false;
+        }
+      }finally{
+        q._loadingBefore=false;
+        if(!q._unmounted)drawChart(q,true);
+      }
+      return true;
+    }
     function mount(q) {
       const el=q.el, sym=q.symbol;
       q._observe=window.PANEL_CHART_ENGINE.createObservationSeries?.();
@@ -930,7 +993,7 @@
       q.point=el.querySelector('.chart-point'); q.point.id='chart-point-'+sym; q.point.setAttribute('aria-live','off');
       q.refreshHistory=async()=>{
         if(q.tf==='intraday'){await q.refreshSamples();return;}
-        if(q.historyPreparedAt&&Date.now()-q.historyPreparedAt<120000)return;
+        if(!q.historyStore.getMeta(q.tf)?.loadedDirect&&q.historyPreparedAt&&Date.now()-q.historyPreparedAt<120000)return;
         if(q._unmounted||q.visible===false||document.hidden||q.tf==='intraday'||!q.d||q._loadingBefore)return;
         const tf=q.tf;
         if(q.historyStore.getMeta(tf)?.status==='loading')return;
@@ -950,7 +1013,7 @@
       q.tf = b.dataset.tf; const tf=q.tf; q.tabs.forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',String(x===b));});
       const spec=window.PANEL_TIMEFRAMES?.get(tf) || {kind:tf==='intraday'?'quote':'history',visible:tf==='yearly'?20:60};
       let job;
-      if(spec?.kind==='history' && (!q.historyStore.getSeries(tf).length||['error','stale'].includes(q.historyStore.getMeta(tf)?.status)))job=q.historyStore.load(tf);
+      if(spec?.kind==='history' && (q.historyStore.needsLoad?.(tf)||!q.historyStore.getSeries(tf).length||['error','stale'].includes(q.historyStore.getMeta(tf)?.status)))job=q.historyStore.load(tf);
       if(q.d)drawChart(q,true);
       if(tf==='intraday'&&q._intradayMode==='samples')await q.refreshSamples(true);
       if(job){await job;if(!q._unmounted&&q.tf===tf&&q.d)drawChart(q,true);}
@@ -962,25 +1025,17 @@
 
     sl.addEventListener('input', async () => {
       if (!q.d) return; q.winStart = +sl.value; q.followEnd = q.winStart >= +sl.max;q.fullSession=false;
-      const tf=q.tf, savedView=view(),meta=q.historyStore?.getMeta(tf), bars=seriesFor(q,tf), anchor=bars[0]?.periodStart;
-      if(q.winStart===0 && tf!=='intraday' && meta?.meta?.hasMore && anchor && !q._loadingBefore){
-        q._loadingBefore=true;
-        try{
-          await q.historyStore.load(tf,{before:anchor});
-          if(q._unmounted)return;
-          const next=seriesFor(q,tf),idx=next.findIndex(b=>b.periodStart===anchor);
-          if(idx>=0){savedView.winStart=idx;savedView.followEnd=false;}
-        }finally{q._loadingBefore=false;}
-        if(q.tf!==tf)return;
-      }
+      if(q.winStart===0&&await loadOlder(q))return;
       drawChart(q);
     });
     // 缩放按钮(移动端友好): + / − / 全部
     const zb = document.createElement('div'); zb.className = 'zoombar';
-    zb.innerHTML = '<button data-z="in" aria-label="放大">+</button><button data-z="out" aria-label="缩小">−</button><button data-z="fit" aria-label="全部">全览</button><button data-z="latest" aria-label="跟随最新">最新</button><button data-z="shot" aria-label="导出图表PNG">导出</button>';
+    zb.innerHTML = '<button data-z="older" aria-label="加载更早历史" hidden>加载更早</button><button data-z="in" aria-label="放大">+</button><button data-z="out" aria-label="缩小">−</button><button data-z="fit" aria-label="全部">全览</button><button data-z="latest" aria-label="跟随最新">最新</button><button data-z="shot" aria-label="导出图表PNG">导出</button>';
     met.appendChild(zb);
+    q.loadOlderButton=zb.querySelector('[data-z="older"]');
     zb.addEventListener('click', (e) => {
       const z = e.target && e.target.dataset && e.target.dataset.z; if (!z || !q.d) return;
+      if(z==='older'){void loadOlder(q,{reveal:true});return;}
       const history = seriesFor(q,q.tf); if (!history.length) return;
       const live=q.tf==='intraday'&&!q._sampled?window.PANEL_CHART_ENGINE.livePointFor(q.d):null;
       const all=live?history.concat(live):history;
@@ -1032,9 +1087,10 @@
       return '<b>'+esc(pointTime(b.t))+'</b> 最新报价点 <b>'+esc(money(b.c))+'</b> · '+esc(b.source)+' · 无成交量数据'+
         ' · 历史分时截至 '+esc(pointTime(last.t))+'（早 '+Math.max(0,Math.round(b.t-last.t))+' 秒）';
     }
-    const base = p.candle ? p.bars[0].c : p.reference?.value||p.bars[0].c;
+    const base = p.candle ? p.bars[0].c : p.reference?.value??p.bars[0].c;
     const chg = p.candle ? b.c - b.o : b.c - base;
-    const chgP = p.candle ? (b.o ? chg / b.o * 100 : 0) : (base ? chg / base * 100 : 0);
+    const divisor=p.candle?b.o:base,chgP=divisor===0?null:chg/Math.abs(divisor)*100;
+    const percent=chgP==null?'—':(chgP>=0?'+':'')+chgP.toFixed(2)+'%';
     const up = chg >= 0, cl = up ? UP : DOWN, sg = up ? '+' : '';
     const c = v => '<b style="color:' + cl + '">' + window.PANEL_FORMAT.esc(v) + '</b>';
     const periodLabel=q.tf==='yearly'?b.periodStart?.slice(0,4):q.tf==='monthly'?b.periodStart?.slice(0,7):q.tf==='weekly'?b.periodStart:fmtDate(b.t,q.tf==='intraday');
@@ -1042,9 +1098,9 @@
     let s = '<b>' + window.PANEL_FORMAT.esc(periodLabel) + '</b>  ';
     const volumeUnit=q.tf==='intraday'?q.d?.regularChart?.volumeUnit:q.historyStore?.getMeta(q.tf)?.meta?.volumeUnit;
     const volumeLabel=window.PANEL_FORMAT.esc(volumeUnit==='shares'?'股':volumeUnit==='lots'?'手':volumeUnit||'单位待核验');
-    if (p.candle) s += '开' + c(money(b.o)) + ' 高' + c(money(b.h)) + ' 低' + c(money(b.l)) + ' 收' + c(money(b.c)) + ' 较开盘' + c(sg + money(chg) + ' (' + sg + chgP.toFixed(2) + '%)') + ' 量' + c(fmtVol(b.v)) + ' '+volumeLabel+'  '
+    if (p.candle) s += '开' + c(money(b.o)) + ' 高' + c(money(b.h)) + ' 低' + c(money(b.l)) + ' 收' + c(money(b.c)) + ' 较开盘' + c(sg + money(chg) + ' (' + percent + ')') + ' 量' + c(fmtVol(b.v)) + ' '+volumeLabel+'  '
       + p.periods.map(per => { const mc=window.PANEL_CHART_ENGINE.CHART_THEME.ma[per].text,v = p.ma[per][p.a + bi]; return '<span style="color:' + mc + '">MA' + per + ' ' + (v == null ? '—' : money(v)) + '</span>'; }).join(' ');
-    else s += '价' + c(money(b.c)) + (p.reference?' 较昨收':' 区间涨跌') + c(sg + money(chg) + ' (' + sg + chgP.toFixed(2) + '%)') + ' 量' + c(fmtVol(b.v)) + ' '+volumeLabel+
+    else s += '价' + c(money(b.c)) + (p.reference?' 较'+window.PANEL_FORMAT.esc(window.PANEL_FORMAT.quoteBaseline?.(q.d)?.shortLabel||'昨收'):' 区间涨跌') + c(sg + money(chg) + ' (' + percent + ')') + ' 量' + c(fmtVol(b.v)) + ' '+volumeLabel+
       ' · 来源 '+window.PANEL_FORMAT.esc(q.d?.regularChart?.source||'待核验');
     s += window.PANEL_FORMAT.esc(quality);
     return s;
@@ -1155,6 +1211,7 @@
       if(q.d&&q._observe){const view=q._observe(q.d,q._intradayMode,q.sampleStore?.snapshot());q._displayIntraday=view.bars;q._sampled=view.sampled;q._observationNote=view.note;}
       const all=seriesFor(q,q.tf);
       updateChartStatus(q);
+      updateOlderButton(q);
       // Reserve the same geometry for empty/offscreen charts before deferring paint.
       // Otherwise an unpainted default 300x150 canvas changes the next row's layout.
       if(q.chartFrame){const width=q._chartWidth||q.cv?.getBoundingClientRect?.().width||0,height=(width<420?220:240)+'px';if(q.chartFrame.style.height!==height)q.chartFrame.style.height=height;}
@@ -1174,7 +1231,8 @@
       const liveKey=live?JSON.stringify(live):'';
       const regularKey=q.tf==='intraday'?JSON.stringify([q.d?.regularChart?.tradeDate,
         q.d?.regularChart?.previousCloseReference,q.d?.regularChart?.regularSessions,
-        q.d?.regularChart?.volumeQuality?.status]):'';
+        q.d?.regularChart?.exchangeZone,q.d?.regularChart?.source,q.d?.regularChart?.pointKind,
+        q.d?.regularChart?.volumeUnit,q.d?.regularChart?.volumeQuality?.status]):'';
        const revision=q.tf==='intraday'?q.d.intradayVer:q.historyStore?.getRevision(q.tf)??(q.d.daily30Ver??q.d.daily30Version);
       const key=[q.tf,idOf(all),revision,all.length,last?.t,last?.o,last?.h,last?.l,last?.c,last?.v,liveKey,regularKey,q.winStart,q.followEnd,q.visN[q.tf],q._chartWidth,JSON.stringify(q.maEnabled),formatKey(chartData(q)),q.historyStore?.getMeta(q.tf)?.status].join('|');
       if(!force && key===q._drawKey)return;
@@ -1198,15 +1256,17 @@
       const e=q.historyStore?.getMeta(q.tf),intra=q.tf==='intraday',m=e?.meta;
       const label=window.PANEL_TIMEFRAMES?.get(q.tf)?.label||'日K';
       const cooling=!intra&&e?.retryAt>Date.now();
-      const checked=intra?q.d?.slowFields?.intraday?.updatedAt:m?.sourceCheckedAt;
       const regular=q.d?.regularChart;
+      const checked=intra?regular?.sourceCheckedAt??q.d?.slowFields?.intraday?.updatedAt:m?.sourceCheckedAt;
       let text=intra?(q._sampled?'常规时段报价采样 · 非完整历史':
         '常规分时 '+(regular?.tradeDate||'日期待核验')+' · '+sourceName(regular?.source||q.d?.src)+
         (regular?.volumeQuality?.status==='missing'?' · 区间成交量暂缺':'')+
-        (regular?.missingReason?' · '+regular.missingReason:'')):
+        (regular?.stale?' · 来源暂不可用，保留旧图':regular?.missingReason?' · '+(regular.missingReason==='CLOSING_PRINT_COVERAGE_UNVERIFIED'?'收盘成交覆盖待核验':regular.missingReason):'')):
         e?.status==='loading'?label+' · 加载中…':e?.status==='error'?label+' · 历史来源暂不可用':
         m?label+' · '+sourceName(m.source)+(e.status==='stale'?' · 缓存历史':m.prewarmed?' · 后台已预备':'')+(m.refreshing?' · 后台更新中':''):label+(q.historyPrepared?' · 后台正在准备':' · 尚未加载');
       text+=intra?' · 北京时间 UTC+8':' · 交易所交易日';
+      if(!intra&&m?.closeConsistency?.status==='conflict')text+=' · 同日收盘冲突，已隔离该日';
+      else if(!intra&&e?.errorCode==='HISTORY_CLOSE_CONFLICT')text+=' · 同日收盘冲突，等待独立来源确认';
       if(intra&&q.d?.slowFields?.intraday?.timeBasis==='epoch-unverified')text+=' · 来源时间口径待核验';
       if(cooling)text+=' · '+Math.ceil((e.retryAt-Date.now())/1000)+' 秒后可重试';
       if(q.chartState&&q.chartState.textContent!==text){q.chartState.textContent=text;q.chartState.title=checked?'来源检查 '+pointTime(checked/1000):'';}
@@ -1482,27 +1542,39 @@
 
 ;/* public/modules/panel-chart-detail.js */
 (() => {
-  const createChartDetailView=({document,formatterFor,UP,DOWN})=>{
+  const createChartDetailView=({document,formatterFor,UP,DOWN,network=window.PANEL_NETWORK.createNetwork({timeoutMs:30000}),canPoll=()=>!document.hidden})=>{
     const engine=window.PANEL_CHART_ENGINE.createChartEngine({UP,DOWN,
       fmtDate:window.PANEL_FORMAT.fmtDate,formatterFor,maSeries:window.PANEL_CHART.maSeries});
-    const fmt=window.PANEL_FORMAT,periods=[['intraday','一日'],['fiveDay','五日'],['daily30','日K'],['weekly','周K'],['monthly','月K'],['yearly','年K']];
-    let dialog=null,current=null,tf='intraday',five=null,remote=null,requestId=0,fetchAbort=null,poll=null,
+    const fmt=window.PANEL_FORMAT,periods=window.PANEL_TIMEFRAMES.all.flatMap(period=>period.key==='intraday'?[['intraday','一日'],['fiveDay','五日']]:[[period.key,period.label]]);
+    let dialog=null,current=null,tf='intraday',tapeSession='auto',five=null,remote=null,requestId=0,fetchAbort=null,fetchJob=null,poll=null,
       drawFrame=null,resizeObserver=null,scrollStyle='',focusReturn=null,openedHistory=false,manualRotate=null,
-      hover=null,drag=null,lastTap=null,view={};
+      hover=null,drag=null,lastTap=null,view={},pageAway=false,pollingAllowed=null;
+    const historyReadAt=new Map();
     const make=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!=null)el.textContent=text;return el;};
     const number=v=>typeof v==='number'&&Number.isFinite(v)?v:null;
+    const tradeUsdFormat=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:8});
+    const periodLabel=(bar,period)=>period==='yearly'?bar.periodStart?.slice(0,4):
+      period==='monthly'?bar.periodStart?.slice(0,7):bar.periodStart;
+    const volumeLabel=unit=>unit==='shares'?'股':unit==='lots'?'手':unit==='contracts'?'张':
+      !unit||unit==='source-unit-unverified'?'单位待核验':unit;
     const zone=()=>current?.d?.regularChart?.exchangeZone||'UTC';
     const zoneLabel=()=>zone()==='America/New_York'?'美东':zone()==='Asia/Shanghai'?'北京时间':zone();
-    const time=(ms,selectedZone=zone())=>{
+    const time=(ms,selectedZone=zone(),withSeconds=false)=>{
       if(!number(ms))return '时间未提供';
-      try{return new Intl.DateTimeFormat('zh-CN',{timeZone:selectedZone,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(ms));}
-      catch{return new Date(ms).toISOString().slice(0,16);}
+      try{return new Intl.DateTimeFormat('zh-CN',{timeZone:selectedZone,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',...(withSeconds?{second:'2-digit'}:{}),hour12:false}).format(new Date(ms));}
+      catch{return new Date(ms).toISOString().slice(0,withSeconds?19:16);}
     };
     const reason={SOURCE_HAS_NO_BOOK:'来源未提供盘口',INSTRUMENT_TYPE:'该品种无盘口',RETAINED_BOOK:'盘口已过期',
       NO_RECEIVED_TRADES:'该时段尚未收到逐笔',TRADE_STREAM_NOT_CONFIGURED:'逐笔源未配置',
       FIVE_DAY_SOURCE_GAPS:'五日历史覆盖不足',FIVE_DAY_SOURCE_UNAVAILABLE:'五日历史来源不可用',
       FIVE_DAY_SESSION_OPEN:'当日常规时段尚未收盘',
-      SOURCE_COOLDOWN:'五日历史来源限流冷却中',REGULAR_HISTORY_NOT_AVAILABLE:'常规历史暂不可用'};
+      CLOSING_PRINT_COVERAGE_UNVERIFIED:'收盘成交覆盖待核验',DETAIL_LOADING:'盘口加载中',DETAIL_REQUEST_FAILED:'详情刷新失败，盘口暂不可用',DETAIL_PAUSED:'后台已暂停，盘口待重新检查',
+      SOURCE_COOLDOWN:'五日历史来源限流冷却中',REGULAR_HISTORY_NOT_AVAILABLE:'常规历史暂不可用',CHART_SOURCE_STALE:'历史来源刷新失败，保留旧图'};
+    const tapeReasons={TAPE_LOADING:'逐笔加载中',PUBLIC_TRADES_EMPTY:'该时段暂无公开逐笔',
+      SOURCE_DATE_MISSING:'来源未提供可核验交易日',SOURCE_DATE_MISMATCH:'来源交易日与所选日期不符',
+      PUBLIC_TRADES_UNSUPPORTED:'该证券暂无适用的公开逐笔来源',PUBLIC_TRADES_UNAVAILABLE:'公开逐笔来源暂不可用',
+      SOURCE_COOLDOWN:'逐笔来源限流冷却中'};
+    const tapeSessionLabel=value=>({auto:'最近时段',regular:'常规',pre:'盘前',post:'盘后'})[value]||'时段待核验';
     function ensure(){
       if(dialog)return;
       dialog=make('dialog','chart-detail-dialog');dialog.setAttribute('aria-labelledby','chart-detail-title');
@@ -1516,7 +1588,9 @@
           <aside class="cd-side"><div class="cd-book"><h3>买卖盘口 · 一档</h3><div class="cd-book-status"></div>
             <div class="cd-book-row"><span>卖一</span><b class="cd-ask">—</b><span class="cd-ask-size">—</span></div>
             <div class="cd-book-row"><span>买一</span><b class="cd-bid">—</b><span class="cd-bid-size">—</span></div><small class="cd-book-meta"></small></div>
-            <div class="cd-tape"><div class="cd-side-tabs"><button type="button" data-side="tape" aria-pressed="true">逐笔明细</button>
+            <div class="cd-tape"><label class="cd-tape-filter">逐笔时段 <select class="cd-tape-session" aria-label="逐笔时段">
+              <option value="auto">最近时段</option><option value="regular">常规</option><option value="pre">盘前</option><option value="post">盘后</option>
+              </select></label><div class="cd-side-tabs"><button type="button" data-side="tape" aria-pressed="true">逐笔明细</button>
               <button type="button" data-side="stats" aria-pressed="false">成交统计</button></div>
               <div class="cd-tape-status"></div><div class="cd-tape-list"></div><div class="cd-tape-stats" hidden></div></div></aside></div>
         <footer class="chart-detail-foot"><nav class="cd-periods" aria-label="行情周期"></nav>
@@ -1527,6 +1601,7 @@
       for(const [key,label] of periods){const b=make('button','',label);b.type='button';b.dataset.tf=key;nav.appendChild(b);}
       document.body.appendChild(dialog);
       dialog.querySelector('.cd-close').addEventListener('click',()=>close());
+      dialog.querySelector('.cd-tape-session').addEventListener('change',event=>void selectTapeSession(event.target.value));
       dialog.addEventListener('cancel',e=>{e.preventDefault();close();});
       dialog.querySelectorAll('[data-tf]').forEach(b=>b.addEventListener('click',()=>void selectPeriod(b.dataset.tf)));
       dialog.querySelectorAll('[data-side]').forEach(b=>b.addEventListener('click',()=>selectSide(b.dataset.side)));
@@ -1572,30 +1647,61 @@
       engine.drawCursor(view,p,hover,c);
       const b=p.bars[hover??p.n-1];if(!b)return;
       const money=formatterFor(view._chartData).money;
-      dialog.querySelector('.cd-point').textContent=time(b.t*1000)+' '+zoneLabel()+' · '+(p.candle?
+      const date=p.candle?(periodLabel(b,tf)||'交易日未知')+' · 交易所交易日':time(b.t*1000)+' '+zoneLabel();
+      dialog.querySelector('.cd-point').textContent=date+' · '+(p.candle?
         '开 '+money(b.o)+' 高 '+money(b.h)+' 低 '+money(b.l)+' 收 '+money(b.c):'价 '+money(b.c))+
-        ' · 区间量 '+(number(b.v)==null?'暂缺':fmt.fmtVol(b.v)+' 股')+(view._vwapSeries?.[p.a+(hover??p.n-1)]!=null?
+        ' · 区间量 '+(number(b.v)==null?'暂缺':fmt.fmtVol(b.v)+' '+volumeLabel(view._volumeUnit))+(view._vwapSeries?.[p.a+(hover??p.n-1)]!=null?
         ' · 估算均价 '+money(view._vwapSeries[p.a+(hover??p.n-1)]):'');
     }
     function chartModel(){
       const q=current;if(!q?.d)return null;
       const candle=tf!=='intraday'&&tf!=='fiveDay';
+      const entry=candle?q.historyStore?.getMeta(tf):null,meta=entry?.meta;
       const fiveChart=five&&{...q.d.regularChart,bars:five.bars,regularSessions:five.regularSessions,
         previousCloseReference:five.previousCloseReference,tradeDate:five.tradeDates?.at(-1),
         source:five.source,volumeUnit:five.volumeUnit};
-      const data=tf==='fiveDay'?{...q.d,regularChart:fiveChart,intradayLiveStatus:'unavailable'}:q.d;
+      const data=tf==='fiveDay'?{...q.d,regularChart:fiveChart,intradayLiveStatus:'unavailable'}:
+        candle?{...q.d,currency:meta?.currency||q.d.currency,instrumentType:meta?.instrumentType||q.d.instrumentType}:q.d;
       const bars=tf==='fiveDay'?five?.bars||[]:tf==='intraday'?q.d.regularChart?.bars||[]:q.historyStore?.getSeries(tf)||[];
-      return {data,bars,candle};
+      return {data,bars,candle,entry,meta};
+    }
+    function chartInfo(model,count){
+      const chart=tf==='fiveDay'?five:current?.d?.regularChart;
+      const label=periods.find(([key])=>key===tf)?.[1]||'图表';
+      if(model?.candle){
+        const e=model.entry,m=model.meta,coverage=m?.coverageStatus||m?.coverage?.status;
+        return label+' · '+count+' 根K线 · '+(m?.source||'来源待核验')+' · 交易所交易日'+
+          (m?.currency?' · '+m.currency:'')+' · 量单位 '+volumeLabel(m?.volumeUnit)+
+          (coverage?' · '+(coverage==='partial'?'历史覆盖不完整':coverage==='complete-to-asof'?'覆盖至数据截止日':'历史覆盖未知'):'')+
+          (m?.adjustmentBasis?' · '+(/source-default-unverified$/.test(m.adjustmentBasis)?'来源复权口径未确认':m.adjustmentBasis):'')+
+          (m?.historyAsOf?' · 数据截至 '+m.historyAsOf:'')+
+          (m?.closeConsistency?.status==='conflict'?' · 同日收盘冲突，已隔离该日':'')+
+          (e?.status==='loading'?' · 加载中':e?.status==='error'?' · 历史来源暂不可用':e?.status==='stale'||m?.stale?' · 缓存历史已过期':'')+
+          (count?' · 橙线：MA5':'');
+      }
+      const why=chart?.reason||chart?.missingReason;
+      return (tf==='fiveDay'?'五日 '+(five?.coveredDays||0)+'/5 个交易日':'一日 '+(chart?.tradeDate||'日期待核验'))+
+        ' · '+count+' 个价格点 · '+(chart?.source||'来源待核验')+(chart?.resolution?' '+chart.resolution:'')+
+        (chart?.coverage==='single-exchange'?' · 单交易所覆盖':chart?.coverage==='us-sip'?' · SIP 汇总覆盖':'')+
+        (chart?.adjustment==='source-default-unverified'?' · 价格复权口径待核验':'')+
+        (chart?.stale||chart?.status==='stale'?' · 缓存分时已过期':'')+
+        (chart?.error?' · 来源刷新失败：'+chart.error:'')+
+        (chart?.sourceCheckedAt?' · 来源检查 '+time(chart.sourceCheckedAt)+' '+zoneLabel():'')+
+        (why?' · '+(reason[why]||why):'')+
+        (chart?.volumeQuality?.status==='missing'?' · 区间成交量暂缺':'')+
+        (count?(view._vwapSeries?.some(v=>v!=null)?' · 橙线：OHLCV 估算均价':' · 均价暂缺'):'');
     }
     function draw(){drawFrame=null;if(!current||!dialog?.open)return;
       const model=chartModel(),cv=dialog.querySelector('.cd-canvas'),cursor=dialog.querySelector('.cd-cursor');
       if(!model||!model.bars.length){view.plot=null;for(const c of [cv,cursor])c.getContext('2d').clearRect(0,0,c.width,c.height);
+        dialog.querySelector('.cd-chart-info').textContent=chartInfo(model,0);
         dialog.querySelector('.cd-point').textContent='该周期历史暂不可用';return;}
       const plotBox=dialog.querySelector('.cd-plot').getBoundingClientRect();
       const rotated=dialog.classList.contains('is-rotated');
       const width=rotated?plotBox.height:plotBox.width,height=rotated?plotBox.width:plotBox.height;
       const dpr=Math.min(2,Math.max(1,window.devicePixelRatio||1));
       view={...view,d:model.data,_chartData:model.data,tf:tf==='fiveDay'?'intraday':tf,cv,
+        _volumeUnit:model.candle?model.meta?.volumeUnit:tf==='fiveDay'?five?.volumeUnit:current.d.regularChart?.volumeUnit,
         historyStore:current.historyStore,_displayIntraday:model.candle?null:model.bars,
         _sampled:false,_fiveDay:tf==='fiveDay',_detail:true,_displayZone:zone(),_zoneLabel:zoneLabel(),
         _estimatedVwap:!model.candle,maEnabled:{5:true,10:true,20:true},visN:view.visN||{},
@@ -1605,37 +1711,28 @@
       for(const c of [cv,cursor]){c.width=Math.round(p.W*dpr);c.height=Math.round(p.H*dpr);c.style.width=p.W+'px';c.style.height=p.H+'px';}
       p.ctx=cv.getContext('2d');p.ctx.setTransform(cv.width/p.W,0,0,cv.height/p.H,0,0);
       engine.drawPlot(view,p,hover);paintCursor();
-      const chart=tf==='fiveDay'?five:current.d.regularChart;
-      const label=tf==='fiveDay'?'五日 '+(five?.coveredDays||0)+'/5 个交易日':
-        tf==='intraday'?'一日 '+(chart?.tradeDate||'日期待核验'):'交易所历史K线';
-      dialog.querySelector('.cd-chart-info').textContent=label+' · '+p.all.length+' 个价格点 · '+(chart?.source||'来源待核验')+
-        (chart?.resolution?' '+chart.resolution:'')+
-        (chart?.coverage==='single-exchange'?' · 单交易所覆盖':chart?.coverage==='us-sip'?' · SIP 汇总覆盖':'')+
-        (chart?.adjustment==='source-default-unverified'?' · 价格复权口径待核验':'')+
-        (chart?.reason?' · '+(reason[chart.reason]||chart.reason):'')+
-        (chart?.volumeQuality?.status==='missing'?' · 区间成交量暂缺':'')+
-        (!model.candle?(view._vwapSeries?.some(v=>v!=null)?' · 橙线：OHLCV 估算均价':' · 均价暂缺'):' · 橙线：MA5');
+      dialog.querySelector('.cd-chart-info').textContent=chartInfo(model,p.all.length);
     }
     function queueDraw(){if(drawFrame!=null)return;drawFrame=requestAnimationFrame(draw);}
-    function renderSummary(){if(!current||!dialog)return;const d=current.d;if(!d)return;
+    function renderSummary(){if(!current||!dialog)return;const d=current.d||{symbol:current.symbol};
       const money=formatterFor(d).money,change=number(d.change),pct=number(d.changePct),up=change==null?null:change>=0;
       dialog.querySelector('#chart-detail-title').textContent=(current.friendly?.textContent?.trim()||d.displayName||current.symbol)+' · '+current.symbol;
       dialog.querySelector('.cd-status').textContent=(d.priceSession||d.marketState||'状态待核验')+' · '+time(d.quoteAt)+' '+zoneLabel()+' · 图表 '+(d.regularChart?.tradeDate||'日期待核验');
       dialog.querySelector('.cd-price').textContent=number(d.price)==null?'—':money(d.price);
       const changeEl=dialog.querySelector('.cd-change');changeEl.textContent=change==null||pct==null?'涨跌基准待核验':
         (up?'+':'')+money(change)+' ('+(up?'+':'')+pct.toFixed(2)+'%)';changeEl.style.color=up==null?'':up?UP:DOWN;
-      dialog.querySelector('.cd-baseline').textContent='较上一交易日常规收盘 '+
-        (d.previousCloseTradeDate||'日期待核验')+' · '+(number(d.prevClose)==null?'基准待核验':money(d.prevClose));
+      const baseline=fmt.quoteBaseline(d,money);
+      dialog.querySelector('.cd-baseline').textContent=baseline.text;
       const ext=d.priceSession==='PRE'?d.ext?.pre:d.priceSession==='POST'?d.ext?.post:null;
       dialog.querySelector('.cd-extension').textContent=ext?.price==null?'':
         (d.priceSession==='PRE'?'盘前':'盘后')+' '+money(ext.price)+' · '+
-        (number(ext.change)==null?'基准待核验':(ext.change>=0?'+':'')+money(ext.change)+' ('+
+        (number(ext.change)==null||number(ext.changePct)==null?'基准待核验':(ext.change>=0?'+':'')+money(ext.change)+' ('+
           (ext.changePct>=0?'+':'')+ext.changePct.toFixed(2)+'%)');
-      const facts=[['今开',d.open],['昨收',d.prevClose],['最高',d.dayHigh],['最低',d.dayLow],['成交量',d.volume],['成交额',null]];
+      const facts=[['今开',d.open],[baseline.shortLabel,d.prevClose],['最高',d.dayHigh],['最低',d.dayLow],['成交量',d.volume],['成交额',null]];
       dialog.querySelector('.cd-facts').textContent=facts.map(([label,v])=>label+' '+(number(v)==null?'—':label==='成交量'?fmt.fmtVol(v):money(v))).join('  ·  ');
     }
     function renderBook(){if(!dialog)return;const b=remote?.book,money=formatterFor(current?.d||{}).money;
-      dialog.querySelector('.cd-book-status').textContent=b?.status==='ready'?'实时盘口':b?.reason?reason[b.reason]||b.reason:'盘口暂不可用';
+      dialog.querySelector('.cd-book-status').textContent=b?.status==='ready'&&!b.stale?'实时盘口':b?.stale?'旧盘口，等待重新检查':b?.reason?reason[b.reason]||b.reason:'盘口暂不可用';
       dialog.querySelector('.cd-ask').textContent=number(b?.ask?.price)==null?'—':money(b.ask.price);
       dialog.querySelector('.cd-bid').textContent=number(b?.bid?.price)==null?'—':money(b.bid.price);
       const size=b?.sizeUnit==='shares'?'股':b?.sizeUnit==='lots'?'手':'单位待核验';
@@ -1646,53 +1743,105 @@
         '无可用盘口来源；成交价不代替买卖报价';
     }
     function renderTape(){if(!dialog)return;const tape=remote?.tape,events=tape?.events||[],list=dialog.querySelector('.cd-tape-list'),stats=dialog.querySelector('.cd-tape-stats');
-      const stream=tape?.stream,streamNote=stream?.state&&stream.state!=='streaming'?
+      const isPublic=tape?.source==='nasdaq-public-trades'||tape?.coverage?.scope==='public-trade-window';
+      const tradeMoney=isPublic?value=>number(value)==null?'—':tradeUsdFormat.format(value):formatterFor(current?.d||{}).money;
+      const tapeZone=isPublic?'America/New_York':zone(),tapeZoneName=isPublic?'美东':zoneLabel(),stamp=at=>time(at,tapeZone,true);
+      const quality=Array.isArray(tape?.quality)?tape.quality:[];
+      const stream=tape?.stream,streamNote=!isPublic&&stream?.state&&stream.state!=='streaming'?
         ' · 行情流 '+stream.state+(stream.errorCode?' ('+stream.errorCode+')':''):'',
-        duplicateNote=events.some(e=>e.quality)?' · 来源无唯一成交ID，重连可能重复':'';
-      dialog.querySelector('.cd-tape-status').textContent=(events.length?'已接收成交片段 · '+events.length+' 笔 · '+
-        time(tape.coverage?.firstAt)+' 至 '+time(tape.coverage?.lastAt)+' '+zoneLabel():reason[tape?.reason]||'逐笔暂无数据')+
-        streamNote+duplicateNote;
+        duplicateNote=isPublic?(quality.includes('NO_TRADE_IDS')?' · 来源无唯一成交ID':''):
+          events.some(e=>e.quality)?' · 来源无唯一成交ID，重连可能重复':'';
+      const session=tapeSessionLabel(tape?.session||tapeSession),date=tape?.tradeDate||'交易日待核验';
+      const unavailable=tapeReasons[tape?.reason]||reason[tape?.reason]||'逐笔暂无数据';
+      const status=dialog.querySelector('.cd-tape-status');
+      status.textContent=(tape?.sourceLabel||tape?.source||'逐笔')+' · '+session+' · '+date+' · '+
+        (events.length?(isPublic?'最近成交窗口':'已接收成交片段')+' · '+events.length+' 笔 · 非完整逐笔 · '+
+          stamp(tape.coverage?.firstAt)+' 至 '+stamp(tape.coverage?.lastAt)+' '+tapeZoneName:unavailable)+
+        (isPublic&&tape?.delayMinutes==null?' · 延迟未核验':'')+
+        (quality.includes('CORRECTIONS_UNAVAILABLE')?' · 更正/撤销未提供':'')+
+        (tape?.stale?' · 缓存已过期':'')+streamNote+duplicateNote;
+      status.title=(tape?.asOf?'数据截至 '+stamp(tape.asOf)+' '+tapeZoneName:'')+
+        (tape?.sourceCheckedAt?' · 来源检查 '+stamp(tape.sourceCheckedAt)+' '+tapeZoneName:'');
       list.replaceChildren();for(const e of events.slice(-200).reverse()){
-        const row=make('div','cd-trade-row');row.textContent=time(e.at)+' · '+formatterFor(current?.d||{}).money(e.price)+
-        ' · '+fmt.fmtVol(e.size)+' 股 · '+(e.exchange||e.source)+' · 方向未知'+
+        const row=make('div','cd-trade-row');row.textContent=stamp(e.at)+' · '+tradeMoney(e.price)+
+        ' · '+fmt.fmtVol(e.size)+' 股 · '+(isPublic?tape.sourceLabel||'Nasdaq 公开成交':e.exchange||e.source)+' · 方向未知'+
         (e.reportState!=='reported'?' · '+(e.reportState==='corrected'?'已更正，原成交量不计入统计':'已撤销'):'' );list.appendChild(row);
       }
-      if(!events.length)list.textContent='当前目标交易日常规时段无已接收成交；不会用报价采样补造逐笔。';
+      if(!events.length)list.textContent=unavailable+'；图表仍仅显示常规时段。';
       const valid=events.filter(e=>e.reportState==='reported'),total=valid.reduce((sum,e)=>sum+(number(e.size)||0),0),
         prices=valid.map(e=>e.price).filter(v=>number(v)!=null);
-      stats.textContent=valid.length?'已接收片段 '+valid.length+' 笔 · 片段成交量 '+fmt.fmtVol(total)+' 股 · '+
-        '片段最低 '+formatterFor(current?.d||{}).money(Math.min(...prices))+' / 最高 '+
-        formatterFor(current?.d||{}).money(Math.max(...prices))+'。不是全天成交统计；无主动买卖方向。':
+      const scope=isPublic?'当前窗口':'已接收片段';
+      stats.textContent=valid.length?scope+' '+valid.length+' 笔 · '+(isPublic?'窗口':'片段')+'成交量 '+fmt.fmtVol(total)+' 股 · '+
+        '最低 '+tradeMoney(Math.min(...prices))+' / 最高 '+
+        tradeMoney(Math.max(...prices))+'。不是全天成交统计；无主动买卖方向。':
         '当前无可验证成交事件，成交统计暂缺。';
       if(valid.length){const buckets=new Map();for(const e of valid){const start=Math.floor(e.at/1800000)*1800000;
         buckets.set(start,(buckets.get(start)||0)+e.size);}
-        stats.textContent+=' 时间分布（已接收片段）：'+[...buckets].sort((a,b)=>a[0]-b[0])
-          .map(([at,size])=>time(at)+' '+fmt.fmtVol(size)+' 股').join('；');}
+        stats.textContent+=' 时间分布（'+scope+'）：'+[...buckets].sort((a,b)=>a[0]-b[0])
+          .map(([at,size])=>stamp(at)+' '+fmt.fmtVol(size)+' 股').join('；');}
+    }
+    function selectTapeSession(value){
+      if(!current||!['auto','regular','pre','post'].includes(value))return Promise.resolve();
+      tapeSession=value;dialog.querySelector('.cd-tape-session').value=value;
+      remote={...(remote||{}),tape:{status:'loading',session:value,reason:'TAPE_LOADING',events:[]}};
+      renderTape();
+      return fetchDetail(tf==='fiveDay'?'5d':'1d');
     }
     function selectSide(side){dialog.querySelectorAll('[data-side]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.side===side)));
       dialog.querySelector('.cd-tape-list').hidden=side!=='tape';dialog.querySelector('.cd-tape-stats').hidden=side!=='stats';}
-    async function fetchDetail(range='1d'){
+    function resetRemote(bookReason='DETAIL_LOADING',tapeReason='TAPE_LOADING'){
+      remote={book:{status:'unavailable',reason:bookReason},tape:{status:'unavailable',session:tapeSession,reason:tapeReason,events:[]}};
+      renderBook();renderTape();
+    }
+    function fetchDetail(range='1d'){
+      if(!current||pageAway||!canPoll())return Promise.resolve();
+      const symbol=current.symbol,session=tapeSession,key=symbol+':'+range+':'+session;
+      if(fetchJob?.key===key&&!fetchJob.controller.signal.aborted)return fetchJob.promise;
       fetchAbort?.abort();const controller=fetchAbort=new AbortController(),id=++requestId;
-      try{const response=await fetch('/api/chart/detail?symbol='+encodeURIComponent(current.symbol)+'&range='+range,
-        {signal:controller.signal,cache:'no-store'});
-        if(!response.ok)throw new Error('HTTP '+response.status);
+      const job={key,id,controller,promise:null};fetchJob=job;
+      job.promise=(async()=>{
+      try{const response=await network.request('chart-detail:'+symbol,'/api/chart/detail?symbol='+encodeURIComponent(symbol)+'&range='+range+'&tapeSession='+session,
+        {signal:controller.signal,cache:'no-store',replace:true});
+        if(!response.ok)throw new Error(response.retryAt>Date.now()?'来源限流，'+Math.ceil((response.retryAt-Date.now())/1000)+' 秒后可重试':'HTTP '+response.status);
         const value=await response.json();if(id!==requestId||!current||controller.signal.aborted)return;
+        if(value?.symbol!==symbol||value.range!==range)throw new Error('证券身份或请求范围不符');
         remote=value;if(range==='5d')five=value.fiveDay;
         renderBook();renderTape();queueDraw();
-      }catch(error){if(controller.signal.aborted)return;
+      }catch(error){if(id!==requestId||!current||controller.signal.aborted&&error.code!=='REQUEST_TIMEOUT')return;
+        resetRemote('DETAIL_REQUEST_FAILED','PUBLIC_TRADES_UNAVAILABLE');
         dialog.querySelector('.cd-tape-status').textContent='详情接口暂不可用：'+error.message;
         if(range==='5d'){five=null;queueDraw();}
-      }
+      }finally{if(fetchJob===job){fetchJob=null;if(fetchAbort===controller)fetchAbort=null;}}
+      })();
+      return job.promise;
     }
     async function selectPeriod(value){if(!current)return;tf=value;hover=null;view={visN:{},followEnd:true,winStart:null,fullSession:false};
       dialog.querySelectorAll('[data-tf]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tf===tf)));
       if(tf==='fiveDay'){five=null;queueDraw();await fetchDetail('5d');return;}
-      if(tf!=='intraday'&&!current.historyStore?.getSeries(tf)?.length){const selected=current,job=current.historyStore?.load(tf);
+      void fetchDetail('1d');
+      if(tf!=='intraday'&&(!current.historyStore?.getSeries(tf)?.length||current.historyStore?.needsLoad?.(tf))){historyReadAt.set(tf,Date.now());const selected=current,job=current.historyStore?.load(tf);
         queueDraw();await job;if(current===selected&&tf===value)queueDraw();return;}
+      if(tf!=='intraday')void refreshHistory();
       queueDraw();
     }
+    async function refreshHistory(force=false){
+      if(!current||pageAway||!canPoll()||tf==='intraday'||tf==='fiveDay')return;
+      const selected=current,period=tf,store=selected.historyStore,entry=store?.getMeta?.(period),now=Date.now();
+      if(!store?.load||entry?.status==='loading'||entry?.retryAt>now||!force&&now-(historyReadAt.get(period)??-Infinity)<60000)return;
+      historyReadAt.set(period,now);
+      const anchor=!view.followEnd?view.plot?.bars[0]?.periodStart:null,savedStart=view.winStart;
+      const before=anchor?view.plot?.bars.at(-1)?.periodEndExclusive:undefined;
+      const spec=window.PANEL_TIMEFRAMES.get(period),limit=before?Math.min(500,(view.plot?.vis||view.visN?.[period]||spec.visible)+spec.prewarm):undefined;
+      const job=store.load(period,{before,limit});queueDraw();
+      try{await job;}finally{
+        if(current===selected&&tf===period){
+          if(anchor&&!view.followEnd&&view.winStart===savedStart){const index=store.getSeries(period).findIndex(bar=>bar.periodStart===anchor);if(index>=0)view.winStart=index;}
+          queueDraw();
+        }
+      }
+    }
     function zoom(kind,e){const p=view.plot;if(!p?.n)return;let vis=p.vis;
-      vis=kind==='in'?Math.max(5,Math.round(vis/1.4)):Math.min(p.all.length,Math.round(vis*1.4));
+      vis=kind==='in'?Math.max(window.PANEL_TIMEFRAMES.get(view.tf).minVisible,Math.round(vis/1.4)):Math.min(p.all.length,Math.round(vis*1.4));
       if(!view.visN)view.visN={};view.visN[view.tf]=vis;view.fullSession=false;
       if(e){const anchor=p.a+nearest(p,local(e,p).x);view.winStart=Math.max(0,Math.min(p.all.length-vis,Math.round(anchor-(anchor-p.a)*vis/p.vis)));view.followEnd=false;}
       queueDraw();}
@@ -1715,30 +1864,43 @@
       queueDraw();
     }
     function onPop(){if(current)close(true);}
+    function syncVisibility(){
+      if(!current)return;
+      const allowed=!pageAway&&canPoll();if(pollingAllowed===allowed)return;pollingAllowed=allowed;
+      clearInterval(poll);poll=null;
+      if(!allowed){requestId++;fetchAbort?.abort();fetchAbort=null;fetchJob=null;resetRemote('DETAIL_PAUSED','PUBLIC_TRADES_UNAVAILABLE');return;}
+      void fetchDetail(tf==='fiveDay'?'5d':'1d');
+      void refreshHistory(true);
+      poll=setInterval(()=>{if(current){void fetchDetail(tf==='fiveDay'?'5d':'1d');void refreshHistory();}},10000);
+    }
+    const onPageHide=()=>{pageAway=true;syncVisibility();},onPageShow=()=>{pageAway=false;syncVisibility();};
     function close(fromPop=false){if(!current)return;
-      current=null;requestId++;fetchAbort?.abort();fetchAbort=null;clearInterval(poll);poll=null;
+      current=null;requestId++;fetchAbort?.abort();fetchAbort=null;fetchJob=null;clearInterval(poll);poll=null;
       resizeObserver?.disconnect();resizeObserver=null;
       window.removeEventListener('resize',layout);window.visualViewport?.removeEventListener('resize',layout);
       window.visualViewport?.removeEventListener('scroll',layout);
       document.removeEventListener('fullscreenchange',layout);window.removeEventListener('popstate',onPop);
+      document.removeEventListener('visibilitychange',syncVisibility);window.removeEventListener('pagehide',onPageHide);window.removeEventListener('pageshow',onPageShow);
       if(drawFrame!=null)cancelAnimationFrame(drawFrame);drawFrame=null;
       if(document.fullscreenElement===dialog)void document.exitFullscreen?.().catch(()=>{});
       try{window.screen?.orientation?.unlock?.();}catch{}
       dialog.close();document.body.style.overflow=scrollStyle;focusReturn?.focus?.();focusReturn=null;
       if(openedHistory&&!fromPop)history.back();openedHistory=false;
-      remote=null;five=null;view={};hover=null;drag=null;lastTap=null;manualRotate=null;
+      remote=null;five=null;view={};hover=null;drag=null;lastTap=null;manualRotate=null;pollingAllowed=null;historyReadAt.clear();
     }
     function open(q,opener){ensure();if(current)close();current=q;focusReturn=opener||q.cv;
       scrollStyle=document.body.style.overflow;document.body.style.overflow='hidden';
-      tf='intraday';remote=null;five=null;view={visN:{},followEnd:true,winStart:null,fullSession:false};hover=null;
+      tf='intraday';tapeSession='auto';remote=null;five=null;view={visN:{},followEnd:true,winStart:null,fullSession:false};hover=null;pageAway=false;pollingAllowed=null;
+      dialog.querySelector('.cd-tape-session').value='auto';resetRemote();selectSide('tape');
       dialog.showModal();history.pushState({chartDetail:true},'',location.href);openedHistory=true;
       window.addEventListener('popstate',onPop);window.addEventListener('resize',layout);
       window.visualViewport?.addEventListener('resize',layout);window.visualViewport?.addEventListener('scroll',layout);
       document.addEventListener('fullscreenchange',layout);
+      document.addEventListener('visibilitychange',syncVisibility);window.addEventListener('pagehide',onPageHide);window.addEventListener('pageshow',onPageShow);
       resizeObserver=typeof ResizeObserver==='function'?new ResizeObserver(()=>queueDraw()):null;
       resizeObserver?.observe(dialog.querySelector('.cd-plot'));
       renderSummary();void selectPeriod('intraday');layout();dialog.querySelector('.cd-close').focus();
-      void fetchDetail();poll=setInterval(()=>{if(current)void fetchDetail(tf==='fiveDay'?'5d':'1d');},10000);
+      syncVisibility();
       if(window.innerWidth<700&&dialog.requestFullscreen){
         void dialog.requestFullscreen().then(()=>window.screen?.orientation?.lock?.('landscape')).catch(()=>layout());
       }
@@ -1755,7 +1917,7 @@
       });
     }
     return Object.freeze({mount,update:q=>{if(current===q){renderSummary();queueDraw();}},
-      remove:q=>{if(current===q)close();},close});
+      remove:q=>{if(current===q)close();},close,syncVisibility});
   };
   window.PANEL_CHART_DETAIL=Object.freeze({createChartDetailView});
 })();
@@ -1764,7 +1926,7 @@
 
 ;/* public/modules/panel-card-view.js */
 (() => {
-  const createCardView = ({ document, panelsEl, stripEl, chartController, formatterFor, cardCurOf, nameOf, onRemove, onRetry, onCurrency, humanizeAge, UP, DOWN, getReadIntervalMs=()=>0, quoteClock=null, onNewsToggle=()=>{} }) => {
+  const createCardView = ({ document, panelsEl, stripEl, chartController, formatterFor, cardCurOf, nameOf, onRemove, onRetry, onCurrency, humanizeAge, UP, DOWN, getReadIntervalMs=()=>0, canPollDetails=()=>!document.hidden, quoteClock=null, onNewsToggle=()=>{} }) => {
     const { esc, fmtVol, pct, fmtTime8 } = window.PANEL_FORMAT;
     const FRIENDLY = {QQQ:'纳指100 ETF',SPY:'标普500 ETF'};
     const visibleName=d=>{
@@ -1774,6 +1936,8 @@
     };
     const TF = (window.PANEL_TIMEFRAMES?.all || [['intraday','分时'],['daily30','日K'],['weekly','周K'],['monthly','月K'],['yearly','年K']]).map(t=>Array.isArray(t)?t:[t.key,t.label]);
     const cardCache=new Map(), lastPrice=new Map();
+    const reducedMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    reducedMotion?.addEventListener?.('change',()=>{if(reducedMotion.matches)for(const q of cardCache.values())q.priceAnimation?.cancel();});
     let fundamentalsView=null,detailView=null,chartDetailView=null;
     // Measure natural content, never the stretched card or a previous minimum.
     // A shared observer only schedules work when a band's intrinsic size changes.
@@ -1882,7 +2046,7 @@
     fundamentalsView.mount(q);
     detailView ||= window.PANEL_DETAIL.createDetailView({document});
     detailView.mount(q);
-    chartDetailView ||= window.PANEL_CHART_DETAIL.createChartDetailView({document,formatterFor,UP,DOWN});
+    chartDetailView ||= window.PANEL_CHART_DETAIL.createChartDetailView({document,formatterFor,UP,DOWN,canPoll:canPollDetails});
     chartDetailView.mount(q);
     mountBands(q);
     q.ccybtns.forEach(b => b.addEventListener('click', () => onCurrency(sym, b.dataset.ccy)));
@@ -1957,7 +2121,7 @@
   function updateQuoteMeta(q, now = quoteClock ? quoteClock.now() : Date.now()) {
     const d = q.d; if (!d || !q.quoteMeta) return;
     const freshness=applyStaleBadge(q,d,now);
-    const sourceNames = { 'yahoo-futures':'Yahoo · 期货', 'eastmoney-futures':'东方财富 · 期货', 'eastmoney-futures-list':'东方财富 · 期货目录（成交时间未知）', 'alpaca-iex':'Alpaca · IEX 单一交易所', 'alpaca-sip':'Alpaca · 美国 SIP 数据源', 'sina-batch':'新浪批量报价',yahoo: 'Yahoo', 'tx-cn': '腾讯', 'tx-us': '腾讯', 'tx-batch': '腾讯批量报价', 'naver-index': 'Naver 指数', 'naver-us': 'Naver 美股', 'naver-kr': 'Naver 韩股', 'em-cn': '东方财富', finnhub:'Finnhub · 覆盖依账户权限','finnhub-quote':'Finnhub 报价',fixture: '测试数据' };
+    const sourceNames = { 'yahoo-futures':'Yahoo · 期货', 'eastmoney-futures':'东方财富 · 期货', 'eastmoney-futures-list':'东方财富 · 期货目录（成交时间未知）', 'alpaca-iex':'Alpaca · IEX 单一交易所', 'alpaca-sip':'Alpaca · 美国 SIP 数据源', 'sina-batch':'新浪批量报价',yahoo: 'Yahoo', 'tx-cn': '腾讯', 'tx-us': '腾讯', 'tx-batch': '腾讯批量报价', 'naver-index': 'Naver 指数', 'naver-us': 'Naver 美股', 'naver-kr': 'Naver 韩股', 'naver-jp':'Naver 日股', 'twse-mis':'台湾证券交易所 · MIS', 'em-cn': '东方财富', finnhub:'Finnhub · 覆盖依账户权限','finnhub-quote':'Finnhub 报价',fixture: '测试数据' };
     const sessionNames = { SOURCE_SNAPSHOT:'统计来自独立快照，非逐笔同步', CACHED_REGULAR: '常规时段统计', REGULAR: '常规时段统计', PRE: '盘前统计', POST: '盘后统计', CN_SNAPSHOT: '交易日快照', UNKNOWN: '统计时段未核验' };
     const at = quoteTimeMs(d.quoteAt ?? d.ts), checked = quoteTimeMs(d.sourceCheckedAt);
     const parts = ['报价 ' + (at ? fmtTime8(at) : '时刻未知'), sourceNames[d.src] || '来源未标明'];
@@ -2015,7 +2179,7 @@
     // 价格 flash
     q.cur.className = 'cur';
     const prev = lastPrice.get(d.symbol);
-    if (prev!=null && prev!==d.price) {
+    if (prev!=null && prev!==d.price && !reducedMotion?.matches) {
       q.cur.classList.remove('flash-up','flash-down');
       if(q.cur.animate){q.priceAnimation?.cancel();q.priceAnimation=q.cur.animate([{opacity:0.35},{opacity:1}],{duration:420,easing:'ease-out'});}
       else q.cur.classList.add(d.price>prev?'flash-up':'flash-down');
@@ -2046,9 +2210,10 @@
     applyStaleBadge(q, d);   // T2: stale 徽标分级 — 上游限流(含重试倒计时)/冷却重试/旧后端 d.stale 兼容
     const calendarEstimate = d.calendarCoverage && d.calendarCoverage.known === false;
     const calendar=window.PANEL_STATE.calendarStatus(d);
-    const stName={REGULAR:(calendarEstimate ? '常规时段·节假日未核验' : '交易中'),PRE:'盘前',POST:'盘后',AUCTION:'集合竞价',BREAK:'午间休市',CLOSED:'已收盘',UNKNOWN:calendar.pending?'交易时段待公布':'时段未核验'}[d.marketState]||'时段未核验';
+    const stName={REGULAR:(calendarEstimate ? '常规时段·节假日未核验' : '交易中'),PRE:'盘前',POST:'盘后',AUCTION:'集合竞价',BREAK:'午间休市',CLOSED:'已收盘',HOLIDAY:'休市',UNKNOWN:calendar.pending?'交易时段待公布':'时段未核验'}[d.marketState]||'时段未核验';
     q.marketLabel=stName;q.marketTitle=calendar.message||(calendarEstimate ? '交易日历覆盖不足，此时段状态仅为估计' : '');applyRequestState(q);
-    if(q.changeBaseline){q.changeBaseline.textContent=(d.changeBasis==='previous-settlement'?'较前结算基准':d.instrumentType==='FUTURE'?'较来源基准':'较上一交易日常规收盘')+(d.previousCloseTradeDate?' '+d.previousCloseTradeDate:'')+(d.prevClose!=null?' '+money(d.prevClose):'（基准待核验）');q.changeBaseline.title=d.previousCloseMissingReason||d.previousCloseStatus||'主涨跌相对报价交易日的上一交易日常规收盘；盘后行相对本交易日常规收盘。';}
+    const baseline=window.PANEL_FORMAT.quoteBaseline(d,money);
+    if(q.changeBaseline){q.changeBaseline.textContent=baseline.text;q.changeBaseline.title=baseline.title;}
 
     // 盘前/盘后独立报价行
     if (q.extRow) {
@@ -2061,7 +2226,7 @@
     }
     q.open.textContent=money(d.open); q.high.textContent=money(d.dayHigh); q.low.textContent=money(d.dayLow);
     q.prev.textContent=money(d.prevClose);
-    const previousLabel=q.prev.parentElement?.querySelector?.('label');if(previousLabel)previousLabel.textContent=d.instrumentType==='FUTURE'?(d.changeBasis==='previous-settlement'?'前结算':'来源前值'):'昨收'; q.volume.textContent=fmtVol(d.volume);
+    const previousLabel=q.prev.parentElement?.querySelector?.('label');if(previousLabel)previousLabel.textContent=baseline.shortLabel; q.volume.textContent=fmtVol(d.volume);
     q.w52h.textContent=money(d.week52High); q.w52l.textContent=money(d.week52Low);
     q.exch.textContent=d.exchangeName || '—';
     fundamentalsView?.render(q);
@@ -2095,7 +2260,7 @@
     }
 
     function remove(symbol) { const q=cardCache.get(symbol);if(!q)return;fundamentalsView?.remove(q);detailView?.remove(q);chartDetailView?.remove(q);chartController.unmount(q);for(const content of q.layoutContents||[]){bandObserver?.unobserve(content);layoutRecords.delete(content);}scheduleBands();q.el.remove();q.strip?.remove();cardCache.delete(symbol);lastPrice.delete(symbol); }
-    return Object.freeze({ ensureCard, render, renderStrip, updateQuoteMeta, setFetchStatus, cardCache, remove });
+    return Object.freeze({ ensureCard, render, renderStrip, updateQuoteMeta, setFetchStatus, cardCache, remove, syncVisibility:()=>chartDetailView?.syncVisibility() });
   };
   window.PANEL_CARD_VIEW=Object.freeze({createCardView});
 })();
@@ -2110,13 +2275,14 @@
   let searchReqId = 0;   // P1-U2: 搜索请求代际号, 丢弃过期响应
   let searchController = null;
   let searchIndex = -1;
+  let lastSearchMore = false;
   const status=document.createElement('div');status.className='search-status';status.setAttribute('role','status');status.setAttribute('aria-live','polite');
   qEl.parentNode.appendChild(status);
   const busy=value=>{qEl.setAttribute('aria-busy',String(value));srEl.setAttribute('aria-busy',String(value));};
   const hideSearch = (clear = false) => {
     searchReqId++;
     if (searchController) { try { searchController.abort(); } catch {} searchController = null; }
-    clearTimeout(sTimer); searchIndex = -1; srEl.hidden = true; srEl.innerHTML = ''; qEl.setAttribute('aria-expanded', 'false');
+    clearTimeout(sTimer); searchIndex = -1; lastSearchMore = false; srEl.hidden = true; srEl.innerHTML = ''; qEl.setAttribute('aria-expanded', 'false');
     qEl.setAttribute('aria-activedescendant', '');
     busy(false);status.textContent='';if (clear) qEl.value = '';
   };
@@ -2124,6 +2290,7 @@
     more = more === true;
     const myId = ++searchReqId;   // P1-U2
     const v = qEl.value.trim(); if (!v) { hideSearch(); return 0; }
+    lastSearchMore = more;
     if (searchController) { try { searchController.abort(); } catch {} }
     searchController = typeof AbortController === 'function' ? new AbortController() : null;
     busy(true);status.textContent='正在查询…';srEl.innerHTML='<div class="sempty">正在查询…</div>';srEl.hidden=false;qEl.setAttribute('aria-expanded','true');
@@ -2134,7 +2301,7 @@
       const list = PANEL.normalizeList(await r.json());
       if (myId !== searchReqId) return;   // P1-U2: 已有更新的搜索, 本次过期响应直接丢弃
       srEl.innerHTML = (list && list.length)
-        ? list.map((x, i) => '<div class="sitem" title="' + esc(x.matchNote || x.seriesNote || '') + '" role="option" tabindex="-1" id="sitem-' + i + '" data-sym="' + esc(x.symbol) + '" data-name="' + esc(x.name) + '"><span class="mkttag" data-mkt="' + esc(x.market) + '">' + esc(x.market) + '</span><b>' + esc(x.symbol) + '</b><span class="sname">' + esc(x.name) + '</span><span class="stype">' + ({INDEX:'指数',ETF:'ETF',EQUITY:'股票',FUTURE:'期货',MUTUALFUND:'基金',CURRENCY:'汇率'}[x.type] || '证券') + '</span><span class="sexch">' + esc(x.exch) + '</span>' + (x.matchNote ? '<small class="search-note">' + esc(x.matchNote) + '</small>' : '') + '</div>').join('')
+        ? list.map((x, i) => '<div class="sitem" title="' + esc(x.matchNote || x.seriesNote || '') + '" role="option" tabindex="-1" id="sitem-' + i + '" data-sym="' + esc(x.symbol) + '" data-name="' + esc(x.name) + '"><span class="mkttag" data-mkt="' + esc(x.market) + '">' + esc(x.market) + '</span><b>' + esc(x.symbol) + '</b><span class="sname">' + esc(x.name) + '</span><span class="stype">' + ({INDEX:'指数',ETF:'ETF',EQUITY:'股票',FUTURE:'期货',MUTUALFUND:'基金',CURRENCY:'汇率'}[x.type] || '证券') + '</span><span class="sexch">' + esc([x.exch,x.currency].filter(Boolean).join(' · ')) + '</span>' + (x.matchNote ? '<small class="search-note">' + esc(x.matchNote) + '</small>' : '') + '</div>').join('')
         : sourceStatus==='unavailable'?'<div class="sempty">搜索来源暂不可用，未能确认是否存在匹配证券。<button type="button" data-search-retry="1">重新查询</button>；也可尝试完整代码，如 9766.T / VOD.L / M&amp;M.NS</div>':'<div class="sempty">无结果，可尝试公司英文名或完整代码，如 科乐美 / 9766.T / VOD.L / M&amp;M.NS</div>';
       if(list.length&&sourceStatus==='partial')srEl.innerHTML+='<div class="sempty">部分搜索来源暂不可用，当前结果可能不完整。<button type="button" data-search-retry="1">重新查询</button></div>';
       srEl.innerHTML += more ? '<div class="sempty">已合并可用来源；目录可能不完整或限流，连续合约请核对来源。</div>' : '<div class="search-more" id="search-more-option" role="option" tabindex="0" data-search-more="1" aria-label="查询更多来源与具体合约">查询更多来源与具体合约</div>';
@@ -2168,7 +2335,7 @@
     runSearch();
   });
   srEl.addEventListener('click', (e) => {
-    if(e.target.closest('[data-search-retry]')){runSearch();return;}
+    if(e.target.closest('[data-search-retry]')){runSearch(lastSearchMore);return;}
     if(e.target.closest('[data-search-more]')){runSearch(true);return;}
     const it = e.target.closest('.sitem'); if (!it || !it.dataset.sym) return;
     const sym = it.dataset.sym.toUpperCase();
@@ -2573,13 +2740,14 @@
 ;/* public/modules/panel-market-store.js */
 (() => {
   const createMarketStore = () => {
+  const regularCache={};
   const intradayCache={};  // T1: sym -> {ver,bars} — 分时K线条件传输客户端缓存(配合请求 &cv=, 服务端版本一致时回 'same' 不重传数组)
   const daily30Cache={};   // P1-P1: sym -> {ver,bars} — daily30Version 未变时复用旧日K数组(服务端SLOW_TTL内数据不变, 不再每2s重处理16KB日K)
   // T1: 请求携带客户端已知图表版本号 — 每符号 SYM:iVer:dVer, 无缓存/版本无效用 0
   function chartVersions(symbols){
     return symbols.map(sym => {
-      const ic=intradayCache[sym], dc=daily30Cache[sym];
-      return sym+':'+((ic && ic.ver>0 && ic.bars) ? ic.ver : 0)+':'+((dc && dc.ver>0 && dc.bars) ? dc.ver : 0);
+      const ic=intradayCache[sym], dc=daily30Cache[sym],rc=regularCache[sym];
+      return sym+':'+((ic && ic.ver>0 && ic.bars) ? ic.ver : 0)+':'+((dc && dc.ver>0 && dc.bars) ? dc.ver : 0)+(rc?.ver?':'+rc.ver:'');
     }).join(';');
   }
   // T1: 响应图表字段落位 — 'same' 复用本地缓存(畸形: 本地无缓存/ver为0 → 按空数组防御); 全量数组入库带版本(旧后端同版本重发仍复用旧引用)
@@ -2616,9 +2784,18 @@
     function prepareQuote(data) {
       const previous=quotes.get(data.symbol);
       if(!data.charts && previous?.charts)data.charts=previous.charts;
+      const regular=data.regularChart,cached=regularCache[data.symbol];
+      if(regular){
+        if(regular.bars==='same')regular.bars=cached?.ver===regular.revision?cached.bars:[];
+        else if(Array.isArray(regular.bars)){
+          if(regular.revision>0&&cached?.ver===regular.revision)regular.bars=cached.bars;
+          else if(regular.revision>0)regularCache[data.symbol]={ver:regular.revision,bars:regular.bars};
+          else delete regularCache[data.symbol];
+        }
+      }
       resolveCharts(data);quotes.set(data.symbol,data);return data;
     }
-    function remove(symbol) {quotes.delete(symbol);delete intradayCache[symbol];delete daily30Cache[symbol];}
+    function remove(symbol) {quotes.delete(symbol);delete intradayCache[symbol];delete daily30Cache[symbol];delete regularCache[symbol];}
     return Object.freeze({prepareQuote,chartVersions,remove,intradayCache,daily30Cache});
   };
   window.PANEL_MARKET_STORE=Object.freeze({createMarketStore});
@@ -2629,7 +2806,7 @@
 ;/* public/modules/panel-live-store.js */
 (() => {
   function symbolsUrl(path,symbols,cv=''){
-    const base=path+(path.includes('?')?'&':'?')+'symbols='+encodeURIComponent(symbols.join(','));
+    const base=path+(path.includes('?')?'&':'?')+'symbols='+encodeURIComponent(symbols.join(','))+(path==='/api/stream'?'&historyDelta=1&regularDelta=1':'');
     const withVersions=base+'&cv='+encodeURIComponent(cv);
     // Nginx accepts request lines up to 8 KiB. Cache hints are optional;
     // membership is never truncated to squeeze a large watchlist into the URL.
@@ -2739,7 +2916,7 @@
   const saveName = (sym, name) => { if (typeof name!=='string' || !name.trim()) return; names[sym]=name.trim().slice(0,160); panelState.saveNames(NAMES_KEY,names); };
   const { esc } = window.PANEL_FORMAT;
   const chartController=window.PANEL_CHART_CONTROLLER.createChartController({ document, formatterFor, formatKey:d=>JSON.stringify([cardCurOf(d.symbol),d.currency,d.instrumentType,d.fxStale,d.fxKind,d.fxKind?d.fxMap:fxMap]), client:PANEL, flash, UP, DOWN, dpr:devicePixelRatio });
-  const cardView=window.PANEL_CARD_VIEW.createCardView({ document, panelsEl, stripEl, chartController, formatterFor, cardCurOf, nameOf:sym=>names[sym], onRemove:removeFromWatch, onRetry:()=>refresh(true), onCurrency:setCardCurrency, humanizeAge, UP, DOWN, onNewsToggle:()=>{newsController.invalidate();void refreshNews();}, getReadIntervalMs:()=>currentPollingPolicy().marketMs, quoteClock });
+  const cardView=window.PANEL_CARD_VIEW.createCardView({ document, panelsEl, stripEl, chartController, formatterFor, cardCurOf, nameOf:sym=>names[sym], onRemove:removeFromWatch, onRetry:()=>refresh(true), onCurrency:setCardCurrency, humanizeAge, UP, DOWN, onNewsToggle:()=>{newsController.invalidate();void refreshNews();}, getReadIntervalMs:()=>currentPollingPolicy().marketMs, canPollDetails:()=>!document.hidden||refreshMode==='continuous', quoteClock });
   const {ensureCard,render,renderStrip,updateQuoteMeta,setFetchStatus,cardCache}=cardView;
   function removeFromWatch(sym) {
     const q=cardCache.get(sym); if(!q)return;
@@ -2961,7 +3138,7 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=104').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=108').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
         nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本','info',{label:'刷新页面',run:()=>location.reload()}); });
       });
@@ -3110,6 +3287,7 @@
   }
   function syncVisibility(){
     if(document.hidden&&refreshMode==='economy')liveStore?.pause();else liveStore?.resume();
+    cardView.syncVisibility();
   }
   function resumeQuotes(){quoteClock.resume();tickClock();syncVisibility();}
   document.addEventListener('visibilitychange',()=>{syncVisibility();if(!document.hidden){resumeQuotes();refreshNews();refreshMacro();}});

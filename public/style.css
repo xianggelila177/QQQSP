@@ -196,6 +196,9 @@ button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,summ
 .cd-book-row{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #edf1f5;font-size:12px}
 .cd-book-row b{font-variant-numeric:tabular-nums}.cd-ask{color:#25a46d}.cd-bid{color:#ec4757}
 .cd-book-meta{padding-top:6px}.cd-tape{display:flex;flex-direction:column;min-height:0;flex:1;padding:10px 12px}
+.cd-tape-filter{display:flex;align-items:center;gap:6px;margin-bottom:7px;font-size:11px;color:#526177}
+.cd-tape-session{min-width:0;flex:1;font:inherit;color:#344a68;background:#fff;border:1px solid #d8e1ed;border-radius:5px;padding:5px}
+.cd-tape-session:focus-visible{outline:2px solid #2473d4;outline-offset:2px}
 .cd-side-tabs{display:flex;gap:5px}.cd-side-tabs button{flex:1;font-size:11px}.cd-side-tabs button[aria-pressed="true"],.cd-periods button[aria-pressed="true"]{
   color:#245ce3;background:#eaf1ff;border-color:#a9bff9}
 .cd-tape-status{padding:8px 0}.cd-tape-list,.cd-tape-stats{min-height:0;overflow:auto;font-size:11px;color:#526177;line-height:1.6}

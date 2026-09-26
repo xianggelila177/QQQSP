@@ -4,8 +4,9 @@
     const point=d?.intradayLivePoint,history=d?.regularChart?.bars,last=Array.isArray(history)?history.at(-1):null;
     if(d?.intradayLiveStatus!=='ready'||!point||!last||d.error||d.pending||d.stale||d.staleInfo||d.recovery)return null;
     if(d.marketState!=='REGULAR'||d.priceSession!=='REGULAR'||d.regularChart?.source!==d.src)return null;
-    if(!Number.isFinite(point.t)||point.t<=0||!Number.isFinite(point.c)||point.c<=0||point.v!==null||point.c!==d.price)return null;
-    if(!Number.isFinite(last.t)||last.t<=0||!Number.isFinite(last.c)||last.c<=0||point.t<last.t||!Number.isFinite(d.quoteAt)||Math.abs(point.t-d.quoteAt/1000)>.001||d.quoteAt>Date.now()+5000)return null;
+    const validPrice=value=>Number.isFinite(value)&&(d.instrumentType==='FUTURE'||value>0);
+    if(!Number.isFinite(point.t)||point.t<=0||!validPrice(point.c)||point.v!==null||point.c!==d.price)return null;
+    if(!Number.isFinite(last.t)||last.t<=0||!validPrice(last.c)||point.t<last.t||!Number.isFinite(d.quoteAt)||Math.abs(point.t-d.quoteAt/1000)>.001||d.quoteAt>Date.now()+5000)return null;
     if(typeof point.currency!=='string'||point.currency!==d.currency||typeof point.source!=='string'||!point.source||point.source!==d.src)return null;
     if(typeof point.sessionDate!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(point.sessionDate)||point.sessionDate!==point.historyDate)return null;
     const dateAt=Date.parse(point.sessionDate+'T00:00:00Z');
@@ -54,15 +55,37 @@
   // supplies formatting and series helpers explicitly at construction time.
   const createChartEngine = ({ UP, DOWN, fmtDate, formatterFor, maSeries }) => {
   const seriesCache = new WeakMap();
+  const vwapCache = new WeakMap(), timeFormats = new Map();
+  function timeFormat(zone,kind){
+    const key=zone+':'+kind;
+    if(!timeFormats.has(key)){
+      let formatter=null;
+      try{formatter=new Intl.DateTimeFormat(kind==='day'?'en-CA':'en-GB',{timeZone:zone,...(kind==='day'?{year:'numeric',month:'2-digit',day:'2-digit'}:{hour:'2-digit',minute:'2-digit',hour12:false})});}catch{}
+      if(timeFormats.size>=64)timeFormats.delete(timeFormats.keys().next().value);
+      timeFormats.set(key,formatter);
+    }
+    return timeFormats.get(key);
+  }
   const localClock=(at,zone)=>{
     if(!zone)return fmtDate(at/1000,true).slice(11,16);
-    try{return new Intl.DateTimeFormat('en-GB',{timeZone:zone,hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(at));}
-    catch{return fmtDate(at/1000,true).slice(11,16);}
+    return timeFormat(zone,'clock')?.format(new Date(at))||fmtDate(at/1000,true).slice(11,16);
   };
   const localDay=(at,zone)=>{
-    try{return new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(at));}
-    catch{return new Date(at).toISOString().slice(0,10);}
+    return timeFormat(zone,'day')?.format(new Date(at))||new Date(at).toISOString().slice(0,10);
   };
+  function estimatedVwap(history,revision,zone){
+    const tail=history.at(-1),key=[revision,zone,history.length,tail?.t,tail?.h,tail?.l,tail?.c,tail?.v].join(':');
+    const cached=vwapCache.get(history);if(cached?.key===key)return cached.values;
+    const values=[];let day=null,weighted=0,volume=0,broken=false;
+    for(const b of history){
+      const date=localDay(b.t*1000,zone);
+      if(date!==day){day=date;weighted=0;volume=0;broken=false;}
+      if(!Number.isFinite(b.v)||b.v<0||![b.h,b.l,b.c].every(Number.isFinite))broken=true;
+      if(broken){values.push(null);continue;}
+      weighted+=(b.h+b.l+b.c)/3*b.v;volume+=b.v;values.push(volume>0?weighted/volume:null);
+    }
+    vwapCache.set(history,{key,values});return values;
+  }
   function movingAverages(all, revision) {
     const tail = all[all.length - 1];
     const key = [revision, all.length, tail?.t, tail?.c].join(':');
@@ -90,15 +113,8 @@
     const ma = candle ? movingAverages(history, revision) : {};
     let vwapSeries=null;
     if(q._estimatedVwap&&q.tf==='intraday'&&!q._sampled){
-      vwapSeries=[];let day=null,weighted=0,volume=0,broken=false;
-      for(const b of all){
-        const key=localDay(b.t*1000,d?.regularChart?.exchangeZone||q._displayZone||'America/New_York');
-        if(key!==day){day=key;weighted=0;volume=0;broken=false;}
-        if(!Number.isFinite(b.v)||b.v<0||![b.h,b.l,b.c].every(Number.isFinite)){broken=true;vwapSeries.push(null);continue;}
-        if(broken){vwapSeries.push(null);continue;}
-        weighted+=(b.h+b.l+b.c)/3*b.v;volume+=b.v;
-        vwapSeries.push(volume>0?weighted/volume:null);
-      }
+      const values=estimatedVwap(history,revision,d?.regularChart?.exchangeZone||q._displayZone||'America/New_York');
+      vwapSeries=live?values.concat(null):values;
     }
     q._vwapSeries=vwapSeries;
     const periods=[5,10,20].filter(period=>q.maEnabled?.[period]!==false);
@@ -106,14 +122,13 @@
     for (const b of bars) { const h = hi(b), l = lo(b); if (h > maxH) maxH = h; if (l < minL) minL = l; }
     for(const period of periods)for(const value of (ma[period]||[]).slice(a,a+bars.length))if(value!=null&&Number.isFinite(value)){maxH=Math.max(maxH,value);minL=Math.min(minL,value);}
     for(const value of (vwapSeries||[]).slice(a,a+bars.length))if(value!=null&&Number.isFinite(value)){maxH=Math.max(maxH,value);minL=Math.min(minL,value);}
-    const reference=q.tf==='intraday'&&!q._sampled&&d?.regularChart?.previousCloseReference?.value>0?
-      d.regularChart.previousCloseReference:null;
+    const ref=d?.regularChart?.previousCloseReference,reference=q.tf==='intraday'&&!q._sampled&&Number.isFinite(ref?.value)&&(d?.instrumentType==='FUTURE'||ref.value>0)?ref:null;
     if(reference){maxH=Math.max(maxH,reference.value);minL=Math.min(minL,reference.value);}
     if (!isFinite(maxH)) { maxH = 1; minL = 0; }
     const rect = q._chartWidth ? {width:q._chartWidth} : q.cv?.getBoundingClientRect?.();
     q._chartWidth = rect?.width || 1000;
     const W = Math.max(1, Number(rect?.width) || 1000), H = q._chartHeight || (W < 420 ? 220 : 240), padT = 8, padB = 24;
-    const span = Math.max((maxH - minL) || 0, (maxH || 1) * 0.0005);
+    const span = Math.max((maxH - minL) || 0, Math.max(Math.abs(maxH),Math.abs(minL),1) * 0.0005);
     const top = maxH + span * 0.08, bot = minL - span * 0.08;
     const axisFont=(W<420?12:11)+'px sans-serif', measure=q.cv?.getContext?.('2d');
     if(measure)measure.font=axisFont;
@@ -164,7 +179,7 @@
       const yy=p.yTop+p.chartH*g/4;
       if(p.intraday){
         cx.textAlign='right';cx.fillText(money(v),p.L-6,yy,p.L-8);
-        if(p.reference){const pct=(v/p.reference.value-1)*100;
+        if(p.reference&&p.reference.value!==0){const pct=(v-p.reference.value)/Math.abs(p.reference.value)*100;
           cx.textAlign='left';cx.fillText((pct>=0?'+':'')+pct.toFixed(2)+'%',p.W-p.R+5,yy,p.R-7);}
       }else cx.fillText(money(v), p.W - p.R + 8, yy,p.R-10);
     }
@@ -321,7 +336,7 @@
     cx.strokeStyle = 'rgba(31,30,29,.35)'; cx.setLineDash([4, 4]); cx.lineWidth = 1;
     cx.beginPath(); cx.moveTo(L, lyp); cx.lineTo(W - R, lyp); cx.stroke(); cx.setLineDash([]);
     priceTag(cx, p, lyp, money(last.c), candle&&!last._live ? (last.c >= last.o ? UP : DOWN) :
-      (last.c >= (p.reference?.value||bars[0].c) ? UP : DOWN));
+      (last.c >= (p.reference?.value??bars[0].c) ? UP : DOWN));
   }
   function drawCursor(q, p, hover, cx) {
     const money = formatterFor(q._chartData||q.d).money;

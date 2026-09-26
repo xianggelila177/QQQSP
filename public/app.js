@@ -39,7 +39,7 @@
   const saveName = (sym, name) => { if (typeof name!=='string' || !name.trim()) return; names[sym]=name.trim().slice(0,160); panelState.saveNames(NAMES_KEY,names); };
   const { esc } = window.PANEL_FORMAT;
   const chartController=window.PANEL_CHART_CONTROLLER.createChartController({ document, formatterFor, formatKey:d=>JSON.stringify([cardCurOf(d.symbol),d.currency,d.instrumentType,d.fxStale,d.fxKind,d.fxKind?d.fxMap:fxMap]), client:PANEL, flash, UP, DOWN, dpr:devicePixelRatio });
-  const cardView=window.PANEL_CARD_VIEW.createCardView({ document, panelsEl, stripEl, chartController, formatterFor, cardCurOf, nameOf:sym=>names[sym], onRemove:removeFromWatch, onRetry:()=>refresh(true), onCurrency:setCardCurrency, humanizeAge, UP, DOWN, onNewsToggle:()=>{newsController.invalidate();void refreshNews();}, getReadIntervalMs:()=>currentPollingPolicy().marketMs, quoteClock });
+  const cardView=window.PANEL_CARD_VIEW.createCardView({ document, panelsEl, stripEl, chartController, formatterFor, cardCurOf, nameOf:sym=>names[sym], onRemove:removeFromWatch, onRetry:()=>refresh(true), onCurrency:setCardCurrency, humanizeAge, UP, DOWN, onNewsToggle:()=>{newsController.invalidate();void refreshNews();}, getReadIntervalMs:()=>currentPollingPolicy().marketMs, canPollDetails:()=>!document.hidden||refreshMode==='continuous', quoteClock });
   const {ensureCard,render,renderStrip,updateQuoteMeta,setFetchStatus,cardCache}=cardView;
   function removeFromWatch(sym) {
     const q=cardCache.get(sym); if(!q)return;
@@ -261,7 +261,7 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=104').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=108').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
         nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本','info',{label:'刷新页面',run:()=>location.reload()}); });
       });
@@ -410,6 +410,7 @@
   }
   function syncVisibility(){
     if(document.hidden&&refreshMode==='economy')liveStore?.pause();else liveStore?.resume();
+    cardView.syncVisibility();
   }
   function resumeQuotes(){quoteClock.resume();tickClock();syncVisibility();}
   document.addEventListener('visibilitychange',()=>{syncVisibility();if(!document.hidden){resumeQuotes();refreshNews();refreshMacro();}});

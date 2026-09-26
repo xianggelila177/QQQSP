@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {EXTRA_QUERY_KEYS} from '../lib/context-query-catalog.js';
-import {querySchema,responseSchema,orderBookSchema,sectionSchemas} from './build-context-docs.mjs';
+import {querySchema,responseSchema,orderBookSchema,sectionSchemas,applyInstrumentPricePolicy} from './build-context-docs.mjs';
 
 export const detailQuerySchema={type:'object',additionalProperties:false,required:['symbol'],properties:{
   symbol:querySchema.properties.symbol,profile:{enum:['snapshot','analysis'],default:'snapshot',description:'snapshot 只读取详情；analysis 增加历史、服务器采样及近期资讯/宏观。'},
@@ -36,6 +36,7 @@ for(const name of ['intraday','daily','samples','corporate_actions']){
 }
 props.quality.properties.missing_sections.items.enum.push('order_book');
 for(const key of ['missing_fields','stale_fields','conflicting_fields']){props.quality.properties[key]={type:'array',items:{type:'string'}};props.quality.required.push(key);}
+applyInstrumentPricePolicy(detailResponseSchema);
 const embedded=structuredClone(detailResponseSchema);delete embedded.$schema;delete embedded.$id;
 const errorSchema={type:'object',additionalProperties:false,required:['schema_version','request_id','status','error'],properties:{schema_version:{const:2},request_id:{type:'string'},status:{const:'unavailable'},error:{type:'object',additionalProperties:false,required:['code','message'],properties:{code:{type:'string'},message:{type:'string'}}}}};
 export const detailOpenapi={openapi:'3.1.0',info:{title:'QQQSP 证券详情与本地智能体接口',version:'2.1.0',description:'只读快照；不修改自选，不购买或出售证券。未知值为null，部分数据返回partial；盘口不等于成交。'},servers:[{url:'https://quotes.example.com'}],

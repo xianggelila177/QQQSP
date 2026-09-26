@@ -106,7 +106,7 @@ export function marketStateFor(symbol, gmtoffset, nowMs = Date.now(), venue = ''
   // Sunday with unpublished times cannot be mistaken for a normal closure.
   if(cal.pending)return 'UNKNOWN';
   if ((day === 0 || day === 6)&&!cal.specialOpen) return 'CLOSED';
-  if (cal.closed) return 'CLOSED';
+  if (cal.closed) return cal.key==='tw' ? 'HOLIDAY' : 'CLOSED';
   if(!cal.known||!calendarSession.reg?.length)return 'UNKNOWN';
   const sess = calendarSession;
   const inR = (rs) => rs?.some(([a, b]) => hm >= a && hm < b);

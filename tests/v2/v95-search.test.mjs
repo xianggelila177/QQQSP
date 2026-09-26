@@ -49,6 +49,16 @@ test('same local numeric code retains independently confirmed listing choices fr
  const get=await httpFixture(t,{yahooSearch:async()=>[{symbol:'9766.HK',name:'Other listing',type:'EQUITY'}]});
  const r=await get('9766');const rows=await r.json();assert.ok(rows.some(x=>x.symbol==='9766.HK'));assert.ok(rows.some(x=>x.symbol==='9766.T'));
 });
+test('Taiwan Semiconductor listings remain distinct and an exact ticker leads search results',async t=>{
+ const get=await httpFixture(t,{yahooSearch:async()=>[{symbol:'TSMC',name:'Other issuer',type:'EQUITY'},{symbol:'ZZQ',name:'Exact remote issuer',type:'EQUITY'}]});
+ const ticker=await (await get('TSM')).json();
+ assert.equal(ticker[0]?.symbol,'TSM');assert.equal(ticker[0]?.currency,'USD');assert.match(ticker[0]?.exch,/NYSE/);
+ const both=await (await get('台积电')).json();
+ assert.ok(both.some(row=>row.symbol==='TSM'&&row.currency==='USD'));
+ assert.ok(both.some(row=>row.symbol==='2330.TW'&&row.currency==='TWD'));
+ assert.equal((await (await get('2330.tw')).json())[0]?.symbol,'2330.TW');
+ assert.equal((await (await get('ZZQ')).json())[0]?.symbol,'ZZQ');
+});
 test('unknown native company text is passed to search adapters rather than silently discarded',async t=>{
  let seen;const get=await httpFixture(t,{yahooSearch:async query=>{seen=query;return [{symbol:'VOW3.DE',name:'Foreign company',type:'EQUITY'}];}});
  const response=await get('未知本地公司名');assert.equal(seen,'未知本地公司名');assert.ok((await response.json()).some(row=>row.symbol==='VOW3.DE'));

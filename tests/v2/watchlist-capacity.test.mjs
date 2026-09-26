@@ -68,11 +68,11 @@ test('worst valid 100-symbol URL preserves ampersands and membership below proxy
  const cv=long.map(s=>s+':281474976710655:281474976710655').join(';');
  for(const route of ['/api/stream','/api/market?t=1']){const raw=context.window.PANEL_LIVE_STORE.symbolsUrl(route,long,cv),url=new URL(raw,'https://example.test');assert.ok(raw.length<6500);assert.deepEqual(url.searchParams.get('symbols').split(','),long);assert.equal(url.searchParams.has('cv'),false);}
 });
-test('100-history warming eventually expands every symbol while refreshes remain due',async()=>{
+test('100-history warming prepares every symbol without automatic wide expansion',async()=>{
  let time=clock;const expanded=new Set(),prepared=new Set();const periods=Object.fromEntries(['daily','weekly','monthly','yearly'].map(period=>[period,{period,revision:'1',bars:[]}]));
  const h={...history(),prepare:async(s,{tier})=>{prepared.add(s);if(tier==='long')expanded.add(s);return periods;}};
  const worker=createHistoryPrewarm({history:h,now:()=>time,tickMs:600000,expandAfterMs:0});worker.retain(symbols);await worker.start();await worker.settled();
- try{for(let i=0;i<350;i++){time+=1000;await worker.runDue();}assert.equal(prepared.size,100);assert.equal(expanded.size,100);}finally{await worker.stop();}
+ try{for(let i=0;i<350;i++){time+=1000;await worker.runDue();}assert.equal(prepared.size,100);assert.equal(expanded.size,0);}finally{await worker.stop();}
 });
 test('news batches preserve the existing 12-symbol admission and serial upstream demand',async()=>{
  const context={window:{PANEL_FORMAT:{}}};vm.runInNewContext(await fs.readFile(new URL('../../public/modules/panel-news-controller.js',import.meta.url),'utf8'),context);
