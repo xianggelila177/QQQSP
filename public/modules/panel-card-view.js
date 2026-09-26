@@ -1,5 +1,5 @@
 (() => {
-  const createCardView = ({ document, panelsEl, stripEl, chartController, formatterFor, cardCurOf, nameOf, onRemove, onRetry, onCurrency, humanizeAge, UP, DOWN, getReadIntervalMs=()=>0, quoteClock=null, onNewsToggle=()=>{} }) => {
+  const createCardView = ({ document, panelsEl, stripEl, chartController, formatterFor, cardCurOf, nameOf, onRemove, onRetry, onCurrency, humanizeAge, UP, DOWN, getReadIntervalMs=()=>0, canPollDetails=()=>!document.hidden, quoteClock=null, onNewsToggle=()=>{} }) => {
     const { esc, fmtVol, pct, fmtTime8 } = window.PANEL_FORMAT;
     const FRIENDLY = {QQQ:'纳指100 ETF',SPY:'标普500 ETF'};
     const visibleName=d=>{
@@ -9,6 +9,8 @@
     };
     const TF = (window.PANEL_TIMEFRAMES?.all || [['intraday','分时'],['daily30','日K'],['weekly','周K'],['monthly','月K'],['yearly','年K']]).map(t=>Array.isArray(t)?t:[t.key,t.label]);
     const cardCache=new Map(), lastPrice=new Map();
+    const reducedMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    reducedMotion?.addEventListener?.('change',()=>{if(reducedMotion.matches)for(const q of cardCache.values())q.priceAnimation?.cancel();});
     let fundamentalsView=null,detailView=null,chartDetailView=null;
     // Measure natural content, never the stretched card or a previous minimum.
     // A shared observer only schedules work when a band's intrinsic size changes.
@@ -117,7 +119,7 @@
     fundamentalsView.mount(q);
     detailView ||= window.PANEL_DETAIL.createDetailView({document});
     detailView.mount(q);
-    chartDetailView ||= window.PANEL_CHART_DETAIL.createChartDetailView({document,formatterFor,UP,DOWN});
+    chartDetailView ||= window.PANEL_CHART_DETAIL.createChartDetailView({document,formatterFor,UP,DOWN,canPoll:canPollDetails});
     chartDetailView.mount(q);
     mountBands(q);
     q.ccybtns.forEach(b => b.addEventListener('click', () => onCurrency(sym, b.dataset.ccy)));
@@ -192,7 +194,7 @@
   function updateQuoteMeta(q, now = quoteClock ? quoteClock.now() : Date.now()) {
     const d = q.d; if (!d || !q.quoteMeta) return;
     const freshness=applyStaleBadge(q,d,now);
-    const sourceNames = { 'yahoo-futures':'Yahoo · 期货', 'eastmoney-futures':'东方财富 · 期货', 'eastmoney-futures-list':'东方财富 · 期货目录（成交时间未知）', 'alpaca-iex':'Alpaca · IEX 单一交易所', 'alpaca-sip':'Alpaca · 美国 SIP 数据源', 'sina-batch':'新浪批量报价',yahoo: 'Yahoo', 'tx-cn': '腾讯', 'tx-us': '腾讯', 'tx-batch': '腾讯批量报价', 'naver-index': 'Naver 指数', 'naver-us': 'Naver 美股', 'naver-kr': 'Naver 韩股', 'em-cn': '东方财富', finnhub:'Finnhub · 覆盖依账户权限','finnhub-quote':'Finnhub 报价',fixture: '测试数据' };
+    const sourceNames = { 'yahoo-futures':'Yahoo · 期货', 'eastmoney-futures':'东方财富 · 期货', 'eastmoney-futures-list':'东方财富 · 期货目录（成交时间未知）', 'alpaca-iex':'Alpaca · IEX 单一交易所', 'alpaca-sip':'Alpaca · 美国 SIP 数据源', 'sina-batch':'新浪批量报价',yahoo: 'Yahoo', 'tx-cn': '腾讯', 'tx-us': '腾讯', 'tx-batch': '腾讯批量报价', 'naver-index': 'Naver 指数', 'naver-us': 'Naver 美股', 'naver-kr': 'Naver 韩股', 'naver-jp':'Naver 日股', 'twse-mis':'台湾证券交易所 · MIS', 'em-cn': '东方财富', finnhub:'Finnhub · 覆盖依账户权限','finnhub-quote':'Finnhub 报价',fixture: '测试数据' };
     const sessionNames = { SOURCE_SNAPSHOT:'统计来自独立快照，非逐笔同步', CACHED_REGULAR: '常规时段统计', REGULAR: '常规时段统计', PRE: '盘前统计', POST: '盘后统计', CN_SNAPSHOT: '交易日快照', UNKNOWN: '统计时段未核验' };
     const at = quoteTimeMs(d.quoteAt ?? d.ts), checked = quoteTimeMs(d.sourceCheckedAt);
     const parts = ['报价 ' + (at ? fmtTime8(at) : '时刻未知'), sourceNames[d.src] || '来源未标明'];
@@ -250,7 +252,7 @@
     // 价格 flash
     q.cur.className = 'cur';
     const prev = lastPrice.get(d.symbol);
-    if (prev!=null && prev!==d.price) {
+    if (prev!=null && prev!==d.price && !reducedMotion?.matches) {
       q.cur.classList.remove('flash-up','flash-down');
       if(q.cur.animate){q.priceAnimation?.cancel();q.priceAnimation=q.cur.animate([{opacity:0.35},{opacity:1}],{duration:420,easing:'ease-out'});}
       else q.cur.classList.add(d.price>prev?'flash-up':'flash-down');
@@ -281,9 +283,10 @@
     applyStaleBadge(q, d);   // T2: stale 徽标分级 — 上游限流(含重试倒计时)/冷却重试/旧后端 d.stale 兼容
     const calendarEstimate = d.calendarCoverage && d.calendarCoverage.known === false;
     const calendar=window.PANEL_STATE.calendarStatus(d);
-    const stName={REGULAR:(calendarEstimate ? '常规时段·节假日未核验' : '交易中'),PRE:'盘前',POST:'盘后',AUCTION:'集合竞价',BREAK:'午间休市',CLOSED:'已收盘',UNKNOWN:calendar.pending?'交易时段待公布':'时段未核验'}[d.marketState]||'时段未核验';
+    const stName={REGULAR:(calendarEstimate ? '常规时段·节假日未核验' : '交易中'),PRE:'盘前',POST:'盘后',AUCTION:'集合竞价',BREAK:'午间休市',CLOSED:'已收盘',HOLIDAY:'休市',UNKNOWN:calendar.pending?'交易时段待公布':'时段未核验'}[d.marketState]||'时段未核验';
     q.marketLabel=stName;q.marketTitle=calendar.message||(calendarEstimate ? '交易日历覆盖不足，此时段状态仅为估计' : '');applyRequestState(q);
-    if(q.changeBaseline){q.changeBaseline.textContent=(d.changeBasis==='previous-settlement'?'较前结算基准':d.instrumentType==='FUTURE'?'较来源基准':'较上一交易日常规收盘')+(d.previousCloseTradeDate?' '+d.previousCloseTradeDate:'')+(d.prevClose!=null?' '+money(d.prevClose):'（基准待核验）');q.changeBaseline.title=d.previousCloseMissingReason||d.previousCloseStatus||'主涨跌相对报价交易日的上一交易日常规收盘；盘后行相对本交易日常规收盘。';}
+    const baseline=window.PANEL_FORMAT.quoteBaseline(d,money);
+    if(q.changeBaseline){q.changeBaseline.textContent=baseline.text;q.changeBaseline.title=baseline.title;}
 
     // 盘前/盘后独立报价行
     if (q.extRow) {
@@ -296,7 +299,7 @@
     }
     q.open.textContent=money(d.open); q.high.textContent=money(d.dayHigh); q.low.textContent=money(d.dayLow);
     q.prev.textContent=money(d.prevClose);
-    const previousLabel=q.prev.parentElement?.querySelector?.('label');if(previousLabel)previousLabel.textContent=d.instrumentType==='FUTURE'?(d.changeBasis==='previous-settlement'?'前结算':'来源前值'):'昨收'; q.volume.textContent=fmtVol(d.volume);
+    const previousLabel=q.prev.parentElement?.querySelector?.('label');if(previousLabel)previousLabel.textContent=baseline.shortLabel; q.volume.textContent=fmtVol(d.volume);
     q.w52h.textContent=money(d.week52High); q.w52l.textContent=money(d.week52Low);
     q.exch.textContent=d.exchangeName || '—';
     fundamentalsView?.render(q);
@@ -330,7 +333,7 @@
     }
 
     function remove(symbol) { const q=cardCache.get(symbol);if(!q)return;fundamentalsView?.remove(q);detailView?.remove(q);chartDetailView?.remove(q);chartController.unmount(q);for(const content of q.layoutContents||[]){bandObserver?.unobserve(content);layoutRecords.delete(content);}scheduleBands();q.el.remove();q.strip?.remove();cardCache.delete(symbol);lastPrice.delete(symbol); }
-    return Object.freeze({ ensureCard, render, renderStrip, updateQuoteMeta, setFetchStatus, cardCache, remove });
+    return Object.freeze({ ensureCard, render, renderStrip, updateQuoteMeta, setFetchStatus, cardCache, remove, syncVisibility:()=>chartDetailView?.syncVisibility() });
   };
   window.PANEL_CARD_VIEW=Object.freeze({createCardView});
 })();

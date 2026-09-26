@@ -1,6 +1,6 @@
 (() => {
   function symbolsUrl(path,symbols,cv=''){
-    const base=path+(path.includes('?')?'&':'?')+'symbols='+encodeURIComponent(symbols.join(','));
+    const base=path+(path.includes('?')?'&':'?')+'symbols='+encodeURIComponent(symbols.join(','))+(path==='/api/stream'?'&historyDelta=1&regularDelta=1':'');
     const withVersions=base+'&cv='+encodeURIComponent(cv);
     // Nginx accepts request lines up to 8 KiB. Cache hints are optional;
     // membership is never truncated to squeeze a large watchlist into the URL.

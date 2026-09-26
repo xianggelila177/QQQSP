@@ -10,7 +10,7 @@ export default class SchemaValidator {
     if (this.ajv) return this.ajv.compile(schema);
     const script = 'import json,sys; from jsonschema import Draft202012Validator; x=json.load(sys.stdin); Draft202012Validator.check_schema(x["schema"]); print(json.dumps([{"message":e.message,"instancePath":"/"+"/".join(map(str,e.path))} for e in Draft202012Validator(x["schema"]).iter_errors(x["data"])]))';
     function validate(data) {
-      const result = spawnSync('python3', ['-c', script], {input:JSON.stringify({schema,data}),encoding:'utf8',timeout:10000,maxBuffer:4*1024*1024});
+      const result = spawnSync(process.env.PYTHON || (process.platform==='win32'?'python':'python3'), ['-c', script], {input:JSON.stringify({schema,data}),encoding:'utf8',timeout:10000,maxBuffer:4*1024*1024});
       if (result.status !== 0 || result.error) throw new Error('Install npm dev dependencies (Ajv), or Python jsonschema for offline tests: '+(result.stderr || result.error));
       validate.errors = JSON.parse(result.stdout);
       return validate.errors.length === 0;

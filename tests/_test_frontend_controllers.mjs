@@ -25,7 +25,8 @@ now+=30000;const [a,b]=await Promise.all([net.request('market','/api/market'),ne
 mode='service';await net.request('search','/api/search');assert.equal((await net.request('search','/api/search')).deferred,true);
 console.log('PASS Retry-After HTTP date and 503 defer per resource, expiration makes one deduplicated request without scheduled burst');
 const bars=Array.from({length:100},(_,i)=>({t:1700000000+i,c:100+i,v:i}));
-const quote=extra=>({symbol:'QQQ',price:199,currency:'USD',marketState:'CLOSED',src:'fixture',quoteAt:Date.now(),charts:{intraday:bars},...extra});
+const quote=extra=>({symbol:'QQQ',price:199,currency:'USD',marketState:'CLOSED',src:'fixture',quoteAt:Date.now(),
+ regularChart:{source:'fixture',bars:extra?.charts?.intraday||bars},charts:{intraday:bars},...extra});
 e.fetch.push('market',{body:[quote({intradayVer:1})]});await e.hooks().refresh(false);
 const q=e.hooks().cardCache.get('QQQ');let clears=0;q.cv.getContext().clearRect=()=>clears++;
 e.intersections[0].emit([{target:q.cv,isIntersecting:false}]);
@@ -38,3 +39,31 @@ assert.ok(layouts<=1);assert.equal(clears,1,'cursor only updates overlay');
 e.resizes[0].emit([{target:q.cv,contentRect:{width:500}}]);e.timers.runTimeouts(16);assert.equal(q.cv.width,500);assert.equal(clears,2);
 q.closeBtn.click();assert.equal(e.intersections[0].targets.has(q.cv),false);assert.equal(e.resizes[0].targets.has(q.cv),false);
 console.log('PASS offscreen prices/status stay current while chart work defers; pointer reuses layout and overlay; resize/removal release observers');
+
+const futureBars=[{t:1700000000,c:-10,v:0},{t:1700000060,c:-5,v:0}];
+const future={symbol:'CL=F',instrumentType:'FUTURE',changeBasis:'previous-settlement',price:-5,prevClose:-10,change:5,changePct:50,
+ currency:'USD',marketState:'CLOSED',src:'fixture',quoteAt:Date.now(),intradayVer:1,charts:{intraday:futureBars},
+ regularChart:{source:'fixture',bars:futureBars,previousCloseReference:{value:-10}}};
+const integrated=await loadApp({watchlist:['CL=F'],initialMarket:[future]});await integrated.drain();
+const fq=integrated.hooks().cardCache.get('CL=F');
+assert.match(fq.ohlc.innerHTML,/较前结算/);assert.match(fq.ohlc.innerHTML,/\+50\.00%/);assert.doesNotMatch(fq.ohlc.innerHTML,/-50\.00%/);
+const zeroBars=[{t:1700000000,c:0,v:0},{t:1700000060,c:0,v:0}];
+integrated.fetch.push('market',{body:[{...future,price:0,prevClose:0,change:0,changePct:null,intradayVer:2,
+ charts:{intraday:zeroBars},regularChart:{source:'fixture',bars:zeroBars,previousCloseReference:{value:0}}}]});await integrated.hooks().refresh(false);
+assert.match(fq.ohlc.innerHTML,/\(—\)/);assert.doesNotMatch(fq.ohlc.innerHTML,/NaN|Infinity|0\.00%/);
+console.log('PASS integrated futures chart uses absolute negative baselines and leaves zero-denominator percentage unavailable');
+
+const yearly=(year,close)=>({periodStart:year+'-01-01',periodEndExclusive:(year+1)+'-01-01',t:Date.parse(year+'-01-01T00:00:00Z')/1000,o:-10,h:0,l:-12,c:close,v:10});
+const near={schemaVersion:1,symbol:'CL=F',period:'yearly',seriesId:'fixture-yearly',revision:'near-1',prewarmScope:'near',sourceCheckedAt:Date.now(),bars:[yearly(2026,-5)]};
+assert.equal(fq.historyStore.hydrate('yearly',near),true);assert.equal(fq.historyStore.needsLoad('yearly'),true);
+fq.historyPreparedAt=Date.now();fq.tabs[1].dataset.tf='yearly';
+const direct={...near,prewarmScope:undefined,revision:'direct-2',bars:[yearly(2025,-6),yearly(2026,-5)]};
+integrated.fetch.push('other',{body:direct});fq.tabs[1].click();await integrated.drain();
+assert.equal(integrated.countFetch('/api/history?'),1);assert.equal(fq.historyStore.getMeta('yearly').loadedDirect,true);
+assert.equal(fq.historyStore.needsLoad('yearly'),false);assert.equal(fq.historyStore.getSeries('yearly').length,2);
+integrated.fetch.push('other',{body:{...direct,revision:'direct-3',bars:[yearly(2025,-6),yearly(2026,-4)]}});
+await fq.refreshHistory();assert.equal(integrated.countFetch('/api/history?'),2,'loadedDirect history refresh is not suppressed by recent near prewarm');
+assert.equal(fq.historyStore.getSeries('yearly').at(-1).c,-4);
+fq.historyStore.getMeta('yearly').retryAt=Date.now()+60000;await fq.refreshHistory();
+assert.equal(integrated.countFetch('/api/history?'),2,'source cooldown remains enforced');
+console.log('PASS integrated near prewarm requests deeper yearly history and loadedDirect refresh bypasses only the prewarm delay, retaining cooldown');

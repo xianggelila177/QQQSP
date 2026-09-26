@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { STATIC_INPUTS } from '../scripts/build-static.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const APP_SRC = path.join(ROOT, 'public', 'app.js');
@@ -194,7 +195,7 @@ export async function loadApp({ hidden = false, fakeWorker = false, watchlist = 
     setTimeout: timers.setTimeout, clearTimeout: timers.clearTimeout,
     setInterval: timers.setInterval, clearInterval: timers.clearInterval,
     requestAnimationFrame: fn => timers.setTimeout(fn,16),
-    devicePixelRatio: dpr,
+    devicePixelRatio: dpr, URLSearchParams,
   };
   if (fakeObservers) {
     const observerClass = registry => class {
@@ -215,12 +216,12 @@ export async function loadApp({ hidden = false, fakeWorker = false, watchlist = 
   sandbox.AbortController = AbortController;
   sandbox.atob = atob; sandbox.TextDecoder = TextDecoder;
   sandbox.globalThis = sandbox;
-  sandbox.queueMicrotask=queueMicrotask;win.localStorage=sandbox.localStorage;
+  sandbox.queueMicrotask=queueMicrotask;win.localStorage=sandbox.localStorage;win.fetch=fetchStub;
   const searchWrap=makeEl('.searchwrap');searchWrap.ownerDocument=doc;searchWrap.appendChild(byId('q'));searchWrap.appendChild(byId('sr'));
-  for (const mod of ['panel-client.js', 'panel-currency.js', 'panel-chart.js', 'panel-chart-engine.js', 'panel-scheduler.js', 'panel-network.js', 'panel-watchlist-sync.js', 'panel-admin.js', 'panel-state.js', 'panel-utils.js', 'panel-format.js', 'panel-chart-controller.js', 'panel-fundamentals.js', 'panel-detail.js', 'panel-chart-detail.js', 'panel-card-view.js', 'panel-search-controller.js', 'panel-market-directory.js', 'panel-news-controller.js', 'panel-macro-controller.js', 'panel-market-store.js','panel-live-store.js']) {
-    vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'public', 'modules', mod), 'utf8'), sandbox, { filename: path.join(ROOT,'public','modules',mod) });
+  for (const input of STATIC_INPUTS) {
+    const filename=path.join(ROOT,input);
+    vm.runInNewContext(fs.readFileSync(filename,'utf8'),sandbox,{filename});
   }
-  vm.runInNewContext(fs.readFileSync(APP_SRC, 'utf8'), sandbox, { filename: APP_SRC });
   timers.runTimeouts(0); // Browser event loop starts immediate fallback reads before the test drains microtasks.
 
   return {

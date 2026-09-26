@@ -1,6 +1,7 @@
 """Deterministic desktop and portrait-fallback smoke check for the chart detail."""
 import json
 from pathlib import Path
+from urllib.parse import urlparse, parse_qs
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -27,8 +28,6 @@ detail = {'symbol':'AAOI','book':{'status':'unavailable','reason':'SOURCE_HAS_NO
           'tape':{'status':'unavailable','reason':'NO_RECEIVED_TRADES','events':[]},'fiveDay':five}
 
 fixture = r"""
-window.PANEL_FORMAT={fmtDate:(t,withTime=false)=>{const d=new Date(t*1000+8*3600000).toISOString();return withTime?d.slice(0,16).replace('T',' '):d.slice(0,10)},
- fmtVol:v=>v==null?'—':Number(v).toLocaleString('en-US')};
 document.body.innerHTML='<section class="price-card"><button class="chart-expand">展开图表</button><canvas class="chart-main" width="600" height="240"></canvas></section>';
 const canvas=document.querySelector('.chart-main');canvas.style.width='min(100%,600px)';canvas.style.height='240px';
 const data=window.FIXTURE;
@@ -57,12 +56,14 @@ with sync_playwright() as playwright:
         page.on('pageerror',lambda error: errors.append(str(error)))
         page.route('http://detail.test/**', lambda route: route.fulfill(status=200, content_type='text/html', body='<html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body></body></html>')
                    if '/api/' not in route.request.url else route.fulfill(status=200, content_type='application/json',
-                                                                         body=json.dumps(detail)))
+                                                                          body=json.dumps(dict(detail, range=parse_qs(urlparse(route.request.url).query).get('range',['1d'])[0]))))
         page.goto('http://detail.test/')
         page.add_style_tag(content=(ROOT / 'public' / 'style.css').read_text(encoding='utf8'))
         page.evaluate("() => { HTMLDialogElement.prototype.requestFullscreen=function(){return Promise.reject(new Error('orientation unavailable'))}; return true; }")
         page.add_script_tag(path=str(ROOT / 'public' / 'modules' / 'panel-chart.js'))
         page.add_script_tag(path=str(ROOT / 'public' / 'modules' / 'panel-timeframes.js'))
+        for module in ['panel-scheduler', 'panel-network', 'panel-format']:
+            page.add_script_tag(path=str(ROOT / 'public' / 'modules' / (module + '.js')))
         page.add_script_tag(path=str(ROOT / 'public' / 'modules' / 'panel-chart-engine.js'))
         page.evaluate("""() => { const original=window.PANEL_CHART_ENGINE;
           window.PANEL_CHART_ENGINE={...original,createChartEngine(args){const engine=original.createChartEngine(args);

@@ -24,21 +24,33 @@ test('REGRESSION: Yahoo 429 cannot disable US daily/weekly/monthly/yearly at the
  const calls=[];
  const app=createApplication({env:{HISTORY_BACKGROUND_ENABLED:'0',HISTORY_STATE_PATH:'',MACRO_BACKGROUND_ENABLED:'0',MACRO_STATE_PATH:'',PORT:0,REALTIME_SNAPSHOTS:'0',PUBLIC_SOURCE_REDUNDANCY:'0'},now:()=>asOf,telemetry:createTelemetry(),upstream:async url=>{
   calls.push(url);
-  if(url.includes('api.nasdaq.com')&&url.includes('/historical'))return {status:200,headers:{},body:JSON.stringify({data:{symbol:'NVDA',totalRecords:sourceRows().length,tradesTable:{rows:sourceRows()}},status:{rCode:200}})};
+  if(url.includes('api.nasdaq.com')&&url.includes('/historical')){
+   const params=new URL(url).searchParams,from=params.get('fromdate'),through=params.get('todate');
+   const rows=sourceRows().filter(row=>{
+    const [month,day,year]=row.date.split('/');const date=`${year}-${month}-${day}`;
+    return date>=from&&date<=through;
+   }).slice(0,Number(params.get('limit')));
+   return {status:200,headers:{},body:JSON.stringify({data:{symbol:'NVDA',totalRecords:rows.length,tradesTable:{rows}},status:{rCode:200}})};
+  }
   return {status:429,headers:{'retry-after':'120'},body:''};
  }});
  t.after(()=>app.stop());app.start();await once(app.httpServer,'listening');const origin='http://127.0.0.1:'+app.httpServer.address().port;
  for(const period of ['daily','weekly','monthly','yearly']){
   const r=await fetch(`${origin}/api/history?symbol=NVDA&period=${period}&count=12`),j=await r.json();
-  assert.equal(r.status,200,JSON.stringify(j));assert.equal(j.status,'ready');assert.ok(j.bars.length>=9,period);assert.equal(j.source,'nasdaq-history');
+  assert.equal(r.status,200,JSON.stringify(j));assert.equal(j.status,'ready');assert.ok(j.bars.length>=(period==='yearly'?1:9),period);assert.equal(j.source,'nasdaq-history');
+  if(period==='yearly'){
+   assert.equal(j.coverage.stopReason,'fallback-window');
+   assert.equal(j.coverage.sourceStopReason,'bounded-pages');
+   assert.equal(j.hasMore,null);
+  }
   assert.ok(j.bars.every(b=>b.o>0&&b.l<=b.o&&b.h>=b.c));assert.equal(j.exchangeTimeZone,'America/New_York');
   if(period==='daily')assert.equal(j.bars.at(-1).lastTradingDate,'2026-09-09');
  }
  const historyCalls=calls.filter(u=>u.includes('/historical'));
- assert.equal(historyCalls.length,2,'daily/weekly/monthly share one window; yearly expands it exactly once');
+ assert.equal(historyCalls.length,3,'daily/weekly/monthly share one recent page; yearly adds at most two older pages');
  assert.ok(new URL(historyCalls[1]).searchParams.get('fromdate')<new URL(historyCalls[0]).searchParams.get('fromdate'));
  await fetch(origin+'/api/history?symbol=NVDA&period=yearly&count=12');
- assert.equal(calls.filter(u=>u.includes('/historical')).length,2,'repeated yearly read reuses cache');
+ assert.equal(calls.filter(u=>u.includes('/historical')).length,3,'repeated yearly read reuses cache');
  assert.ok(calls.filter(u=>/yahoo\.com/.test(u)).length<=1,'Yahoo cooldown is shared');
 });
 

@@ -1,14 +1,31 @@
 """Package the checked source with Python stdlib; do not run legacy release.mjs.
-Usage: python3 scripts/package.py /mnt/data/qqqsp-v2.14.0-source.zip
-       python3 scripts/package.py --verify /mnt/data/qqqsp-v2.14.0-source.zip
-Run scripts/verify.mjs and tests/run.mjs BEFORE packaging; this is not a test gate.
+Usage: python3 scripts/package.py /path/to/qqqsp-source.zip
+       python3 scripts/package.py --verify /path/to/qqqsp-source.zip
+Run build, check and relevant regression tests before packaging.
 """
 from pathlib import Path, PurePosixPath
 import hashlib, json, stat, sys, zipfile
 ROOT=Path(__file__).resolve().parents[1]
 DIRECTORIES={'lib','public','data','ops','docs','scripts','tests'}
-EXCLUDE={'node_modules','.git','__pycache__','logs','state','dist','.pytest_cache'}
-HIDDEN={'.env.example','.gitignore','.dockerignore'}
+EXCLUDE={'node_modules','.git','__pycache__','logs','state','dist','.pytest_cache',
+         'private','outputs','work','recovery','coverage','playwright-report','test-results','evidence'}
+HIDDEN={'.env.example','.gitignore','.dockerignore','.gitattributes'}
+EXTENSIONS={'.js','.mjs','.json','.html','.css','.svg','.webmanifest','.md','.txt',
+            '.sh','.py','.service','.timer','.conf','.yaml','.yml','.xml','.raw','.gz','.br'}
+
+def public_source(relative):
+    p=PurePosixPath(relative)
+    if p.is_absolute() or '..' in p.parts or '\\' in relative:return False
+    if any(part.lower() in EXCLUDE for part in p.parts):return False
+    if any(part.startswith('.') and part not in HIDDEN for part in p.parts):return False
+    if len(p.parts)>1 and p.parts[0] not in DIRECTORIES:return False
+    if p.name.endswith('.env') or p.name.startswith('.env.') and p.name!='.env.example':return False
+    return p.name in HIDDEN or p.name in {'VERSION','Dockerfile','SHA256SUMS'} or p.suffix in EXTENSIONS
+
+def source_bytes(p):
+    data=p.read_bytes()
+    if p.suffix=='.sh' and b'\r' in data:raise ValueError('Shell source must use LF: '+p.name)
+    return data
 def digest(data): return hashlib.sha256(data).hexdigest()
 def verify(target):
     with zipfile.ZipFile(target) as archive:
@@ -19,6 +36,8 @@ def verify(target):
         for name in names:
             p=PurePosixPath(name)
             assert not p.is_absolute() and '..' not in p.parts and '\\' not in name
+            assert public_source(name[len(prefix):]), 'Private or unsupported archive entry: '+name
+            if name.endswith('.sh'):assert b'\r' not in archive.read(name), 'Shell archive entry must use LF: '+name
         manifest=archive.read(prefix+'SHA256SUMS').decode().splitlines()
         expected={}
         for line in manifest:
@@ -32,12 +51,10 @@ def package(target):
     files={}
     for p in sorted(ROOT.rglob('*')):
         rel=p.relative_to(ROOT)
-        if any(part in EXCLUDE for part in rel.parts):continue
-        if any(part.startswith('.') and part not in HIDDEN for part in rel.parts):continue
-        if len(rel.parts)>1 and rel.parts[0] not in DIRECTORIES:continue
+        if not public_source(rel.as_posix()):continue
         if p.is_symlink():raise ValueError('Source symlinks are not packaged: '+str(rel))
         if not p.is_file() or rel.as_posix()=='SHA256SUMS' or p.suffix in {'.pyc','.zip','.tmp','.bak','.pem','.key'}:continue
-        files[rel.as_posix()]=p.read_bytes()
+        files[rel.as_posix()]=source_bytes(p)
     required=['server.js','app.js','package.json','VERSION','public/panel.bundle.js','public/index.html','部署说明.md']
     assert all(name in files for name in required),'Missing required source'
     manifest=''.join(f'{digest(data)}  {name}\n' for name,data in files.items())
@@ -52,7 +69,11 @@ def package(target):
     result=verify(target);result.update({'file':str(target),'bytes':target.stat().st_size,'sha256':digest(target.read_bytes()),'applicationVersion':version,'assetVersion':files['VERSION'].decode().strip()})
     Path(str(target)+'.sha256').write_bytes((result['sha256']+'  '+target.name+'\n').encode('utf-8'))
     return result
-if __name__=='__main__':
-    if len(sys.argv)==3 and sys.argv[1]=='--verify': print(json.dumps(verify(Path(sys.argv[2])),ensure_ascii=False,indent=2))
-    elif len(sys.argv)==2: print(json.dumps(package(Path(sys.argv[1]).resolve()),ensure_ascii=False,indent=2))
-    else: raise SystemExit(__doc__)
+def main(args=None):
+    args=list(sys.argv[1:] if args is None else args)
+    if len(args)==2 and args[0]=='--verify':result=verify(Path(args[1]))
+    elif len(args)==1:result=package(Path(args[0]).resolve())
+    else:raise SystemExit(__doc__)
+    print(json.dumps(result,ensure_ascii=False,indent=2))
+
+if __name__=='__main__':main()

@@ -1,12 +1,13 @@
 (() => {
   const createMarketStore = () => {
+  const regularCache={};
   const intradayCache={};  // T1: sym -> {ver,bars} — 分时K线条件传输客户端缓存(配合请求 &cv=, 服务端版本一致时回 'same' 不重传数组)
   const daily30Cache={};   // P1-P1: sym -> {ver,bars} — daily30Version 未变时复用旧日K数组(服务端SLOW_TTL内数据不变, 不再每2s重处理16KB日K)
   // T1: 请求携带客户端已知图表版本号 — 每符号 SYM:iVer:dVer, 无缓存/版本无效用 0
   function chartVersions(symbols){
     return symbols.map(sym => {
-      const ic=intradayCache[sym], dc=daily30Cache[sym];
-      return sym+':'+((ic && ic.ver>0 && ic.bars) ? ic.ver : 0)+':'+((dc && dc.ver>0 && dc.bars) ? dc.ver : 0);
+      const ic=intradayCache[sym], dc=daily30Cache[sym],rc=regularCache[sym];
+      return sym+':'+((ic && ic.ver>0 && ic.bars) ? ic.ver : 0)+':'+((dc && dc.ver>0 && dc.bars) ? dc.ver : 0)+(rc?.ver?':'+rc.ver:'');
     }).join(';');
   }
   // T1: 响应图表字段落位 — 'same' 复用本地缓存(畸形: 本地无缓存/ver为0 → 按空数组防御); 全量数组入库带版本(旧后端同版本重发仍复用旧引用)
@@ -43,9 +44,18 @@
     function prepareQuote(data) {
       const previous=quotes.get(data.symbol);
       if(!data.charts && previous?.charts)data.charts=previous.charts;
+      const regular=data.regularChart,cached=regularCache[data.symbol];
+      if(regular){
+        if(regular.bars==='same')regular.bars=cached?.ver===regular.revision?cached.bars:[];
+        else if(Array.isArray(regular.bars)){
+          if(regular.revision>0&&cached?.ver===regular.revision)regular.bars=cached.bars;
+          else if(regular.revision>0)regularCache[data.symbol]={ver:regular.revision,bars:regular.bars};
+          else delete regularCache[data.symbol];
+        }
+      }
       resolveCharts(data);quotes.set(data.symbol,data);return data;
     }
-    function remove(symbol) {quotes.delete(symbol);delete intradayCache[symbol];delete daily30Cache[symbol];}
+    function remove(symbol) {quotes.delete(symbol);delete intradayCache[symbol];delete daily30Cache[symbol];delete regularCache[symbol];}
     return Object.freeze({prepareQuote,chartVersions,remove,intradayCache,daily30Cache});
   };
   window.PANEL_MARKET_STORE=Object.freeze({createMarketStore});

@@ -43,7 +43,7 @@ test('a candle-only 403 tries another token without cooling either quote slot',a
   assert.equal((await pool.request('/quote?symbol=AAOI')).status,200);
 });
 
-test('Naver interval tradingVolume wins over accumulated volume, including the closing bar',async()=>{
+test('Naver interval tradingVolume excludes the bar that mixes closing and after-hours prints',async()=>{
   const provider=createNaverWorldHistory({now:()=>now,resolveCode:async()=> 'AAOI.O',httpsGet:async url=>{
     assert.match(url,/\/chart\/foreign\/ITEM\/NASDAQ\/AAOI\.O\/interval\/5/);
     return {status:200,headers:{},body:JSON.stringify(naverPayload)};
@@ -52,10 +52,13 @@ test('Naver interval tradingVolume wins over accumulated volume, including the c
   const chart=await provider('AAOI',`?interval=5m&period1=${start}&period2=${end}`);
   assert.deepEqual(chart.indicators.quote[0].volume,[250072,695682]);
   const q=chart.indicators.quote[0],bars=chart.timestamp.map((t,i)=>({t,o:q.open[i],h:q.high[i],l:q.low[i],c:q.close[i],v:q.volume[i]}));
-  const regular=projectRegularBars('AAOI',bars,{source:chart.source,pointKind:'bar-close',targetDate:'2026-09-22',now});
-  assert.equal(regular.volumeQuality.status,'ready');
+  assert.equal(chart.meta.chartTimeBasis,'bar-start');
+  const regular=projectRegularBars('AAOI',bars,{source:chart.source,pointKind:chart.meta.chartTimeBasis,
+    intervalSeconds:chart.meta.chartIntervalSeconds,targetDate:'2026-09-22',now});
+  assert.equal(regular.volumeQuality.status,'partial');
+  assert.equal(regular.volumeQuality.closingPrintStatus,'unverified');
   assert.equal(regular.volumeUnit,'shares');
-  assert.equal(regular.bars.at(-1).t,at('2026-09-22T20:00:00Z'));
+  assert.equal(regular.bars.at(-1).t,at('2026-09-22T13:30:00Z'));
 });
 
 test('Finnhub quote carries source time and prior close without inventing volume',()=>{

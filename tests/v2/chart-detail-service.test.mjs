@@ -78,6 +78,7 @@ test('browser chart detail route validates symbol and range under the shared HTT
     assert.equal(good.status,200);assert.equal((await good.json()).range,'5d');
     assert.deepEqual(calls,[{symbol:'AAOI',range:'5d'}]);
     assert.equal((await fetch(base+'/api/chart/detail?symbol=AAOI&range=20d')).status,400);
+    assert.equal((await fetch(base+'/api/chart/detail?symbol=AAOI&tapeSession=night')).status,400);
     assert.equal((await fetch(base+'/api/chart/detail?symbol=%3Cbad%3E')).status,400);
   }finally{await server.stop();}
 });

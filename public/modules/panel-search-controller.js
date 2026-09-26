@@ -5,13 +5,14 @@
   let searchReqId = 0;   // P1-U2: 搜索请求代际号, 丢弃过期响应
   let searchController = null;
   let searchIndex = -1;
+  let lastSearchMore = false;
   const status=document.createElement('div');status.className='search-status';status.setAttribute('role','status');status.setAttribute('aria-live','polite');
   qEl.parentNode.appendChild(status);
   const busy=value=>{qEl.setAttribute('aria-busy',String(value));srEl.setAttribute('aria-busy',String(value));};
   const hideSearch = (clear = false) => {
     searchReqId++;
     if (searchController) { try { searchController.abort(); } catch {} searchController = null; }
-    clearTimeout(sTimer); searchIndex = -1; srEl.hidden = true; srEl.innerHTML = ''; qEl.setAttribute('aria-expanded', 'false');
+    clearTimeout(sTimer); searchIndex = -1; lastSearchMore = false; srEl.hidden = true; srEl.innerHTML = ''; qEl.setAttribute('aria-expanded', 'false');
     qEl.setAttribute('aria-activedescendant', '');
     busy(false);status.textContent='';if (clear) qEl.value = '';
   };
@@ -19,6 +20,7 @@
     more = more === true;
     const myId = ++searchReqId;   // P1-U2
     const v = qEl.value.trim(); if (!v) { hideSearch(); return 0; }
+    lastSearchMore = more;
     if (searchController) { try { searchController.abort(); } catch {} }
     searchController = typeof AbortController === 'function' ? new AbortController() : null;
     busy(true);status.textContent='正在查询…';srEl.innerHTML='<div class="sempty">正在查询…</div>';srEl.hidden=false;qEl.setAttribute('aria-expanded','true');
@@ -29,7 +31,7 @@
       const list = PANEL.normalizeList(await r.json());
       if (myId !== searchReqId) return;   // P1-U2: 已有更新的搜索, 本次过期响应直接丢弃
       srEl.innerHTML = (list && list.length)
-        ? list.map((x, i) => '<div class="sitem" title="' + esc(x.matchNote || x.seriesNote || '') + '" role="option" tabindex="-1" id="sitem-' + i + '" data-sym="' + esc(x.symbol) + '" data-name="' + esc(x.name) + '"><span class="mkttag" data-mkt="' + esc(x.market) + '">' + esc(x.market) + '</span><b>' + esc(x.symbol) + '</b><span class="sname">' + esc(x.name) + '</span><span class="stype">' + ({INDEX:'指数',ETF:'ETF',EQUITY:'股票',FUTURE:'期货',MUTUALFUND:'基金',CURRENCY:'汇率'}[x.type] || '证券') + '</span><span class="sexch">' + esc(x.exch) + '</span>' + (x.matchNote ? '<small class="search-note">' + esc(x.matchNote) + '</small>' : '') + '</div>').join('')
+        ? list.map((x, i) => '<div class="sitem" title="' + esc(x.matchNote || x.seriesNote || '') + '" role="option" tabindex="-1" id="sitem-' + i + '" data-sym="' + esc(x.symbol) + '" data-name="' + esc(x.name) + '"><span class="mkttag" data-mkt="' + esc(x.market) + '">' + esc(x.market) + '</span><b>' + esc(x.symbol) + '</b><span class="sname">' + esc(x.name) + '</span><span class="stype">' + ({INDEX:'指数',ETF:'ETF',EQUITY:'股票',FUTURE:'期货',MUTUALFUND:'基金',CURRENCY:'汇率'}[x.type] || '证券') + '</span><span class="sexch">' + esc([x.exch,x.currency].filter(Boolean).join(' · ')) + '</span>' + (x.matchNote ? '<small class="search-note">' + esc(x.matchNote) + '</small>' : '') + '</div>').join('')
         : sourceStatus==='unavailable'?'<div class="sempty">搜索来源暂不可用，未能确认是否存在匹配证券。<button type="button" data-search-retry="1">重新查询</button>；也可尝试完整代码，如 9766.T / VOD.L / M&amp;M.NS</div>':'<div class="sempty">无结果，可尝试公司英文名或完整代码，如 科乐美 / 9766.T / VOD.L / M&amp;M.NS</div>';
       if(list.length&&sourceStatus==='partial')srEl.innerHTML+='<div class="sempty">部分搜索来源暂不可用，当前结果可能不完整。<button type="button" data-search-retry="1">重新查询</button></div>';
       srEl.innerHTML += more ? '<div class="sempty">已合并可用来源；目录可能不完整或限流，连续合约请核对来源。</div>' : '<div class="search-more" id="search-more-option" role="option" tabindex="0" data-search-more="1" aria-label="查询更多来源与具体合约">查询更多来源与具体合约</div>';
@@ -63,7 +65,7 @@
     runSearch();
   });
   srEl.addEventListener('click', (e) => {
-    if(e.target.closest('[data-search-retry]')){runSearch();return;}
+    if(e.target.closest('[data-search-retry]')){runSearch(lastSearchMore);return;}
     if(e.target.closest('[data-search-more]')){runSearch(true);return;}
     const it = e.target.closest('.sitem'); if (!it || !it.dataset.sym) return;
     const sym = it.dataset.sym.toUpperCase();

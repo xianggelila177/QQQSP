@@ -1,7 +1,7 @@
 (() => {
   const createHistoryStore = ({fetchImpl = window.fetch.bind(window), symbol, timeoutMs = 22000, network}) => {
     const transport = network || window.PANEL_NETWORK.createNetwork({fetchImpl, timeoutMs});
-    const entries=Object.create(null), controllers=Object.create(null), generations=Object.create(null);
+    const entries=Object.create(null), controllers=Object.create(null), generations=Object.create(null),prewarmBuffers=Object.create(null);
     const entry=tf=>entries[tf] ||= {bars:[],revision:0,status:'unknown',warnings:[],meta:null};
     const validDate=date=>typeof date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(date)&&Number.isFinite(Date.parse(date+'T00:00:00Z'))&&new Date(date+'T00:00:00Z').toISOString().slice(0,10)===date;
     const normalize=bar=>{
@@ -12,7 +12,7 @@
     };
     function merge(tf,response,{before}={}){
       const e=entry(tf),same=e.meta?.seriesId===response.seriesId;
-      if(same&&e.revision===String(response.revision)&&e.bars.length){e.meta=response;e.status=response.status||'ready';e.retryAt=response.retryAt||null;return e;}
+      if(same&&e.revision===String(response.revision)&&e.bars.length){e.meta=response;e.status=response.status||'ready';e.retryAt=response.retryAt||null;e.errorCode=response.errorCode||null;e.warnings=response.warnings||[];return e;}
 
       const map=same?new Map(e.bars.map(b=>[b.periodStart,b])):new Map();
       const first=response.bars[0]?.periodStart,last=response.bars.at(-1)?.periodStart;
@@ -31,9 +31,18 @@
     }
     function hydrate(tf,response){
       const spec=window.PANEL_TIMEFRAMES.get(tf);
-      if(!response||response.schemaVersion!==1||response.symbol!==symbol||response.period!==spec.apiPeriod||typeof response.seriesId!=='string'||typeof response.revision!=='string'||!Array.isArray(response.bars)||response.bars.some(b=>!normalize(b))||response.bars.some((b,i,a)=>i&&b.t<=a[i-1].t))return false;
+      const unchanged=response?.bars==='same';
+      if(unchanged){
+        const saved=prewarmBuffers[tf];
+        if(!saved||saved.seriesId!==response.seriesId||(saved.barsRevision||saved.revision)!==(response.barsRevision||response.revision))return false;
+        response={...response,bars:saved.bars};
+      }
+      if(!response||response.schemaVersion!==1||response.symbol!==symbol||response.period!==spec.apiPeriod||typeof response.seriesId!=='string'||typeof response.revision!=='string'||!Array.isArray(response.bars)||!unchanged&&(response.bars.some(b=>!normalize(b))||response.bars.some((b,i,a)=>i&&b.t<=a[i-1].t)))return false;
       const old=entry(tf).meta;
       if(old?.sourceCheckedAt>response.sourceCheckedAt)return false;
+      prewarmBuffers[tf]=response;
+      // Near daily aggregates cannot replace a complete requested month/year.
+      if(response.prewarmScope==='near'&&spec.apiPeriod!=='daily'&&(entry(tf).loadedDirect||controllers[tf]))return true;
       // A prewarm arriving during a first load supersedes it, but never abort an older-page request.
       if(controllers[tf]&&!entry(tf).loadingBefore){generations[tf]=(generations[tf]||0)+1;controllers[tf].abort();delete controllers[tf];}
       merge(tf,response);return true;
@@ -55,14 +64,15 @@
           if(!r.ok)throw Object.assign(new Error(j.error||'历史来源暂不可用'),{code:j.code||'HISTORY_SOURCE_UNAVAILABLE',retryAt:j.retryAt||r.retryAt||null});
           if(j.schemaVersion!==1||j.symbol!==symbol||j.period!==spec.apiPeriod||typeof j.seriesId!=='string'||!j.seriesId||typeof j.revision!=='string'||!Array.isArray(j.bars))throw new Error(j.error||'invalid history response');
           if(j.bars.some(b=>!normalize(b))||j.bars.some((b,i,a)=>i&&b.t<=a[i-1].t))throw new Error('invalid history bars');
-          return merge(tf,j,{before});
+          const value=merge(tf,j,{before});value.loadedDirect=true;return value;
         }
       }catch(err){if(current()){e.status=e.bars.length?'stale':'error';e.warnings=[String(err.message||err)];e.errorCode=err.code||'HISTORY_BAD_RESPONSE';e.retryAt=Number(err.retryAt)||null;}}
       finally{if(controllers[tf]===ac)delete controllers[tf];}
       return e;
     }
     function abort(){for(const tf of Object.keys(controllers)){generations[tf]=(generations[tf]||0)+1;controllers[tf].abort();delete controllers[tf];const e=entry(tf);e.status=e.bars.length?'stale':'unknown';e.loadingBefore=null;}}
-    return Object.freeze({getSeries:tf=>entry(tf).bars,getRevision:tf=>entry(tf).revision,getMeta:entry,load,hydrate,abort});
+    const needsLoad=tf=>{const spec=window.PANEL_TIMEFRAMES.get(tf),e=entry(tf);return spec.kind==='history'&&(!e.bars.length||!e.loadedDirect&&e.meta?.prewarmScope==='near'&&spec.apiPeriod!=='daily');};
+    return Object.freeze({getSeries:tf=>entry(tf).bars,getRevision:tf=>entry(tf).revision,getMeta:entry,needsLoad,load,hydrate,abort});
   };
   window.PANEL_HISTORY_STORE=Object.freeze({createHistoryStore});
 })();

@@ -1,7 +1,5 @@
-// P0-4 SW ignoreSearch —— RED 阶段测试
-// 断言: 断网回退时 caches.match(e.request,{ignoreSearch:true}) 能把
-//       '/style.css?v=42' 命中缓存里的 '/style.css'(忽略 query)。
-// Cache/CacheStorage 以符合规范的 ignoreSearch 语义桩实现, 驱动真实 sw.js 的 fetch 处理器。
+// Installed shell assets use exact versioned keys; offline fallback must not
+// satisfy a new version URL with old bytes.
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
@@ -9,14 +7,15 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = fs.readFileSync(path.join(ROOT, 'public', 'sw.js'), 'utf8');
+const VERSION=SRC.match(/const VERSION = 'v(\d+)'/)[1],NEXT=String(Number(VERSION)+1);
 
 let pass = 0; const fails = [];
 const ok = (cond, name) => { cond ? pass++ : fails.push(name); console.log((cond ? '  \u2713 ' : '  \u2717 ') + name); };
 
 function setup({ offline, status = 200, cacheFailure = false }) {
   const store = new Map([
-    ['https://panel.test/style.css', new Response('CACHED_CSS')],
-    ['https://panel.test/app.js', new Response('CACHED_APP_JS')],
+    ['https://panel.test/style.css?v='+VERSION, new Response('CACHED_CSS')],
+    ['https://panel.test/panel.bundle.js?v='+VERSION, new Response('CACHED_APP_JS')],
   ]);
   const normKey = (url) => { const i = url.indexOf('?'); return i < 0 ? url : url.slice(0, i); };
   const cacheHits = [], cacheWrites = [];
@@ -65,24 +64,24 @@ function setup({ offline, status = 200, cacheFailure = false }) {
 }
 
 try {
-  // 场景1(核心): 断网 + 带版本参数请求 → 应命中无 query 的缓存条目
+  // Current-version assets remain available offline.
   const s1 = setup({ offline: true });
   let resp;
-  try { resp = await s1.dispatch('/style.css?v=42'); } catch {}
+  try { resp = await s1.dispatch('/style.css?v='+VERSION); } catch {}
   const body = resp ? await resp.text() : '(no response)';
-  ok(body === 'CACHED_CSS', '断网时 /style.css?v=42 命中 /style.css 缓存 (实际: ' + body + ')');
+  ok(body === 'CACHED_CSS', '断网时当前版本 CSS 命中精确版本缓存 (实际: ' + body + ')');
 
-  // 场景2: 不同参数值同样命中
+  // A different version must not reuse old bytes.
   const s2 = setup({ offline: true });
   let resp2;
-  try { resp2 = await s2.dispatch('/app.js?v=99'); } catch {}
+  try { resp2 = await s2.dispatch('/panel.bundle.js?v='+NEXT); } catch {}
   const body2 = resp2 ? await resp2.text() : '(no response)';
-  ok(body2 === 'CACHED_APP_JS', '断网时 /app.js?v=99 命中 /app.js 缓存 (实际: ' + body2 + ')');
+  ok(resp2?.type==='error', '断网时新 bundle 版本不借用旧 bundle (实际: ' + body2 + ')');
 
   // 场景3(回归): 联网时网络优先不受影响
   const s3 = setup({ offline: false });
-  const resp3 = await s3.dispatch('/style.css?v=42');
-  ok((await resp3.text()) === 'NETWORK_BODY', '联网时仍网络优先');
+  const resp3 = await s3.dispatch('/style.css?v='+NEXT);
+  ok((await resp3.text()) === 'NETWORK_BODY', '新版本请求使用网络响应');
   ok(s3.netHits.length === 1, '联网请求直达网络一次');
 
   // 场景4(回归): 精确路径(无query)断网回退依旧工作
@@ -95,7 +94,7 @@ try {
   // A transient HTTP error must fall back to the last valid cached asset.
   const s5 = setup({ offline: false, status: 500 });
   let resp5;
-  try { resp5 = await s5.dispatch('/style.css?v=500'); } catch {}
+  try { resp5 = await s5.dispatch('/style.css?v='+VERSION); } catch {}
   ok(resp5 && await resp5.text() === 'CACHED_CSS', '网络 500 时回退到有效 CSS 缓存');
   ok(s5.cacheWrites.length === 0, '失败的 HTTP 响应不写入静态缓存');
 

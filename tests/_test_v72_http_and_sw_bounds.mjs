@@ -14,8 +14,10 @@ try {
  }
 } finally {await server.stop();}
 const handlers={},store=new Map();
-const cache={addAll:async()=>{},put:async(key,value)=>{store.set(key,value);}};
-vm.runInNewContext(fs.readFileSync(new URL('../public/sw.js',import.meta.url),'utf8'),{
+const sw=fs.readFileSync(new URL('../public/sw.js',import.meta.url),'utf8'),version=sw.match(/const VERSION = 'v(\d+)'/)[1];
+store.set('https://fixture.test/style.css?v='+version,new Response('installed asset'));
+const cache={addAll:async()=>{},match:async key=>store.get(key)?.clone(),put:async(key,value)=>{store.set(key,value);}};
+vm.runInNewContext(sw,{
  self:{location:new URL('https://fixture.test/sw.js'),addEventListener:(k,v)=>handlers[k]=v},URL,Response,
  caches:{open:async()=>cache,match:async()=>undefined},fetch:async()=>new Response('asset')
 });

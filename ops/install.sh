@@ -2,6 +2,7 @@
 # 单用户安装：一个进程、一个 service。旧版服务不停止，默认新端口 8568。
 set -euo pipefail
 SOURCE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+source "$SOURCE/ops/release-common.sh"
 ROOT=${1:-/opt/qqqsp-v2}
 NEW_PORT=${2:-8568}
 SERVICE=qqqsp-v2.service
@@ -24,8 +25,7 @@ NODE_BIN=$(readlink -f -- "$NODE_BIN")
 id qqqsp >/dev/null 2>&1 || useradd --system --no-create-home --shell /usr/sbin/nologin qqqsp
 runuser -u qqqsp -- "$NODE_BIN" --version >/dev/null || { echo 'qqqsp 用户不能执行该 Node；请使用所有用户可执行的系统 Node 路径。'; exit 1; }
 install -d -m 755 "$ROOT" "$ROOT/releases" "$ROOT/shared"
-exec 9>"$ROOT/.install.lock"
-flock -n 9 || { echo '另一个安装任务正在运行'; exit 1; }
+qqqsp_release_lock "$ROOT"
 install -d -o qqqsp -g qqqsp -m 750 "$ROOT/shared/state" "$ROOT/shared/logs"
 if [[ ! -f "$ROOT/shared/.env" ]]; then
   # .env 仅作为数据交给 Node/systemd 读取，绝不 source 为 shell 脚本。
@@ -48,7 +48,7 @@ cleanup_failed(){
   local code=$?
   if [[ "$COMMITTED" != 1 ]]; then
     if [[ -n "$PREVIOUS" && -d "$PREVIOUS" ]]; then
-      ln -sfn "$PREVIOUS" "$ROOT/.rollback-$$"; mv -Tf "$ROOT/.rollback-$$" "$ROOT/current"
+      qqqsp_switch_release "$ROOT" "$PREVIOUS"
       systemctl restart "$SERVICE" || true
     else
       systemctl stop "$SERVICE" || true
@@ -67,8 +67,7 @@ chmod -R a+rX "$RELEASE"
 ln -s "$ROOT/shared/state" "$RELEASE/state"
 ln -s "$ROOT/shared/logs" "$RELEASE/logs"
 PREVIOUS=$(readlink -f "$ROOT/current" 2>/dev/null || true)
-ln -s "$RELEASE" "$ROOT/.current-$$"
-mv -Tf "$ROOT/.current-$$" "$ROOT/current"
+qqqsp_switch_release "$ROOT" "$RELEASE"
 cat > "/etc/systemd/system/$SERVICE" <<EOF
 [Unit]
 Description=QQQSP v2 single-user market panel
@@ -99,17 +98,14 @@ EOF
 systemctl daemon-reload
 systemctl enable "$SERVICE"
 if systemctl restart "$SERVICE"; then
- for attempt in {1..20}; do
-  if systemctl is-active --quiet "$SERVICE" && "$NODE_BIN" -e 'fetch(process.argv[1],{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))' "http://127.0.0.1:$ACTIVE_PORT/readyz"; then
-   if [[ -n "$PREVIOUS" && "$PREVIOUS" != "$RELEASE" ]]; then ln -sfn "$PREVIOUS" "$ROOT/previous"; fi
+  if qqqsp_wait_ready "$NODE_BIN" "$ACTIVE_PORT" "$(cat "$RELEASE/VERSION")" "$SERVICE"; then
+   if [[ -n "$PREVIOUS" && "$PREVIOUS" != "$RELEASE" ]]; then qqqsp_switch_release "$ROOT" "$PREVIOUS" previous; fi
    COMMITTED=1
    "$NODE_BIN" "$SOURCE/ops/prune-releases.mjs" "$ROOT" "$KEEP_OLD" "$RELEASE_BUDGET" || echo '版本清理未完成，请检查目录权限；当前/回滚版本未主动删除。' >&2
    printf '\n安装成功：%s\n本地地址：http://127.0.0.1:%s\n配置：%s/shared/.env\n日志：journalctl -u %s -f\n' "$SERVICE" "$ACTIVE_PORT" "$ROOT" "$SERVICE"
    echo '已更新 qqqsp-v2 服务，其他名称的旧版服务未改动。确认页面与来源状态后核对现有隧道目标端口。'
    exit 0
   fi
-  sleep 1
- done
 fi
 echo '新版本未通过服务就绪检查，开始恢复上一版本。' >&2
 journalctl -u "$SERVICE" -n 30 --no-pager >&2 || true
