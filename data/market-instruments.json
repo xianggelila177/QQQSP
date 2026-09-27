@@ -517,6 +517,24 @@
     ]
   },
   {
+    "market": "us",
+    "symbol": "JEPQ",
+    "name": "JPMorgan Nasdaq Equity Premium Income ETF",
+    "type": "ETF",
+    "providerType": "ETF",
+    "typeSource": "catalog",
+    "currency": "USD",
+    "exchange": "NASDAQ",
+    "naverCode": "JEPQ.O",
+    "verifiedAt": "2026-09-27T02:03:16.714Z",
+    "source": "J.P. Morgan / Nasdaq / Naver",
+    "sources": [
+      "https://am.jpmorgan.com/content/dam/jpm-am-aem/americas/us/en/literature/fact-sheet/etfs/FS-JEPQ.PDF",
+      "https://api.nasdaq.com/api/quote/JEPQ/historical?assetclass=etf",
+      "https://m.stock.naver.com/front-api/search/autoComplete?query=JEPQ&target=stock"
+    ]
+  },
+  {
     "market": "tw",
     "symbol": "0050.TW",
     "name": "YUANTA SECURITIES INV TRUST CO ",

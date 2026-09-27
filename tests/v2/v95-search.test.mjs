@@ -89,5 +89,5 @@ test('Tencent does not merge share class into its parent ticker and canonicalize
 test('Tencent search keeps verified US and HK ETF identities without guessing from fund-like names',async()=>{
  const service=createSearchService({httpsGet:async()=>({status:200,body:'v_hint="hk~02800~Tracker Fund^us~spy.am~SPDR S&P 500 ETF Trust^us~qqq.oq~Invesco QQQ^hk~00700~Tencent^us~zzfake.n~Unverified ETF name";'})});
  const rows=await service.tencentSuggest('fund');
- assert.deepEqual(rows.map(row=>[row.symbol,row.type]),[['2800.HK','ETF'],['SPY','ETF'],['QQQ','ETF'],['0700.HK','EQUITY'],['ZZFAKE','EQUITY']]);
+ assert.deepEqual(rows.map(row=>[row.symbol,row.type]),[['2800.HK','ETF'],['SPY','ETF'],['QQQ','ETF'],['0700.HK','EQUITY'],['ZZFAKE','UNKNOWN']]);
 });

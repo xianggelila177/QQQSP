@@ -1985,7 +1985,7 @@
     return `
     <section class="price-card" id="card-${esc(sym)}" data-sym="${esc(sym)}">
       <div class="cardhead">
-        <div class="headname"><span class="friendly"></span><span class="mkttag" data-mkt=""></span><span class="sym">${esc(sym)}</span></div>
+        <div class="headname"><span class="friendly"></span><span class="mkttag" data-mkt=""></span><span class="instrument-tag">待识别</span><span class="sym">${esc(sym)}</span></div>
         <span class="card-actions"><span class="chip stale-warn" hidden>数据延迟</span><span class="chip state"></span><button class="cardretry" hidden type="button">重试</button><button class="cardclose" title="移除自选">×</button></span>
       </div>
       <div class="quote-meta"><span class="quote-details"></span><span class="quote-age" data-testid="quote-age"></span><span class="source-check-age"></span></div>
@@ -2205,7 +2205,9 @@
     q.change.className = 'change c' + (up==null?'':(up?' up':' down'));
     q.pct.className = 'pct c' + (up==null?'':(up?' up':' down'));
 
-    if (q.friendly) q.friendly.textContent = FRIENDLY[d.symbol] || (visibleName(d) + (d.instrumentType === 'ETF' ? ' ETF' : ''));
+    if (q.friendly) q.friendly.textContent = FRIENDLY[d.symbol] || visibleName(d);
+    const typeTag=q.el.querySelector('.instrument-tag');
+    if(typeTag)typeTag.textContent=d.instrumentTypeSource==='inferred'?'待识别':({EQUITY:'股票',ETF:'ETF',MUTUALFUND:'基金',INDEX:'指数',FUTURE:'期货',CURRENCY:'汇率'}[d.instrumentType]||'待识别');
     if (q.mkttag) { const mk = d.market || '市场未核验'; q.mkttag.dataset.mkt = mk; q.mkttag.textContent = mk; }
     applyStaleBadge(q, d);   // T2: stale 徽标分级 — 上游限流(含重试倒计时)/冷却重试/旧后端 d.stale 兼容
     const calendarEstimate = d.calendarCoverage && d.calendarCoverage.known === false;
@@ -2301,7 +2303,7 @@
       const list = PANEL.normalizeList(await r.json());
       if (myId !== searchReqId) return;   // P1-U2: 已有更新的搜索, 本次过期响应直接丢弃
       srEl.innerHTML = (list && list.length)
-        ? list.map((x, i) => '<div class="sitem" title="' + esc(x.matchNote || x.seriesNote || '') + '" role="option" tabindex="-1" id="sitem-' + i + '" data-sym="' + esc(x.symbol) + '" data-name="' + esc(x.name) + '"><span class="mkttag" data-mkt="' + esc(x.market) + '">' + esc(x.market) + '</span><b>' + esc(x.symbol) + '</b><span class="sname">' + esc(x.name) + '</span><span class="stype">' + ({INDEX:'指数',ETF:'ETF',EQUITY:'股票',FUTURE:'期货',MUTUALFUND:'基金',CURRENCY:'汇率'}[x.type] || '证券') + '</span><span class="sexch">' + esc([x.exch,x.currency].filter(Boolean).join(' · ')) + '</span>' + (x.matchNote ? '<small class="search-note">' + esc(x.matchNote) + '</small>' : '') + '</div>').join('')
+        ? list.map((x, i) => '<div class="sitem" title="' + esc(x.matchNote || x.seriesNote || '') + '" role="option" tabindex="-1" id="sitem-' + i + '" data-sym="' + esc(x.symbol) + '" data-name="' + esc(x.name) + '"><span class="mkttag" data-mkt="' + esc(x.market) + '">' + esc(x.market) + '</span><b>' + esc(x.symbol) + '</b><span class="sname">' + esc(x.name) + '</span><span class="stype">' + ({INDEX:'指数',ETF:'ETF',EQUITY:'股票',FUTURE:'期货',MUTUALFUND:'基金',CURRENCY:'汇率',UNKNOWN:'待识别'}[x.type] || '证券') + '</span><span class="sexch">' + esc([x.exch,x.currency].filter(Boolean).join(' · ')) + '</span>' + (x.matchNote ? '<small class="search-note">' + esc(x.matchNote) + '</small>' : '') + '</div>').join('')
         : sourceStatus==='unavailable'?'<div class="sempty">搜索来源暂不可用，未能确认是否存在匹配证券。<button type="button" data-search-retry="1">重新查询</button>；也可尝试完整代码，如 9766.T / VOD.L / M&amp;M.NS</div>':'<div class="sempty">无结果，可尝试公司英文名或完整代码，如 科乐美 / 9766.T / VOD.L / M&amp;M.NS</div>';
       if(list.length&&sourceStatus==='partial')srEl.innerHTML+='<div class="sempty">部分搜索来源暂不可用，当前结果可能不完整。<button type="button" data-search-retry="1">重新查询</button></div>';
       srEl.innerHTML += more ? '<div class="sempty">已合并可用来源；目录可能不完整或限流，连续合约请核对来源。</div>' : '<div class="search-more" id="search-more-option" role="option" tabindex="0" data-search-more="1" aria-label="查询更多来源与具体合约">查询更多来源与具体合约</div>';
@@ -2918,11 +2920,34 @@
   const chartController=window.PANEL_CHART_CONTROLLER.createChartController({ document, formatterFor, formatKey:d=>JSON.stringify([cardCurOf(d.symbol),d.currency,d.instrumentType,d.fxStale,d.fxKind,d.fxKind?d.fxMap:fxMap]), client:PANEL, flash, UP, DOWN, dpr:devicePixelRatio });
   const cardView=window.PANEL_CARD_VIEW.createCardView({ document, panelsEl, stripEl, chartController, formatterFor, cardCurOf, nameOf:sym=>names[sym], onRemove:removeFromWatch, onRetry:()=>refresh(true), onCurrency:setCardCurrency, humanizeAge, UP, DOWN, onNewsToggle:()=>{newsController.invalidate();void refreshNews();}, getReadIntervalMs:()=>currentPollingPolicy().marketMs, canPollDetails:()=>!document.hidden||refreshMode==='continuous', quoteClock });
   const {ensureCard,render,renderStrip,updateQuoteMeta,setFetchStatus,cardCache}=cardView;
+  let instrumentFilter='ALL';
+  function applyInstrumentFilter(){
+    const counts={ALL:watchlist.length,EQUITY:0,ETF:0,OTHER:0,UNKNOWN:0};
+    for(const symbol of watchlist){
+      const card=cardCache.get(symbol),d=card?.d;
+      const type=d?.instrumentTypeSource==='inferred'||!d?.instrumentType||d.instrumentType==='UNKNOWN'?'UNKNOWN':
+        ['EQUITY','ETF'].includes(d.instrumentType)?d.instrumentType:'OTHER';
+      counts[type]++;
+      if(card){card.el.hidden=instrumentFilter!=='ALL'&&instrumentFilter!==type;if(card.strip)card.strip.hidden=card.el.hidden;}
+    }
+    const labels={ALL:'全部',EQUITY:'股票',ETF:'ETF',OTHER:'其他',UNKNOWN:'待识别'};
+    for(const button of $('instrumentFilter')?.querySelectorAll('button')||[]){
+      button.textContent=labels[button.dataset.type]+' '+counts[button.dataset.type];
+      button.setAttribute('aria-pressed',String(button.dataset.type===instrumentFilter));
+    }
+    const status=$('instrumentFilterStatus');
+    if(status){status.hidden=instrumentFilter==='ALL'||counts[instrumentFilter]>0||!watchlist.length;status.textContent='当前自选没有'+labels[instrumentFilter]+'类标的';}
+  }
+  $('instrumentFilter')?.addEventListener('click',event=>{
+    const button=event.target.closest('button[data-type]');if(!button)return;
+    instrumentFilter=button.dataset.type;applyInstrumentFilter();
+    window.dispatchEvent(new Event('resize'));
+  });
   function removeFromWatch(sym) {
     const q=cardCache.get(sym); if(!q)return;
     const removedIndex=watchlist.indexOf(sym),restoreFocus=q.el.contains(document.activeElement);
       watchlist = watchlist.filter(x => x !== sym); marketGeneration++; newsController.invalidate(); saveWL();
-      cardView.remove(sym); marketStore.remove(sym);updateEmptyState();
+      cardView.remove(sym); marketStore.remove(sym);updateEmptyState();applyInstrumentFilter();
       if(restoreFocus){const next=cardCache.get(watchlist[Math.min(removedIndex,watchlist.length-1)]);(next?.el.querySelector('button')||$('q')).focus();}
       cardCur.delete(sym); saveCardCurrencies(); if (q.strip) q.strip.remove();
       marketDirectory.syncMembership();
@@ -3023,6 +3048,7 @@
         // Remove state belonging to symbols deleted while the request was in flight.
         for (const [sym, q] of cardCache) if (removedRequested.has(sym)) { q.el.remove(); q.strip && q.strip.remove(); cardCache.delete(sym); }
         lastData=watchlist.map(sym=>cardCache.get(sym)?.d).filter(Boolean);
+        applyInstrumentFilter();
         lastPendingCount=watchlist.filter(sym=>cardCache.get(sym)?.fetchStatus==='pending').length;
         distributeNews(); renderDigest(); updateSession(lastData);
         if (pending.length && !lastData.length) $('updateAt').textContent = '等待首次报价';
@@ -3138,7 +3164,7 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=108').then((reg)=>{
+    navigator.serviceWorker.register('/sw.js?v=110').then((reg)=>{
       reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
         nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本','info',{label:'刷新页面',run:()=>location.reload()}); });
       });
@@ -3172,7 +3198,7 @@
       watchlist.push(sym); marketGeneration++; saveWL();
     }
     saveName(sym, name || '');
-    ensureCard(sym); searchController.hideSearch(true);
+    ensureCard(sym); instrumentFilter='ALL';applyInstrumentFilter();searchController.hideSearch(true);
     marketDirectory.syncMembership();
     updateEmptyState();if(changed){liveStore?.setSymbols();void refreshNews();void refreshPreparedHistory(true);}
     const card = document.getElementById('card-' + sym);window.PANEL_STATE.scrollToCard(card,{block:'start'});

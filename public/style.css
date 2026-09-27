@@ -220,3 +220,4 @@ button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,summ
 @media(max-height:500px){.chart-detail-head{min-height:54px;padding:5px 9px}.cd-price{font-size:21px}
   .chart-detail-foot{min-height:40px}.cd-book{padding:7px}.cd-tape{padding:7px}}
 @media(prefers-reduced-motion:reduce){.chart-detail-dialog *{scroll-behavior:auto!important}}
+.instrument-filter{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 8px}.instrument-filter button{min-height:40px;padding:8px 14px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--mut);cursor:pointer}.instrument-filter button[aria-pressed="true"]{background:#edf2ff;border-color:#aebfff;color:var(--acc)}.instrument-tag{font-size:10px;color:var(--acc);background:#edf2ff;padding:3px 6px;border-radius:4px;white-space:nowrap}

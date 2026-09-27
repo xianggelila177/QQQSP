@@ -58,7 +58,7 @@
     return `
     <section class="price-card" id="card-${esc(sym)}" data-sym="${esc(sym)}">
       <div class="cardhead">
-        <div class="headname"><span class="friendly"></span><span class="mkttag" data-mkt=""></span><span class="sym">${esc(sym)}</span></div>
+        <div class="headname"><span class="friendly"></span><span class="mkttag" data-mkt=""></span><span class="instrument-tag">待识别</span><span class="sym">${esc(sym)}</span></div>
         <span class="card-actions"><span class="chip stale-warn" hidden>数据延迟</span><span class="chip state"></span><button class="cardretry" hidden type="button">重试</button><button class="cardclose" title="移除自选">×</button></span>
       </div>
       <div class="quote-meta"><span class="quote-details"></span><span class="quote-age" data-testid="quote-age"></span><span class="source-check-age"></span></div>
@@ -278,7 +278,9 @@
     q.change.className = 'change c' + (up==null?'':(up?' up':' down'));
     q.pct.className = 'pct c' + (up==null?'':(up?' up':' down'));
 
-    if (q.friendly) q.friendly.textContent = FRIENDLY[d.symbol] || (visibleName(d) + (d.instrumentType === 'ETF' ? ' ETF' : ''));
+    if (q.friendly) q.friendly.textContent = FRIENDLY[d.symbol] || visibleName(d);
+    const typeTag=q.el.querySelector('.instrument-tag');
+    if(typeTag)typeTag.textContent=d.instrumentTypeSource==='inferred'?'待识别':({EQUITY:'股票',ETF:'ETF',MUTUALFUND:'基金',INDEX:'指数',FUTURE:'期货',CURRENCY:'汇率'}[d.instrumentType]||'待识别');
     if (q.mkttag) { const mk = d.market || '市场未核验'; q.mkttag.dataset.mkt = mk; q.mkttag.textContent = mk; }
     applyStaleBadge(q, d);   // T2: stale 徽标分级 — 上游限流(含重试倒计时)/冷却重试/旧后端 d.stale 兼容
     const calendarEstimate = d.calendarCoverage && d.calendarCoverage.known === false;
