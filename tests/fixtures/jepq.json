@@ -1,0 +1,2388 @@
+{
+  "capturedAt": "2026-09-27",
+  "search": {
+    "isSuccess": true,
+    "detailCode": "",
+    "message": "",
+    "result": {
+      "query": "JEPQ",
+      "items": [
+        {
+          "code": "JEPQ",
+          "name": "JPMorgan Nasdaq Equity Premium Income ETF",
+          "typeCode": "NASDAQ",
+          "typeName": "나스닥 증권거래소",
+          "url": "/worldstock/etf/JEPQ.O",
+          "reutersCode": "JEPQ.O",
+          "nationCode": "USA",
+          "nationName": "미국",
+          "category": "stock",
+          "hasDiscussion": true,
+          "isinCode": null,
+          "isEtf": true
+        }
+      ]
+    }
+  },
+  "daily": {
+    "data": {
+      "symbol": "JEPQ",
+      "totalRecords": 9,
+      "tradesTable": {
+        "asOf": null,
+        "headers": {
+          "date": "Date",
+          "close": "Close/Last",
+          "volume": "Volume",
+          "open": "Open",
+          "high": "High",
+          "low": "Low"
+        },
+        "rows": [
+          {
+            "date": "09/25/2026",
+            "close": "61.24",
+            "volume": "6,045,389",
+            "open": "61.205",
+            "high": "61.28",
+            "low": "61.065"
+          },
+          {
+            "date": "09/24/2026",
+            "close": "61.11",
+            "volume": "4,516,617",
+            "open": "60.88",
+            "high": "61.13",
+            "low": "60.85"
+          },
+          {
+            "date": "09/23/2026",
+            "close": "61.10",
+            "volume": "4,743,649",
+            "open": "61.205",
+            "high": "61.205",
+            "low": "60.9734"
+          },
+          {
+            "date": "09/22/2026",
+            "close": "61.17",
+            "volume": "4,475,174",
+            "open": "61.01",
+            "high": "61.22",
+            "low": "61.00"
+          },
+          {
+            "date": "09/21/2026",
+            "close": "61.01",
+            "volume": "8,033,124",
+            "open": "60.62",
+            "high": "61.0599",
+            "low": "60.62"
+          },
+          {
+            "date": "09/18/2026",
+            "close": "60.24",
+            "volume": "4,606,120",
+            "open": "60.055",
+            "high": "60.26",
+            "low": "59.85"
+          },
+          {
+            "date": "09/17/2026",
+            "close": "59.95",
+            "volume": "4,339,701",
+            "open": "59.83",
+            "high": "60.00",
+            "low": "59.685"
+          },
+          {
+            "date": "09/16/2026",
+            "close": "59.09",
+            "volume": "5,300,198",
+            "open": "59.325",
+            "high": "59.5576",
+            "low": "58.74"
+          },
+          {
+            "date": "09/15/2026",
+            "close": "59.08",
+            "volume": "4,088,743",
+            "open": "59.39",
+            "high": "59.40",
+            "low": "59.00"
+          }
+        ]
+      }
+    },
+    "message": null,
+    "status": {
+      "rCode": 200,
+      "bCodeMessage": null,
+      "developerMessage": null
+    }
+  },
+  "nasdaqChart": {
+    "data": {
+      "symbol": "JEPQ",
+      "company": "JPMorgan Nasdaq Equity Premium Income ETF",
+      "timeAsOf": "Sep 24, 2026",
+      "isNasdaq100": false,
+      "lastSalePrice": "$61.24",
+      "netChange": "+0.13",
+      "percentageChange": "+0.21%",
+      "deltaIndicator": "up",
+      "previousClose": "$61.11",
+      "volume": "6,045,448",
+      "exchange": "NASDAQ-GM",
+      "chart": [
+        {
+          "z": {
+            "dateTime": "7:57 PM ET",
+            "value": "61.26"
+          },
+          "x": 1790366220000,
+          "y": 61.26
+        },
+        {
+          "z": {
+            "dateTime": "7:58 PM ET",
+            "value": "61.26"
+          },
+          "x": 1790366280000,
+          "y": 61.26
+        },
+        {
+          "z": {
+            "dateTime": "7:59 PM ET",
+            "value": "61.259"
+          },
+          "x": 1790366340000,
+          "y": 61.259
+        }
+      ],
+      "events": null
+    },
+    "message": null,
+    "status": {
+      "rCode": 200,
+      "bCodeMessage": null,
+      "developerMessage": null
+    }
+  },
+  "naverChart": {
+    "reutersCode": "JEPQ.O",
+    "stockExchangeType": "NASDAQ",
+    "openTime": "2026-09-25T13:30:00Z",
+    "closeTime": "2026-09-25T20:00:00Z",
+    "tradeStop": false,
+    "lastClosePrice": 61.11,
+    "hasVolume": true,
+    "newlyListed": false,
+    "decimalUnit": 2,
+    "candleList": [
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.23,
+        "highPrice": 61.2327,
+        "lowPrice": 61.22,
+        "closePrice": 61.22,
+        "tradingVolume": 5852,
+        "tradingValue": 358,
+        "accumulatedTradingVolume": 105569,
+        "accumulatedTradingValue": 6468,
+        "tradeAt": "2026-09-25T13:00Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.221,
+        "highPrice": 61.24,
+        "lowPrice": 61.221,
+        "closePrice": 61.2302,
+        "tradingVolume": 1825,
+        "tradingValue": 112,
+        "accumulatedTradingVolume": 107394,
+        "accumulatedTradingValue": 6580,
+        "tradeAt": "2026-09-25T13:05Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2392,
+        "highPrice": 61.2397,
+        "lowPrice": 61.2385,
+        "closePrice": 61.2397,
+        "tradingVolume": 2982,
+        "tradingValue": 183,
+        "accumulatedTradingVolume": 110376,
+        "accumulatedTradingValue": 6763,
+        "tradeAt": "2026-09-25T13:10Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2417,
+        "highPrice": 61.2721,
+        "lowPrice": 61.2238,
+        "closePrice": 61.2238,
+        "tradingVolume": 6303,
+        "tradingValue": 386,
+        "accumulatedTradingVolume": 116679,
+        "accumulatedTradingValue": 7149,
+        "tradeAt": "2026-09-25T13:15Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2435,
+        "highPrice": 61.2435,
+        "lowPrice": 61.21,
+        "closePrice": 61.2121,
+        "tradingVolume": 2108,
+        "tradingValue": 129,
+        "accumulatedTradingVolume": 118787,
+        "accumulatedTradingValue": 7278,
+        "tradeAt": "2026-09-25T13:20Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.22,
+        "highPrice": 61.22,
+        "lowPrice": 61.22,
+        "closePrice": 61.22,
+        "tradingVolume": 1644,
+        "tradingValue": 101,
+        "accumulatedTradingVolume": 120431,
+        "accumulatedTradingValue": 7379,
+        "tradeAt": "2026-09-25T13:25Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.19,
+        "highPrice": 61.23,
+        "lowPrice": 61.15,
+        "closePrice": 61.2207,
+        "tradingVolume": 206796,
+        "tradingValue": 12656,
+        "accumulatedTradingVolume": 327227,
+        "accumulatedTradingValue": 20035,
+        "tradeAt": "2026-09-25T13:30Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2207,
+        "highPrice": 61.25,
+        "lowPrice": 61.215,
+        "closePrice": 61.235,
+        "tradingVolume": 165701,
+        "tradingValue": 10146,
+        "accumulatedTradingVolume": 492928,
+        "accumulatedTradingValue": 30181,
+        "tradeAt": "2026-09-25T13:35Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.235,
+        "highPrice": 61.25,
+        "lowPrice": 61.2114,
+        "closePrice": 61.2297,
+        "tradingVolume": 49885,
+        "tradingValue": 3054,
+        "accumulatedTradingVolume": 542813,
+        "accumulatedTradingValue": 33235,
+        "tradeAt": "2026-09-25T13:40Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2297,
+        "highPrice": 61.235,
+        "lowPrice": 61.19,
+        "closePrice": 61.2111,
+        "tradingVolume": 98085,
+        "tradingValue": 6005,
+        "accumulatedTradingVolume": 640898,
+        "accumulatedTradingValue": 39240,
+        "tradeAt": "2026-09-25T13:45Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2111,
+        "highPrice": 61.255,
+        "lowPrice": 61.21,
+        "closePrice": 61.245,
+        "tradingVolume": 111946,
+        "tradingValue": 6855,
+        "accumulatedTradingVolume": 752844,
+        "accumulatedTradingValue": 46095,
+        "tradeAt": "2026-09-25T13:50Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2499,
+        "highPrice": 61.25,
+        "lowPrice": 61.21,
+        "closePrice": 61.22,
+        "tradingVolume": 60711,
+        "tradingValue": 3717,
+        "accumulatedTradingVolume": 813555,
+        "accumulatedTradingValue": 49812,
+        "tradeAt": "2026-09-25T13:55Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.22,
+        "highPrice": 61.2297,
+        "lowPrice": 61.1545,
+        "closePrice": 61.155,
+        "tradingVolume": 113773,
+        "tradingValue": 6962,
+        "accumulatedTradingVolume": 927328,
+        "accumulatedTradingValue": 56774,
+        "tradeAt": "2026-09-25T14:00Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.155,
+        "highPrice": 61.16,
+        "lowPrice": 61.11,
+        "closePrice": 61.15,
+        "tradingVolume": 126562,
+        "tradingValue": 7737,
+        "accumulatedTradingVolume": 1053890,
+        "accumulatedTradingValue": 64511,
+        "tradeAt": "2026-09-25T14:05Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.15,
+        "highPrice": 61.1798,
+        "lowPrice": 61.115,
+        "closePrice": 61.1165,
+        "tradingVolume": 104199,
+        "tradingValue": 6370,
+        "accumulatedTradingVolume": 1158089,
+        "accumulatedTradingValue": 70881,
+        "tradeAt": "2026-09-25T14:10Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.1165,
+        "highPrice": 61.12,
+        "lowPrice": 61.065,
+        "closePrice": 61.095,
+        "tradingVolume": 117615,
+        "tradingValue": 7185,
+        "accumulatedTradingVolume": 1275704,
+        "accumulatedTradingValue": 78066,
+        "tradeAt": "2026-09-25T14:15Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.095,
+        "highPrice": 61.12,
+        "lowPrice": 61.085,
+        "closePrice": 61.114,
+        "tradingVolume": 122272,
+        "tradingValue": 7472,
+        "accumulatedTradingVolume": 1397976,
+        "accumulatedTradingValue": 85538,
+        "tradeAt": "2026-09-25T14:20Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.114,
+        "highPrice": 61.15,
+        "lowPrice": 61.11,
+        "closePrice": 61.11,
+        "tradingVolume": 82507,
+        "tradingValue": 5044,
+        "accumulatedTradingVolume": 1480483,
+        "accumulatedTradingValue": 90582,
+        "tradeAt": "2026-09-25T14:25Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.11,
+        "highPrice": 61.1568,
+        "lowPrice": 61.1039,
+        "closePrice": 61.14,
+        "tradingVolume": 48382,
+        "tradingValue": 2957,
+        "accumulatedTradingVolume": 1528865,
+        "accumulatedTradingValue": 93539,
+        "tradeAt": "2026-09-25T14:30Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.14,
+        "highPrice": 61.17,
+        "lowPrice": 61.14,
+        "closePrice": 61.154,
+        "tradingVolume": 81174,
+        "tradingValue": 4964,
+        "accumulatedTradingVolume": 1610039,
+        "accumulatedTradingValue": 98503,
+        "tradeAt": "2026-09-25T14:35Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.154,
+        "highPrice": 61.16,
+        "lowPrice": 61.12,
+        "closePrice": 61.14,
+        "tradingVolume": 93149,
+        "tradingValue": 5695,
+        "accumulatedTradingVolume": 1703188,
+        "accumulatedTradingValue": 104198,
+        "tradeAt": "2026-09-25T14:40Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.14,
+        "highPrice": 61.1651,
+        "lowPrice": 61.125,
+        "closePrice": 61.1651,
+        "tradingVolume": 80718,
+        "tradingValue": 4936,
+        "accumulatedTradingVolume": 1783906,
+        "accumulatedTradingValue": 109134,
+        "tradeAt": "2026-09-25T14:45Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.1651,
+        "highPrice": 61.1699,
+        "lowPrice": 61.1317,
+        "closePrice": 61.1514,
+        "tradingVolume": 45056,
+        "tradingValue": 2755,
+        "accumulatedTradingVolume": 1828962,
+        "accumulatedTradingValue": 111889,
+        "tradeAt": "2026-09-25T14:50Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.1514,
+        "highPrice": 61.195,
+        "lowPrice": 61.1514,
+        "closePrice": 61.1899,
+        "tradingVolume": 38821,
+        "tradingValue": 2375,
+        "accumulatedTradingVolume": 1867783,
+        "accumulatedTradingValue": 114264,
+        "tradeAt": "2026-09-25T14:55Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.1899,
+        "highPrice": 61.22,
+        "lowPrice": 61.18,
+        "closePrice": 61.22,
+        "tradingVolume": 58230,
+        "tradingValue": 3564,
+        "accumulatedTradingVolume": 1926013,
+        "accumulatedTradingValue": 117828,
+        "tradeAt": "2026-09-25T15:00Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.22,
+        "highPrice": 61.23,
+        "lowPrice": 61.215,
+        "closePrice": 61.215,
+        "tradingVolume": 27687,
+        "tradingValue": 1695,
+        "accumulatedTradingVolume": 1953700,
+        "accumulatedTradingValue": 119523,
+        "tradeAt": "2026-09-25T15:05Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.215,
+        "highPrice": 61.2197,
+        "lowPrice": 61.175,
+        "closePrice": 61.1999,
+        "tradingVolume": 62559,
+        "tradingValue": 3828,
+        "accumulatedTradingVolume": 2016259,
+        "accumulatedTradingValue": 123351,
+        "tradeAt": "2026-09-25T15:10Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.1999,
+        "highPrice": 61.215,
+        "lowPrice": 61.184,
+        "closePrice": 61.1899,
+        "tradingVolume": 62876,
+        "tradingValue": 3848,
+        "accumulatedTradingVolume": 2079135,
+        "accumulatedTradingValue": 127199,
+        "tradeAt": "2026-09-25T15:15Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.1899,
+        "highPrice": 61.215,
+        "lowPrice": 61.18,
+        "closePrice": 61.18,
+        "tradingVolume": 53199,
+        "tradingValue": 3256,
+        "accumulatedTradingVolume": 2132334,
+        "accumulatedTradingValue": 130455,
+        "tradeAt": "2026-09-25T15:20Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.18,
+        "highPrice": 61.19,
+        "lowPrice": 61.17,
+        "closePrice": 61.175,
+        "tradingVolume": 53586,
+        "tradingValue": 3278,
+        "accumulatedTradingVolume": 2185920,
+        "accumulatedTradingValue": 133733,
+        "tradeAt": "2026-09-25T15:25Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.175,
+        "highPrice": 61.215,
+        "lowPrice": 61.175,
+        "closePrice": 61.185,
+        "tradingVolume": 69609,
+        "tradingValue": 4260,
+        "accumulatedTradingVolume": 2255529,
+        "accumulatedTradingValue": 137993,
+        "tradeAt": "2026-09-25T15:30Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.185,
+        "highPrice": 61.185,
+        "lowPrice": 61.1468,
+        "closePrice": 61.1501,
+        "tradingVolume": 40350,
+        "tradingValue": 2468,
+        "accumulatedTradingVolume": 2295879,
+        "accumulatedTradingValue": 140461,
+        "tradeAt": "2026-09-25T15:35Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.1501,
+        "highPrice": 61.165,
+        "lowPrice": 61.135,
+        "closePrice": 61.135,
+        "tradingVolume": 45766,
+        "tradingValue": 2799,
+        "accumulatedTradingVolume": 2341645,
+        "accumulatedTradingValue": 143260,
+        "tradeAt": "2026-09-25T15:40Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.135,
+        "highPrice": 61.16,
+        "lowPrice": 61.125,
+        "closePrice": 61.16,
+        "tradingVolume": 31375,
+        "tradingValue": 1919,
+        "accumulatedTradingVolume": 2373020,
+        "accumulatedTradingValue": 145179,
+        "tradeAt": "2026-09-25T15:45Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.16,
+        "highPrice": 61.165,
+        "lowPrice": 61.1201,
+        "closePrice": 61.16,
+        "tradingVolume": 53245,
+        "tradingValue": 3255,
+        "accumulatedTradingVolume": 2426265,
+        "accumulatedTradingValue": 148434,
+        "tradeAt": "2026-09-25T15:50Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.1599,
+        "highPrice": 61.23,
+        "lowPrice": 61.1599,
+        "closePrice": 61.23,
+        "tradingVolume": 50845,
+        "tradingValue": 3112,
+        "accumulatedTradingVolume": 2477110,
+        "accumulatedTradingValue": 151546,
+        "tradeAt": "2026-09-25T15:55Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.23,
+        "highPrice": 61.25,
+        "lowPrice": 61.215,
+        "closePrice": 61.245,
+        "tradingVolume": 150098,
+        "tradingValue": 9191,
+        "accumulatedTradingVolume": 2627208,
+        "accumulatedTradingValue": 160737,
+        "tradeAt": "2026-09-25T16:00Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.245,
+        "highPrice": 61.26,
+        "lowPrice": 61.235,
+        "closePrice": 61.245,
+        "tradingVolume": 187331,
+        "tradingValue": 11474,
+        "accumulatedTradingVolume": 2814539,
+        "accumulatedTradingValue": 172211,
+        "tradeAt": "2026-09-25T16:05Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.245,
+        "highPrice": 61.255,
+        "lowPrice": 61.225,
+        "closePrice": 61.235,
+        "tradingVolume": 46066,
+        "tradingValue": 2822,
+        "accumulatedTradingVolume": 2860605,
+        "accumulatedTradingValue": 175033,
+        "tradeAt": "2026-09-25T16:10Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.235,
+        "highPrice": 61.255,
+        "lowPrice": 61.2114,
+        "closePrice": 61.215,
+        "tradingVolume": 58233,
+        "tradingValue": 3565,
+        "accumulatedTradingVolume": 2918838,
+        "accumulatedTradingValue": 178598,
+        "tradeAt": "2026-09-25T16:15Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.215,
+        "highPrice": 61.22,
+        "lowPrice": 61.175,
+        "closePrice": 61.2,
+        "tradingVolume": 132671,
+        "tradingValue": 8119,
+        "accumulatedTradingVolume": 3051509,
+        "accumulatedTradingValue": 186717,
+        "tradeAt": "2026-09-25T16:20Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2,
+        "highPrice": 61.24,
+        "lowPrice": 61.195,
+        "closePrice": 61.2399,
+        "tradingVolume": 61887,
+        "tradingValue": 3789,
+        "accumulatedTradingVolume": 3113396,
+        "accumulatedTradingValue": 190506,
+        "tradeAt": "2026-09-25T16:25Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.24,
+        "highPrice": 61.255,
+        "lowPrice": 61.195,
+        "closePrice": 61.2286,
+        "tradingVolume": 168481,
+        "tradingValue": 10315,
+        "accumulatedTradingVolume": 3281877,
+        "accumulatedTradingValue": 200821,
+        "tradeAt": "2026-09-25T16:30Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2286,
+        "highPrice": 61.255,
+        "lowPrice": 61.225,
+        "closePrice": 61.235,
+        "tradingVolume": 43511,
+        "tradingValue": 2664,
+        "accumulatedTradingVolume": 3325388,
+        "accumulatedTradingValue": 203485,
+        "tradeAt": "2026-09-25T16:35Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.235,
+        "highPrice": 61.25,
+        "lowPrice": 61.23,
+        "closePrice": 61.23,
+        "tradingVolume": 30481,
+        "tradingValue": 1867,
+        "accumulatedTradingVolume": 3355869,
+        "accumulatedTradingValue": 205352,
+        "tradeAt": "2026-09-25T16:40Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.23,
+        "highPrice": 61.24,
+        "lowPrice": 61.21,
+        "closePrice": 61.225,
+        "tradingVolume": 33164,
+        "tradingValue": 2030,
+        "accumulatedTradingVolume": 3389033,
+        "accumulatedTradingValue": 207382,
+        "tradeAt": "2026-09-25T16:45Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.225,
+        "highPrice": 61.235,
+        "lowPrice": 61.22,
+        "closePrice": 61.2214,
+        "tradingVolume": 59866,
+        "tradingValue": 3666,
+        "accumulatedTradingVolume": 3448899,
+        "accumulatedTradingValue": 211048,
+        "tradeAt": "2026-09-25T16:50Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2214,
+        "highPrice": 61.24,
+        "lowPrice": 61.2,
+        "closePrice": 61.2101,
+        "tradingVolume": 122707,
+        "tradingValue": 7512,
+        "accumulatedTradingVolume": 3571606,
+        "accumulatedTradingValue": 218560,
+        "tradeAt": "2026-09-25T16:55Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2101,
+        "highPrice": 61.2577,
+        "lowPrice": 61.2101,
+        "closePrice": 61.245,
+        "tradingVolume": 64314,
+        "tradingValue": 3938,
+        "accumulatedTradingVolume": 3635920,
+        "accumulatedTradingValue": 222498,
+        "tradeAt": "2026-09-25T17:00Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.245,
+        "highPrice": 61.255,
+        "lowPrice": 61.23,
+        "closePrice": 61.2501,
+        "tradingVolume": 46197,
+        "tradingValue": 2829,
+        "accumulatedTradingVolume": 3682117,
+        "accumulatedTradingValue": 225327,
+        "tradeAt": "2026-09-25T17:05Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2501,
+        "highPrice": 61.26,
+        "lowPrice": 61.2314,
+        "closePrice": 61.25,
+        "tradingVolume": 51035,
+        "tradingValue": 3126,
+        "accumulatedTradingVolume": 3733152,
+        "accumulatedTradingValue": 228453,
+        "tradeAt": "2026-09-25T17:10Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.25,
+        "highPrice": 61.26,
+        "lowPrice": 61.24,
+        "closePrice": 61.245,
+        "tradingVolume": 39801,
+        "tradingValue": 2438,
+        "accumulatedTradingVolume": 3772953,
+        "accumulatedTradingValue": 230891,
+        "tradeAt": "2026-09-25T17:15Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.245,
+        "highPrice": 61.2559,
+        "lowPrice": 61.24,
+        "closePrice": 61.2559,
+        "tradingVolume": 48007,
+        "tradingValue": 2940,
+        "accumulatedTradingVolume": 3820960,
+        "accumulatedTradingValue": 233831,
+        "tradeAt": "2026-09-25T17:20Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.255,
+        "highPrice": 61.26,
+        "lowPrice": 61.245,
+        "closePrice": 61.2513,
+        "tradingVolume": 58957,
+        "tradingValue": 3612,
+        "accumulatedTradingVolume": 3879917,
+        "accumulatedTradingValue": 237443,
+        "tradeAt": "2026-09-25T17:25Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2513,
+        "highPrice": 61.26,
+        "lowPrice": 61.2301,
+        "closePrice": 61.2401,
+        "tradingVolume": 113753,
+        "tradingValue": 6967,
+        "accumulatedTradingVolume": 3993670,
+        "accumulatedTradingValue": 244410,
+        "tradeAt": "2026-09-25T17:30Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2401,
+        "highPrice": 61.255,
+        "lowPrice": 61.235,
+        "closePrice": 61.245,
+        "tradingVolume": 54561,
+        "tradingValue": 3341,
+        "accumulatedTradingVolume": 4048231,
+        "accumulatedTradingValue": 247751,
+        "tradeAt": "2026-09-25T17:35Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.245,
+        "highPrice": 61.26,
+        "lowPrice": 61.24,
+        "closePrice": 61.245,
+        "tradingVolume": 40643,
+        "tradingValue": 2489,
+        "accumulatedTradingVolume": 4088874,
+        "accumulatedTradingValue": 250240,
+        "tradeAt": "2026-09-25T17:40Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.245,
+        "highPrice": 61.25,
+        "lowPrice": 61.24,
+        "closePrice": 61.245,
+        "tradingVolume": 36035,
+        "tradingValue": 2207,
+        "accumulatedTradingVolume": 4124909,
+        "accumulatedTradingValue": 252447,
+        "tradeAt": "2026-09-25T17:45Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.245,
+        "highPrice": 61.26,
+        "lowPrice": 61.235,
+        "closePrice": 61.24,
+        "tradingVolume": 40821,
+        "tradingValue": 2501,
+        "accumulatedTradingVolume": 4165730,
+        "accumulatedTradingValue": 254948,
+        "tradeAt": "2026-09-25T17:50Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.24,
+        "highPrice": 61.26,
+        "lowPrice": 61.24,
+        "closePrice": 61.255,
+        "tradingVolume": 64395,
+        "tradingValue": 3944,
+        "accumulatedTradingVolume": 4230125,
+        "accumulatedTradingValue": 258892,
+        "tradeAt": "2026-09-25T17:55Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.255,
+        "highPrice": 61.2599,
+        "lowPrice": 61.2414,
+        "closePrice": 61.245,
+        "tradingVolume": 58433,
+        "tradingValue": 3579,
+        "accumulatedTradingVolume": 4288558,
+        "accumulatedTradingValue": 262471,
+        "tradeAt": "2026-09-25T18:00Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.245,
+        "highPrice": 61.26,
+        "lowPrice": 61.2414,
+        "closePrice": 61.26,
+        "tradingVolume": 13726,
+        "tradingValue": 841,
+        "accumulatedTradingVolume": 4302284,
+        "accumulatedTradingValue": 263312,
+        "tradeAt": "2026-09-25T18:05Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.26,
+        "highPrice": 61.27,
+        "lowPrice": 61.2501,
+        "closePrice": 61.265,
+        "tradingVolume": 19448,
+        "tradingValue": 1191,
+        "accumulatedTradingVolume": 4321732,
+        "accumulatedTradingValue": 264503,
+        "tradeAt": "2026-09-25T18:10Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.265,
+        "highPrice": 61.2699,
+        "lowPrice": 61.25,
+        "closePrice": 61.255,
+        "tradingVolume": 92375,
+        "tradingValue": 5659,
+        "accumulatedTradingVolume": 4414107,
+        "accumulatedTradingValue": 270162,
+        "tradeAt": "2026-09-25T18:15Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.255,
+        "highPrice": 61.265,
+        "lowPrice": 61.25,
+        "closePrice": 61.26,
+        "tradingVolume": 72819,
+        "tradingValue": 4460,
+        "accumulatedTradingVolume": 4486926,
+        "accumulatedTradingValue": 274622,
+        "tradeAt": "2026-09-25T18:20Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.26,
+        "highPrice": 61.26,
+        "lowPrice": 61.2242,
+        "closePrice": 61.235,
+        "tradingVolume": 114704,
+        "tradingValue": 7025,
+        "accumulatedTradingVolume": 4601630,
+        "accumulatedTradingValue": 281647,
+        "tradeAt": "2026-09-25T18:25Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.235,
+        "highPrice": 61.26,
+        "lowPrice": 61.2301,
+        "closePrice": 61.245,
+        "tradingVolume": 26421,
+        "tradingValue": 1619,
+        "accumulatedTradingVolume": 4628051,
+        "accumulatedTradingValue": 283266,
+        "tradeAt": "2026-09-25T18:30Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.245,
+        "highPrice": 61.25,
+        "lowPrice": 61.2201,
+        "closePrice": 61.225,
+        "tradingVolume": 51501,
+        "tradingValue": 3153,
+        "accumulatedTradingVolume": 4679552,
+        "accumulatedTradingValue": 286419,
+        "tradeAt": "2026-09-25T18:35Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.225,
+        "highPrice": 61.24,
+        "lowPrice": 61.22,
+        "closePrice": 61.24,
+        "tradingVolume": 35969,
+        "tradingValue": 2203,
+        "accumulatedTradingVolume": 4715521,
+        "accumulatedTradingValue": 288622,
+        "tradeAt": "2026-09-25T18:40Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.24,
+        "highPrice": 61.24,
+        "lowPrice": 61.23,
+        "closePrice": 61.235,
+        "tradingVolume": 45194,
+        "tradingValue": 2767,
+        "accumulatedTradingVolume": 4760715,
+        "accumulatedTradingValue": 291389,
+        "tradeAt": "2026-09-25T18:45Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.235,
+        "highPrice": 61.2397,
+        "lowPrice": 61.22,
+        "closePrice": 61.22,
+        "tradingVolume": 53261,
+        "tradingValue": 3261,
+        "accumulatedTradingVolume": 4813976,
+        "accumulatedTradingValue": 294650,
+        "tradeAt": "2026-09-25T18:50Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.22,
+        "highPrice": 61.235,
+        "lowPrice": 61.22,
+        "closePrice": 61.2263,
+        "tradingVolume": 43631,
+        "tradingValue": 2672,
+        "accumulatedTradingVolume": 4857607,
+        "accumulatedTradingValue": 297322,
+        "tradeAt": "2026-09-25T18:55Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2263,
+        "highPrice": 61.235,
+        "lowPrice": 61.215,
+        "closePrice": 61.225,
+        "tradingVolume": 53518,
+        "tradingValue": 3276,
+        "accumulatedTradingVolume": 4911125,
+        "accumulatedTradingValue": 300598,
+        "tradeAt": "2026-09-25T19:00Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.225,
+        "highPrice": 61.24,
+        "lowPrice": 61.22,
+        "closePrice": 61.224,
+        "tradingVolume": 78001,
+        "tradingValue": 4776,
+        "accumulatedTradingVolume": 4989126,
+        "accumulatedTradingValue": 305374,
+        "tradeAt": "2026-09-25T19:05Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.224,
+        "highPrice": 61.24,
+        "lowPrice": 61.22,
+        "closePrice": 61.235,
+        "tradingVolume": 162968,
+        "tradingValue": 9980,
+        "accumulatedTradingVolume": 5152094,
+        "accumulatedTradingValue": 315354,
+        "tradeAt": "2026-09-25T19:10Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2343,
+        "highPrice": 61.24,
+        "lowPrice": 61.224,
+        "closePrice": 61.2399,
+        "tradingVolume": 67682,
+        "tradingValue": 4145,
+        "accumulatedTradingVolume": 5219776,
+        "accumulatedTradingValue": 319499,
+        "tradeAt": "2026-09-25T19:15Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.235,
+        "highPrice": 61.235,
+        "lowPrice": 61.22,
+        "closePrice": 61.23,
+        "tradingVolume": 69147,
+        "tradingValue": 4233,
+        "accumulatedTradingVolume": 5288923,
+        "accumulatedTradingValue": 323732,
+        "tradeAt": "2026-09-25T19:20Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.23,
+        "highPrice": 61.23,
+        "lowPrice": 61.214,
+        "closePrice": 61.22,
+        "tradingVolume": 173344,
+        "tradingValue": 10613,
+        "accumulatedTradingVolume": 5462267,
+        "accumulatedTradingValue": 334345,
+        "tradeAt": "2026-09-25T19:25Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.215,
+        "highPrice": 61.23,
+        "lowPrice": 61.21,
+        "closePrice": 61.21,
+        "tradingVolume": 47420,
+        "tradingValue": 2903,
+        "accumulatedTradingVolume": 5509687,
+        "accumulatedTradingValue": 337248,
+        "tradeAt": "2026-09-25T19:30Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.215,
+        "highPrice": 61.24,
+        "lowPrice": 61.215,
+        "closePrice": 61.2399,
+        "tradingVolume": 41498,
+        "tradingValue": 2541,
+        "accumulatedTradingVolume": 5551185,
+        "accumulatedTradingValue": 339789,
+        "tradeAt": "2026-09-25T19:35Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2399,
+        "highPrice": 61.25,
+        "lowPrice": 61.23,
+        "closePrice": 61.245,
+        "tradingVolume": 68972,
+        "tradingValue": 4224,
+        "accumulatedTradingVolume": 5620157,
+        "accumulatedTradingValue": 344013,
+        "tradeAt": "2026-09-25T19:40Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.245,
+        "highPrice": 61.2699,
+        "lowPrice": 61.245,
+        "closePrice": 61.2538,
+        "tradingVolume": 96109,
+        "tradingValue": 5887,
+        "accumulatedTradingVolume": 5716266,
+        "accumulatedTradingValue": 349900,
+        "tradeAt": "2026-09-25T19:45Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2538,
+        "highPrice": 61.28,
+        "lowPrice": 61.2501,
+        "closePrice": 61.2563,
+        "tradingVolume": 93116,
+        "tradingValue": 5705,
+        "accumulatedTradingVolume": 5809382,
+        "accumulatedTradingValue": 355605,
+        "tradeAt": "2026-09-25T19:50Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2563,
+        "highPrice": 61.26,
+        "lowPrice": 61.23,
+        "closePrice": 61.24,
+        "tradingVolume": 110100,
+        "tradingValue": 6743,
+        "accumulatedTradingVolume": 5919482,
+        "accumulatedTradingValue": 362348,
+        "tradeAt": "2026-09-25T19:55Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.24,
+        "highPrice": 61.24,
+        "lowPrice": 61.24,
+        "closePrice": 61.24,
+        "tradingVolume": 70286,
+        "tradingValue": 4305,
+        "accumulatedTradingVolume": 5989768,
+        "accumulatedTradingValue": 366653,
+        "tradeAt": "2026-09-25T20:00Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.24,
+        "highPrice": 61.2797,
+        "lowPrice": 61.24,
+        "closePrice": 61.2797,
+        "tradingVolume": 19648,
+        "tradingValue": 1203,
+        "accumulatedTradingVolume": 6009416,
+        "accumulatedTradingValue": 367856,
+        "tradeAt": "2026-09-25T20:05Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.27,
+        "highPrice": 61.27,
+        "lowPrice": 61.27,
+        "closePrice": 61.27,
+        "tradingVolume": 319,
+        "tradingValue": 20,
+        "accumulatedTradingVolume": 6009735,
+        "accumulatedTradingValue": 367876,
+        "tradeAt": "2026-09-25T20:10Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.28,
+        "highPrice": 61.28,
+        "lowPrice": 61.28,
+        "closePrice": 61.28,
+        "tradingVolume": 1461,
+        "tradingValue": 90,
+        "accumulatedTradingVolume": 6011196,
+        "accumulatedTradingValue": 367966,
+        "tradeAt": "2026-09-25T20:15Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.26,
+        "highPrice": 61.26,
+        "lowPrice": 61.2533,
+        "closePrice": 61.2533,
+        "tradingVolume": 988,
+        "tradingValue": 60,
+        "accumulatedTradingVolume": 6012184,
+        "accumulatedTradingValue": 368026,
+        "tradeAt": "2026-09-25T20:25Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.25,
+        "highPrice": 61.25,
+        "lowPrice": 61.25,
+        "closePrice": 61.25,
+        "tradingVolume": 1035,
+        "tradingValue": 63,
+        "accumulatedTradingVolume": 6013219,
+        "accumulatedTradingValue": 368089,
+        "tradeAt": "2026-09-25T20:30Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.25,
+        "highPrice": 61.25,
+        "lowPrice": 61.25,
+        "closePrice": 61.25,
+        "tradingVolume": 419,
+        "tradingValue": 26,
+        "accumulatedTradingVolume": 6013638,
+        "accumulatedTradingValue": 368115,
+        "tradeAt": "2026-09-25T20:35Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2761,
+        "highPrice": 61.2792,
+        "lowPrice": 61.2761,
+        "closePrice": 61.2792,
+        "tradingVolume": 1886,
+        "tradingValue": 116,
+        "accumulatedTradingVolume": 6015524,
+        "accumulatedTradingValue": 368231,
+        "tradeAt": "2026-09-25T20:50Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.25,
+        "highPrice": 61.25,
+        "lowPrice": 61.25,
+        "closePrice": 61.25,
+        "tradingVolume": 2852,
+        "tradingValue": 174,
+        "accumulatedTradingVolume": 6018376,
+        "accumulatedTradingValue": 368405,
+        "tradeAt": "2026-09-25T21:05Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2546,
+        "highPrice": 61.27,
+        "lowPrice": 61.2546,
+        "closePrice": 61.2601,
+        "tradingVolume": 7669,
+        "tradingValue": 470,
+        "accumulatedTradingVolume": 6026045,
+        "accumulatedTradingValue": 368875,
+        "tradeAt": "2026-09-25T21:10Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.26,
+        "highPrice": 61.26,
+        "lowPrice": 61.26,
+        "closePrice": 61.26,
+        "tradingVolume": 1077,
+        "tradingValue": 66,
+        "accumulatedTradingVolume": 6027122,
+        "accumulatedTradingValue": 368941,
+        "tradeAt": "2026-09-25T21:15Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2538,
+        "highPrice": 61.26,
+        "lowPrice": 61.2538,
+        "closePrice": 61.26,
+        "tradingVolume": 682,
+        "tradingValue": 42,
+        "accumulatedTradingVolume": 6027804,
+        "accumulatedTradingValue": 368983,
+        "tradeAt": "2026-09-25T21:25Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2583,
+        "highPrice": 61.2583,
+        "lowPrice": 61.24,
+        "closePrice": 61.24,
+        "tradingVolume": 1537,
+        "tradingValue": 94,
+        "accumulatedTradingVolume": 6029341,
+        "accumulatedTradingValue": 369077,
+        "tradeAt": "2026-09-25T21:30Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.25,
+        "highPrice": 61.25,
+        "lowPrice": 61.25,
+        "closePrice": 61.25,
+        "tradingVolume": 436,
+        "tradingValue": 26,
+        "accumulatedTradingVolume": 6029777,
+        "accumulatedTradingValue": 369103,
+        "tradeAt": "2026-09-25T21:35Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2597,
+        "highPrice": 61.2597,
+        "lowPrice": 61.2597,
+        "closePrice": 61.2597,
+        "tradingVolume": 201,
+        "tradingValue": 13,
+        "accumulatedTradingVolume": 6029978,
+        "accumulatedTradingValue": 369116,
+        "tradeAt": "2026-09-25T21:40Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.25,
+        "highPrice": 61.25,
+        "lowPrice": 61.25,
+        "closePrice": 61.25,
+        "tradingVolume": 1150,
+        "tradingValue": 70,
+        "accumulatedTradingVolume": 6031128,
+        "accumulatedTradingValue": 369186,
+        "tradeAt": "2026-09-25T21:45Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.25,
+        "highPrice": 61.25,
+        "lowPrice": 61.25,
+        "closePrice": 61.25,
+        "tradingVolume": 347,
+        "tradingValue": 21,
+        "accumulatedTradingVolume": 6031475,
+        "accumulatedTradingValue": 369207,
+        "tradeAt": "2026-09-25T21:50Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.24,
+        "highPrice": 61.2569,
+        "lowPrice": 61.24,
+        "closePrice": 61.24,
+        "tradingVolume": 1095,
+        "tradingValue": 67,
+        "accumulatedTradingVolume": 6032570,
+        "accumulatedTradingValue": 369274,
+        "tradeAt": "2026-09-25T21:55Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.25,
+        "highPrice": 61.25,
+        "lowPrice": 61.25,
+        "closePrice": 61.25,
+        "tradingVolume": 729,
+        "tradingValue": 45,
+        "accumulatedTradingVolume": 6033299,
+        "accumulatedTradingValue": 369319,
+        "tradeAt": "2026-09-25T22:05Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.26,
+        "highPrice": 61.26,
+        "lowPrice": 61.26,
+        "closePrice": 61.26,
+        "tradingVolume": 268,
+        "tradingValue": 16,
+        "accumulatedTradingVolume": 6033567,
+        "accumulatedTradingValue": 369335,
+        "tradeAt": "2026-09-25T22:10Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.24,
+        "highPrice": 61.26,
+        "lowPrice": 61.24,
+        "closePrice": 61.26,
+        "tradingVolume": 630,
+        "tradingValue": 39,
+        "accumulatedTradingVolume": 6034197,
+        "accumulatedTradingValue": 369374,
+        "tradeAt": "2026-09-25T22:15Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.24,
+        "highPrice": 61.26,
+        "lowPrice": 61.24,
+        "closePrice": 61.25,
+        "tradingVolume": 746,
+        "tradingValue": 46,
+        "accumulatedTradingVolume": 6034943,
+        "accumulatedTradingValue": 369420,
+        "tradeAt": "2026-09-25T22:20Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.25,
+        "highPrice": 61.26,
+        "lowPrice": 61.25,
+        "closePrice": 61.26,
+        "tradingVolume": 802,
+        "tradingValue": 49,
+        "accumulatedTradingVolume": 6035745,
+        "accumulatedTradingValue": 369469,
+        "tradeAt": "2026-09-25T22:25Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2593,
+        "highPrice": 61.26,
+        "lowPrice": 61.2589,
+        "closePrice": 61.2589,
+        "tradingVolume": 731,
+        "tradingValue": 45,
+        "accumulatedTradingVolume": 6036476,
+        "accumulatedTradingValue": 369514,
+        "tradeAt": "2026-09-25T22:30Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.26,
+        "highPrice": 61.26,
+        "lowPrice": 61.26,
+        "closePrice": 61.26,
+        "tradingVolume": 592,
+        "tradingValue": 36,
+        "accumulatedTradingVolume": 6037068,
+        "accumulatedTradingValue": 369550,
+        "tradeAt": "2026-09-25T22:40Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.25,
+        "highPrice": 61.26,
+        "lowPrice": 61.25,
+        "closePrice": 61.26,
+        "tradingVolume": 1529,
+        "tradingValue": 93,
+        "accumulatedTradingVolume": 6038597,
+        "accumulatedTradingValue": 369643,
+        "tradeAt": "2026-09-25T22:45Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.24,
+        "highPrice": 61.25,
+        "lowPrice": 61.2215,
+        "closePrice": 61.2215,
+        "tradingVolume": 2122,
+        "tradingValue": 130,
+        "accumulatedTradingVolume": 6040719,
+        "accumulatedTradingValue": 369773,
+        "tradeAt": "2026-09-25T22:50Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.24,
+        "highPrice": 61.24,
+        "lowPrice": 61.24,
+        "closePrice": 61.24,
+        "tradingVolume": 1281,
+        "tradingValue": 79,
+        "accumulatedTradingVolume": 6042000,
+        "accumulatedTradingValue": 369852,
+        "tradeAt": "2026-09-25T22:55Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.25,
+        "highPrice": 61.26,
+        "lowPrice": 61.25,
+        "closePrice": 61.2569,
+        "tradingVolume": 894,
+        "tradingValue": 55,
+        "accumulatedTradingVolume": 6042894,
+        "accumulatedTradingValue": 369907,
+        "tradeAt": "2026-09-25T23:00Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.26,
+        "highPrice": 61.26,
+        "lowPrice": 61.26,
+        "closePrice": 61.26,
+        "tradingVolume": 355,
+        "tradingValue": 21,
+        "accumulatedTradingVolume": 6043249,
+        "accumulatedTradingValue": 369928,
+        "tradeAt": "2026-09-25T23:15Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2599,
+        "highPrice": 61.26,
+        "lowPrice": 61.2599,
+        "closePrice": 61.26,
+        "tradingVolume": 804,
+        "tradingValue": 50,
+        "accumulatedTradingVolume": 6044053,
+        "accumulatedTradingValue": 369978,
+        "tradeAt": "2026-09-25T23:25Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.26,
+        "highPrice": 61.26,
+        "lowPrice": 61.26,
+        "closePrice": 61.26,
+        "tradingVolume": 440,
+        "tradingValue": 27,
+        "accumulatedTradingVolume": 6044493,
+        "accumulatedTradingValue": 370005,
+        "tradeAt": "2026-09-25T23:40Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2596,
+        "highPrice": 61.2596,
+        "lowPrice": 61.2596,
+        "closePrice": 61.2596,
+        "tradingVolume": 606,
+        "tradingValue": 37,
+        "accumulatedTradingVolume": 6045099,
+        "accumulatedTradingValue": 370042,
+        "tradeAt": "2026-09-25T23:45Z"
+      },
+      {
+        "reutersCode": "JEPQ.O",
+        "stockExchangeType": "NASDAQ",
+        "openPrice": 61.2569,
+        "highPrice": 61.2569,
+        "lowPrice": 61.2569,
+        "closePrice": 61.2569,
+        "tradingVolume": 247,
+        "tradingValue": 15,
+        "accumulatedTradingVolume": 6045346,
+        "accumulatedTradingValue": 370057,
+        "tradeAt": "2026-09-25T23:55Z"
+      }
+    ],
+    "infoType": "item",
+    "marketStatus": "CLOSE",
+    "timeFrame": "minute5"
+  },
+  "quote": {
+    "pollingInterval": 70000,
+    "datas": [
+      {
+        "reutersCode": "JEPQ.O",
+        "stockName": "JPMorgan Nasdaq Equity Premium Income ETF",
+        "symbolCode": "JEPQ",
+        "stockExchangeType": {
+          "code": "NSQ",
+          "zoneId": "EST5EDT",
+          "nationType": "USA",
+          "delayTime": 0,
+          "startTime": "0930",
+          "endTime": "1600",
+          "closePriceSendTime": "2031",
+          "nameKor": "나스닥 증권거래소",
+          "nameEng": "NASDAQ Stock Exchange",
+          "nationCode": "USA",
+          "nationName": "미국",
+          "stockType": "worldstock",
+          "name": "NASDAQ"
+        },
+        "closePrice": "61.24",
+        "compareToPreviousClosePrice": "0.13",
+        "compareToPreviousPrice": {
+          "code": "2",
+          "text": "상승",
+          "name": "RISING"
+        },
+        "fluctuationsRatio": "0.21",
+        "tradeStopType": {
+          "code": "1",
+          "text": "운영.Trading",
+          "name": "TRADING"
+        },
+        "tradableStatus": "tradable",
+        "tradableStatusCode": "ok",
+        "tradableStatusUpdatedAt": null,
+        "openPrice": "61.21",
+        "highPrice": "61.28",
+        "lowPrice": "61.07",
+        "accumulatedTradingVolume": "6,045,389",
+        "accumulatedTradingValue": "3.7억 USD",
+        "localTradedAt": "2026-09-25T16:00:00-04:00",
+        "marketStatus": "CLOSE",
+        "overMarketPriceInfo": {
+          "tradingSessionType": "AFTER_MARKET",
+          "overMarketStatus": "CLOSE",
+          "overPrice": "61.26",
+          "compareToPreviousPrice": {
+            "code": "2",
+            "text": "상승",
+            "name": "RISING"
+          },
+          "compareToPreviousClosePrice": "0.02",
+          "fluctuationsRatio": "0.03",
+          "localTradedAt": "2026-09-25T20:00:00-04:00"
+        },
+        "currencyType": {
+          "code": "USD",
+          "text": "US dollar",
+          "name": "USD"
+        },
+        "isinCode": "US46654Q2030",
+        "myDataCode": null,
+        "stockEndUrl": null,
+        "marketValueFull": "43,808,034,000",
+        "marketValueHangeul": "-",
+        "marketValueKrwHangeul": "-",
+        "marketValueKrwRaw": null,
+        "accumulatedTradingValueKrwRaw": "502907463000",
+        "marketValueFullRaw": "43808034000",
+        "closePriceRaw": "61.24",
+        "compareToPreviousClosePriceRaw": "0.13",
+        "fluctuationsRatioRaw": "0.21",
+        "openPriceRaw": "61.21",
+        "highPriceRaw": "61.28",
+        "lowPriceRaw": "61.07",
+        "accumulatedTradingVolumeRaw": "6045389",
+        "accumulatedTradingValueRaw": "370057000"
+      }
+    ],
+    "time": "20260927110017"
+  },
+  "post": {
+    "data": {
+      "previousInfo": " Market Close: $61.11",
+      "lastUpdateInfo": [
+        "Data last updated Sep 24, 2026 08:00 PM ET.",
+        "This page will resume updating on Sep 28, 2026 04:00 PM ET."
+      ],
+      "sessionText": "",
+      "infoTable": {
+        "asOf": null,
+        "headers": {
+          "consolidated": "After-Hours Consolidated Last Trade",
+          "volume": "After-Hours Volume",
+          "highPrice": "After-Hours High",
+          "lowPrice": "After-Hours Low"
+        },
+        "rows": [
+          {
+            "consolidated": "$61.259 +0.149 (+0.24%)",
+            "volume": "104,788",
+            "highPrice": "$61.28 (04:17:42 PM)",
+            "lowPrice": "$59.29 (05:18:25 PM)",
+            "delta": "up"
+          }
+        ]
+      },
+      "tradeDetailTable": {
+        "asOf": null,
+        "headers": {
+          "time": "After Hours Time (ET)",
+          "price": "After Hours Price",
+          "shareVolume": "After Hours Share Volume"
+        },
+        "rows": [
+          {
+            "time": "19:59:56",
+            "price": "$61.259",
+            "shareVolume": "20"
+          },
+          {
+            "time": "19:58:24",
+            "price": "$61.26",
+            "shareVolume": "15"
+          },
+          {
+            "time": "19:57:49",
+            "price": "$61.26",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:57:47",
+            "price": "$61.2595",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:57:44",
+            "price": "$61.26",
+            "shareVolume": "2"
+          },
+          {
+            "time": "19:57:44",
+            "price": "$61.26",
+            "shareVolume": "3"
+          },
+          {
+            "time": "19:57:25",
+            "price": "$61.2596",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:56:47",
+            "price": "$61.2569",
+            "shareVolume": "200"
+          },
+          {
+            "time": "19:56:12",
+            "price": "$61.26",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:55:49",
+            "price": "$61.26",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:54:29",
+            "price": "$61.258",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:54:02",
+            "price": "$61.26",
+            "shareVolume": "5"
+          },
+          {
+            "time": "19:53:15",
+            "price": "$61.2599",
+            "shareVolume": "4"
+          },
+          {
+            "time": "19:53:04",
+            "price": "$61.2569",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:51:30",
+            "price": "$61.26",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:50:31",
+            "price": "$61.26",
+            "shareVolume": "2"
+          },
+          {
+            "time": "19:48:12",
+            "price": "$61.2592",
+            "shareVolume": "10"
+          },
+          {
+            "time": "19:47:52",
+            "price": "$61.25",
+            "shareVolume": "20"
+          },
+          {
+            "time": "19:47:52",
+            "price": "$61.25",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:47:27",
+            "price": "$61.2596",
+            "shareVolume": "564"
+          },
+          {
+            "time": "19:46:02",
+            "price": "$61.25",
+            "shareVolume": "13"
+          },
+          {
+            "time": "19:45:46",
+            "price": "$61.25",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:45:29",
+            "price": "$61.24",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:44:57",
+            "price": "$61.26",
+            "shareVolume": "4"
+          },
+          {
+            "time": "19:44:56",
+            "price": "$61.25",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:44:53",
+            "price": "$61.25",
+            "shareVolume": "5"
+          },
+          {
+            "time": "19:44:31",
+            "price": "$61.26",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:43:52",
+            "price": "$61.26",
+            "shareVolume": "5"
+          },
+          {
+            "time": "19:41:00",
+            "price": "$61.24",
+            "shareVolume": "11"
+          },
+          {
+            "time": "19:40:32",
+            "price": "$61.26",
+            "shareVolume": "100"
+          },
+          {
+            "time": "19:38:44",
+            "price": "$61.2598",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:38:17",
+            "price": "$61.26",
+            "shareVolume": "100"
+          },
+          {
+            "time": "19:38:12",
+            "price": "$61.28",
+            "shareVolume": "9"
+          },
+          {
+            "time": "19:36:58",
+            "price": "$61.26",
+            "shareVolume": "4"
+          },
+          {
+            "time": "19:35:55",
+            "price": "$61.2501",
+            "shareVolume": "3"
+          },
+          {
+            "time": "19:35:25",
+            "price": "$61.255",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:34:08",
+            "price": "$61.26",
+            "shareVolume": "3"
+          },
+          {
+            "time": "19:33:53",
+            "price": "$61.26",
+            "shareVolume": "10"
+          },
+          {
+            "time": "19:33:45",
+            "price": "$61.2597",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:33:38",
+            "price": "$61.2591",
+            "shareVolume": "4"
+          },
+          {
+            "time": "19:30:47",
+            "price": "$61.26",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:30:21",
+            "price": "$61.25",
+            "shareVolume": "13"
+          },
+          {
+            "time": "19:30:21",
+            "price": "$61.25",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:30:21",
+            "price": "$61.25",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:30:06",
+            "price": "$61.2599",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:30:06",
+            "price": "$61.2599",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:30:04",
+            "price": "$61.2599",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:30:04",
+            "price": "$61.2599",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:30:04",
+            "price": "$61.2599",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:29:41",
+            "price": "$61.26",
+            "shareVolume": "5"
+          },
+          {
+            "time": "19:29:31",
+            "price": "$61.26",
+            "shareVolume": "10"
+          },
+          {
+            "time": "19:29:26",
+            "price": "$61.24",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:28:36",
+            "price": "$61.26",
+            "shareVolume": "2"
+          },
+          {
+            "time": "19:28:33",
+            "price": "$61.2594",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:27:52",
+            "price": "$61.26",
+            "shareVolume": "2"
+          },
+          {
+            "time": "19:27:46",
+            "price": "$61.26",
+            "shareVolume": "50"
+          },
+          {
+            "time": "19:27:38",
+            "price": "$61.2593",
+            "shareVolume": "5"
+          },
+          {
+            "time": "19:26:37",
+            "price": "$61.26",
+            "shareVolume": "9"
+          },
+          {
+            "time": "19:26:19",
+            "price": "$61.26",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:25:36",
+            "price": "$61.2599",
+            "shareVolume": "100"
+          },
+          {
+            "time": "19:25:36",
+            "price": "$61.26",
+            "shareVolume": "100"
+          },
+          {
+            "time": "19:25:35",
+            "price": "$61.2596",
+            "shareVolume": "3"
+          },
+          {
+            "time": "19:25:26",
+            "price": "$61.26",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:23:33",
+            "price": "$61.26",
+            "shareVolume": "669"
+          },
+          {
+            "time": "19:23:33",
+            "price": "$61.26",
+            "shareVolume": "3"
+          },
+          {
+            "time": "19:22:43",
+            "price": "$61.2599",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:22:43",
+            "price": "$61.26",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:22:29",
+            "price": "$61.258",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:22:01",
+            "price": "$61.26",
+            "shareVolume": "2"
+          },
+          {
+            "time": "19:21:58",
+            "price": "$61.2597",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:21:25",
+            "price": "$61.26",
+            "shareVolume": "20"
+          },
+          {
+            "time": "19:20:10",
+            "price": "$61.2579",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:20:06",
+            "price": "$61.2597",
+            "shareVolume": "2"
+          },
+          {
+            "time": "19:18:52",
+            "price": "$61.26",
+            "shareVolume": "200"
+          },
+          {
+            "time": "19:16:42",
+            "price": "$61.2579",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:16:42",
+            "price": "$61.2579",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:16:41",
+            "price": "$61.2579",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:16:41",
+            "price": "$61.2579",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:14:44",
+            "price": "$61.2581",
+            "shareVolume": "7"
+          },
+          {
+            "time": "19:13:20",
+            "price": "$61.25",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:12:55",
+            "price": "$61.26",
+            "shareVolume": "10"
+          },
+          {
+            "time": "19:12:46",
+            "price": "$61.2579",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:12:46",
+            "price": "$61.2579",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:11:30",
+            "price": "$61.25",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:11:30",
+            "price": "$61.25",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:11:02",
+            "price": "$61.24",
+            "shareVolume": "55"
+          },
+          {
+            "time": "19:10:31",
+            "price": "$61.25",
+            "shareVolume": "5"
+          },
+          {
+            "time": "19:10:08",
+            "price": "$61.25",
+            "shareVolume": "10"
+          },
+          {
+            "time": "19:09:09",
+            "price": "$61.25",
+            "shareVolume": "10"
+          },
+          {
+            "time": "19:08:09",
+            "price": "$61.25",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:06:52",
+            "price": "$61.25",
+            "shareVolume": "5"
+          },
+          {
+            "time": "19:06:24",
+            "price": "$61.2581",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:05:55",
+            "price": "$61.25",
+            "shareVolume": "20"
+          },
+          {
+            "time": "19:05:55",
+            "price": "$61.25",
+            "shareVolume": "12"
+          },
+          {
+            "time": "19:05:55",
+            "price": "$61.25",
+            "shareVolume": "8"
+          },
+          {
+            "time": "19:05:08",
+            "price": "$61.25",
+            "shareVolume": "4"
+          },
+          {
+            "time": "19:04:43",
+            "price": "$61.2581",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:04:37",
+            "price": "$61.26",
+            "shareVolume": "13"
+          },
+          {
+            "time": "19:04:18",
+            "price": "$61.26",
+            "shareVolume": "1"
+          },
+          {
+            "time": "19:04:06",
+            "price": "$61.2569",
+            "shareVolume": "250"
+          }
+        ]
+      },
+      "filterList": [
+        {
+          "name": "Last 100 Trades",
+          "value": 0
+        },
+        {
+          "name": "4:00 - 4:29",
+          "value": 1
+        },
+        {
+          "name": "4:30 - 4:59",
+          "value": 2
+        },
+        {
+          "name": "5:00 - 5:29",
+          "value": 3
+        },
+        {
+          "name": "5:30 - 5:59",
+          "value": 4
+        },
+        {
+          "name": "6:00 - 6:29",
+          "value": 5
+        },
+        {
+          "name": "6:30 - 6:59",
+          "value": 6
+        },
+        {
+          "name": "7:00 - 7:29",
+          "value": 7
+        },
+        {
+          "name": "7:30 - 7:59",
+          "value": 8
+        }
+      ]
+    },
+    "message": null,
+    "status": {
+      "rCode": 200,
+      "bCodeMessage": null,
+      "developerMessage": null
+    }
+  }
+}

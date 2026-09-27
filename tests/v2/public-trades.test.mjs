@@ -38,7 +38,7 @@ test('polling replaces bounded windows, shares requests and respects cancellatio
   calls++;if(url.includes('/LITE/'))return {status:429,headers:{'retry-after':'600'}};
   await new Promise(r=>{release=r;});return {status:200,body:JSON.stringify(payload())};
  }});
- const a=new AbortController(),params={session:'post',tradeDate:options.tradeDate};
+ const a=new AbortController(),params={session:'post',tradeDate:options.tradeDate,instrumentType:'EQUITY'};
  const first=provider.read('INTC',{...params,signal:a.signal});
  const second=provider.read('INTC',params);await new Promise(r=>setImmediate(r));a.abort();
  await assert.rejects(first);release();assert.equal((await second).events.length,2);assert.equal(calls,1);

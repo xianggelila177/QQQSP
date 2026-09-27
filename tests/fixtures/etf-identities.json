@@ -1,0 +1,182 @@
+{
+  "TLT": {
+    "isSuccess": true,
+    "detailCode": "",
+    "message": "",
+    "result": {
+      "query": "TLT",
+      "items": [
+        {
+          "code": "TLT",
+          "name": "iShares 20+ Year Treasury Bond ETF",
+          "typeCode": "NASDAQ",
+          "typeName": "나스닥 증권거래소",
+          "url": "/worldstock/etf/TLT.O",
+          "reutersCode": "TLT.O",
+          "nationCode": "USA",
+          "nationName": "미국",
+          "category": "stock",
+          "hasDiscussion": true,
+          "isinCode": null,
+          "isEtf": true
+        },
+        {
+          "code": "TLTD",
+          "name": "Northern Trust Morningstar Dev Mkt exUS Fc Tlt ETF",
+          "typeCode": "AMEX",
+          "typeName": "아멕스 증권거래소",
+          "url": "/worldstock/etf/TLTD.K",
+          "reutersCode": "TLTD.K",
+          "nationCode": "USA",
+          "nationName": "미국",
+          "category": "stock",
+          "hasDiscussion": true,
+          "isinCode": null,
+          "isEtf": true
+        },
+        {
+          "code": "TLTE",
+          "name": "Northern Trust Morningstar Emg Mkts Fctr Tilt ETF",
+          "typeCode": "AMEX",
+          "typeName": "아멕스 증권거래소",
+          "url": "/worldstock/etf/TLTE.K",
+          "reutersCode": "TLTE.K",
+          "nationCode": "USA",
+          "nationName": "미국",
+          "category": "stock",
+          "hasDiscussion": true,
+          "isinCode": null,
+          "isEtf": true
+        },
+        {
+          "code": "TLTI",
+          "name": "NEOS Enhanced Income 20+ Year Treasury Bond ETF",
+          "typeCode": "AMEX",
+          "typeName": "아멕스 증권거래소",
+          "url": "/worldstock/etf/TLTI.K",
+          "reutersCode": "TLTI.K",
+          "nationCode": "USA",
+          "nationName": "미국",
+          "category": "stock",
+          "hasDiscussion": true,
+          "isinCode": null,
+          "isEtf": true
+        },
+        {
+          "code": "TLTP",
+          "name": "Amplify TLT US Treasury 12% Option Income ETF",
+          "typeCode": "AMEX",
+          "typeName": "아멕스 증권거래소",
+          "url": "/worldstock/etf/TLTP.K",
+          "reutersCode": "TLTP.K",
+          "nationCode": "USA",
+          "nationName": "미국",
+          "category": "stock",
+          "hasDiscussion": true,
+          "isinCode": null,
+          "isEtf": true
+        },
+        {
+          "code": "TLTW",
+          "name": "iShares 20+ Year Treasury Bond BuyWrite Strat ETF",
+          "typeCode": "AMEX",
+          "typeName": "아멕스 증권거래소",
+          "url": "/worldstock/etf/TLTW.K",
+          "reutersCode": "TLTW.K",
+          "nationCode": "USA",
+          "nationName": "미국",
+          "category": "stock",
+          "hasDiscussion": true,
+          "isinCode": null,
+          "isEtf": true
+        },
+        {
+          "code": "TLTX",
+          "name": "Global X Treasury Bond Enhanced Income ETF",
+          "typeCode": "AMEX",
+          "typeName": "아멕스 증권거래소",
+          "url": "/worldstock/etf/TLTX.K",
+          "reutersCode": "TLTX.K",
+          "nationCode": "USA",
+          "nationName": "미국",
+          "category": "stock",
+          "hasDiscussion": true,
+          "isinCode": null,
+          "isEtf": true
+        }
+      ]
+    }
+  },
+  "NVDA": {
+    "isSuccess": true,
+    "detailCode": "",
+    "message": "",
+    "result": {
+      "query": "NVDA",
+      "items": [
+        {
+          "code": "NVDA",
+          "name": "엔비디아",
+          "typeCode": "NASDAQ",
+          "typeName": "나스닥 증권거래소",
+          "url": "/worldstock/stock/NVDA.O/total",
+          "reutersCode": "NVDA.O",
+          "nationCode": "USA",
+          "nationName": "미국",
+          "category": "stock",
+          "hasDiscussion": true,
+          "isinCode": null,
+          "isEtf": false
+        }
+      ]
+    }
+  },
+  "JEPI": {
+    "isSuccess": true,
+    "detailCode": "",
+    "message": "",
+    "result": {
+      "query": "JEPI",
+      "items": [
+        {
+          "code": "JEPI",
+          "name": "JPMorgan Equity Premium Income ETF",
+          "typeCode": "AMEX",
+          "typeName": "아멕스 증권거래소",
+          "url": "/worldstock/etf/JEPI.K",
+          "reutersCode": "JEPI.K",
+          "nationCode": "USA",
+          "nationName": "미국",
+          "category": "stock",
+          "hasDiscussion": true,
+          "isinCode": null,
+          "isEtf": true
+        }
+      ]
+    }
+  },
+  "SCHD": {
+    "isSuccess": true,
+    "detailCode": "",
+    "message": "",
+    "result": {
+      "query": "SCHD",
+      "items": [
+        {
+          "code": "SCHD",
+          "name": "Schwab US Dividend Equity ETF",
+          "typeCode": "AMEX",
+          "typeName": "아멕스 증권거래소",
+          "url": "/worldstock/etf/SCHD.K",
+          "reutersCode": "SCHD.K",
+          "nationCode": "USA",
+          "nationName": "미국",
+          "category": "stock",
+          "hasDiscussion": true,
+          "isinCode": null,
+          "isEtf": true
+        }
+      ]
+    }
+  }
+}
