@@ -75,67 +75,67 @@
     {
       "path": "public/modules/panel-chart-controller.js",
       "startOffset": 60096,
-      "endOffset": 89251
+      "endOffset": 89381
     },
     {
       "path": "public/modules/panel-fundamentals.js",
-      "startOffset": 89299,
-      "endOffset": 103766
+      "startOffset": 89429,
+      "endOffset": 103896
     },
     {
       "path": "public/modules/panel-detail.js",
-      "startOffset": 103808,
-      "endOffset": 114353
+      "startOffset": 103938,
+      "endOffset": 114483
     },
     {
       "path": "public/modules/panel-chart-detail.js",
-      "startOffset": 114401,
-      "endOffset": 145702
+      "startOffset": 114531,
+      "endOffset": 145832
     },
     {
       "path": "public/modules/panel-card-view.js",
-      "startOffset": 145747,
-      "endOffset": 170724
+      "startOffset": 145877,
+      "endOffset": 170854
     },
     {
       "path": "public/modules/panel-search-controller.js",
-      "startOffset": 170777,
-      "endOffset": 177726
+      "startOffset": 170907,
+      "endOffset": 177856
     },
     {
       "path": "public/modules/panel-market-directory.js",
-      "startOffset": 177778,
-      "endOffset": 183886
+      "startOffset": 177908,
+      "endOffset": 184016
     },
     {
       "path": "public/modules/panel-news-controller.js",
-      "startOffset": 183937,
-      "endOffset": 189657
+      "startOffset": 184067,
+      "endOffset": 189787
     },
     {
       "path": "public/modules/panel-macro-context.js",
-      "startOffset": 189706,
-      "endOffset": 198645
+      "startOffset": 189836,
+      "endOffset": 198775
     },
     {
       "path": "public/modules/panel-macro-controller.js",
-      "startOffset": 198697,
-      "endOffset": 210461
+      "startOffset": 198827,
+      "endOffset": 210591
     },
     {
       "path": "public/modules/panel-market-store.js",
-      "startOffset": 210509,
-      "endOffset": 213854
+      "startOffset": 210639,
+      "endOffset": 213984
     },
     {
       "path": "public/modules/panel-live-store.js",
-      "startOffset": 213900,
-      "endOffset": 218149
+      "startOffset": 214030,
+      "endOffset": 218279
     },
     {
       "path": "public/app.js",
-      "startOffset": 218174,
-      "endOffset": 250144
+      "startOffset": 218304,
+      "endOffset": 250274
     }
   ]
 }

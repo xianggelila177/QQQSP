@@ -64,6 +64,7 @@ import {createNaverWorldHistory} from './lib/providers/naver-world-history.js';
 import {createFinnhubQuotes} from './lib/providers/finnhub-quotes.js';
 import {createTwseHistory} from './lib/providers/twse-history.js';
 import {createTwseQuotes} from './lib/providers/twse-quotes.js';
+import {createYahooTwHistory} from './lib/providers/yahoo-tw-history.js';
 import {createStreamPair} from './lib/stream-pair.js';
 import {createRealtimeQuoteService} from './lib/realtime-quote-service.js';
 import {createQuoteSamples} from './lib/quote-samples.js';
@@ -106,7 +107,8 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
     naver:providerOverrides.fetchChart?null:naverHistory,
     alternative:providerOverrides.fetchChart?null:createPublicHistory({httpsGet,now,resolveInstrument,getQuote:symbol=>engine.read([symbol],{lease:false})[0]}),
     finnhub:providerOverrides.fetchChart?null:finnhubHistory,world:worldHistory,
-    twse:providerOverrides.fetchChart?null:twseHistory,resolveInstrument,getQuote:symbol=>engine.read([symbol],{lease:false})[0],now});
+    twse:providerOverrides.fetchChart?null:twseHistory,taiwan:providerOverrides.fetchChart?null:createYahooTwHistory({httpsGet,now}),
+    resolveInstrument,getQuote:symbol=>engine.read([symbol],{lease:false})[0],now});
   const history=createHistoryService({fetchChart:fetchHistory,getQuote:symbol=>engine.read([symbol],{lease:false})[0],now,cacheTtl:60000,maxEntries:config.HISTORY_MAX_SYMBOLS,maxConcurrent:config.HISTORY_MAX_ACTIVE,maxQueued:config.HISTORY_MAX_QUEUE,deadlineMs:config.HISTORY_EXECUTION_DEADLINE_MS,totalDeadlineMs:config.HISTORY_TOTAL_DEADLINE_MS,maxBytes:config.HISTORY_MAX_BYTES});
   const historyPrewarm=createHistoryPrewarm({history,now,enabled:config.HISTORY_BACKGROUND_ENABLED==='1',statePath:config.HISTORY_STATE_PATH,refreshMs:config.HISTORY_REFRESH_MS,maxSymbols:config.HISTORY_MAX_SYMBOLS,expandAfterMs:config.HISTORY_EXPAND_AFTER_MS,canExpand:()=>Object.values(gate.diagnostics()).every(s=>!s.queued),log:telemetry.log});
   const futures=createFuturesProvider({httpsGet,fetchChart:providerOverrides.fetchChart||yahoo.fetchChart,now});
