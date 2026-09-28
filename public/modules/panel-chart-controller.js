@@ -336,6 +336,7 @@
     const sourceName=source=>({'finnhub-candle':'Finnhub K 线','finnhub-quote':'Finnhub 报价',
       'naver-world-chart':'Naver 美股分时','nasdaq-history':'Nasdaq 历史','nasdaq-intraday':'Nasdaq 分时',
       'eastmoney-history':'东方财富历史','naver-index-history':'Naver 指数历史','naver-fchart':'Naver 韩国历史',
+      'yahoo-tw-chart':'Yahoo 台股分时','twse-mis':'台湾证券交易所','twse-stock-day':'台湾证券交易所日线',
       'yahoo':'Yahoo','sina':'新浪','tencent':'腾讯'})[source]||source||'未知来源';
     function updateChartStatus(q){
       if(q._unmounted)return;
@@ -347,7 +348,7 @@
       let text=intra?(q._sampled?'常规时段报价采样 · 非完整历史':
         '常规分时 '+(regular?.tradeDate||'日期待核验')+' · '+sourceName(regular?.source||q.d?.src)+
         (regular?.volumeQuality?.status==='missing'?' · 区间成交量暂缺':'')+
-        (regular?.stale?' · 来源暂不可用，保留旧图':regular?.missingReason?' · '+(regular.missingReason==='CLOSING_PRINT_COVERAGE_UNVERIFIED'?'收盘成交覆盖待核验':regular.missingReason):'')):
+        (regular?.stale?(regular.bars?.length?' · 来源暂不可用，保留旧图':' · 分时来源暂不可用，可切换日K'):regular?.missingReason?' · '+(regular.missingReason==='CLOSING_PRINT_COVERAGE_UNVERIFIED'?'收盘成交覆盖待核验':regular.missingReason):'')):
         e?.status==='loading'?label+' · 加载中…':e?.status==='error'?label+' · 历史来源暂不可用':
         m?label+' · '+sourceName(m.source)+(e.status==='stale'?' · 缓存历史':m.prewarmed?' · 后台已预备':'')+(m.refreshing?' · 后台更新中':''):label+(q.historyPrepared?' · 后台正在准备':' · 尚未加载');
       text+=intra?' · 北京时间 UTC+8':' · 交易所交易日';
