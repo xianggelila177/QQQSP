@@ -9,7 +9,7 @@ import {nikkeiNow as now,nikkeiBasic,nikkeiSnapshot,nikkeiIntraday,nikkeiDaily,n
 
 test('Nikkei has a verified index route distinct from Japanese equities, ETFs and futures',()=>{
  assert.equal(providerCapabilities('^N225').batchGroup,'index');assert.deepEqual(providerCapabilities('^N225').batchProviders,['naver-index']);
- for(const symbol of ['7203.T','1329.T','NQ00Y.FUT','^NDX'])assert.notEqual(providerCapabilities(symbol).batchGroup,'index');
+ for(const symbol of ['7203.T','1329.T','NQ00Y.FUT','^TOPIX'])assert.notEqual(providerCapabilities(symbol).batchGroup,'index');
 });
 test('index quote keeps provider timestamp, delay and point identity; no fabricated index-share volume',()=>{
  const q=parseNaverIndexQuote(nikkeiSnapshot().datas[0],'^N225',{now,pollAfterMs:70000});

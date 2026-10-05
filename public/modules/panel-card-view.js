@@ -41,7 +41,7 @@
     function mountBands(q) {
       if (!bandObserver || typeof q.el.insertBefore !== 'function') return;
       q.layoutContents = [];
-      const regions = {identity:'.cardhead',meta:'.quote-meta',fx:'.fx-note',summary:'.numrow',tabs:'.tabbar',chartstatus:'.chart-statusbar',chartmeta:'.ohlcbar',chart:'.chartframe',range:'.xslide',actions:'.zoombar',statistics:'.statistics'};
+      const regions = {identity:'.cardhead',meta:'.quote-meta',summary:'.numrow',tabs:'.chart-card-toolbar',chartstatus:'.chart-statusbar',chartmeta:'.ohlcbar',chart:'.chartframe',range:'.xslide',actions:'.zoombar',statistics:'.statistics'};
       for (const [name,selector] of Object.entries(regions)) {
         const element = q.el.querySelector(selector); if (!element) continue;
         const slot=document.createElement('div'), content=document.createElement('div');
@@ -62,13 +62,13 @@
         <span class="card-actions"><span class="chip stale-warn" hidden>数据延迟</span><span class="chip state"></span><button class="cardretry" hidden type="button">重试</button><button class="cardclose" title="移除自选">×</button></span>
       </div>
       <div class="quote-meta"><span class="quote-details"></span><span class="quote-age" data-testid="quote-age"></span><span class="source-check-age"></span></div>
-      <div class="fx-note" hidden></div>
       <div class="numrow">
         <div class="num">
           <div class="numline"><span class="phasetag" hidden></span><span class="cur">—</span><span class="unit">USD</span></div>
           <div class="delta"><span class="c change">—</span><span class="c pct">—</span></div>
           <div class="change-baseline">较昨收基准</div>
           <div class="extrow" hidden></div>
+          <div class="fx-note" hidden></div>
         </div>
         <div class="ccyseg">
           <button data-ccy="USD" class="on">USD</button>
@@ -76,8 +76,8 @@
           <button data-ccy="NATIVE" title="按来源报价单位显示，不换汇">原币</button>
         </div>
       </div>
-      <div class="tabbar">${TF.map(t=>`<button class="tfbtn" data-tf="${t[0]}">${t[1]}</button>`).join('')}</div>
-      <div class="meter"><div class="chart-statusbar"><span class="chart-state" role="status"></span><span class="chart-modes"><button type="button" data-chart-mode="history">来源历史</button><button type="button" data-chart-mode="samples">报价采样</button></span><button type="button" class="chart-retry" hidden>重试历史</button><button type="button" class="chart-expand" title="展开图表" aria-label="展开横向行情详情">⛶</button></div><div class="ohlcbar">—</div><div class="chartframe"><canvas class="chart-main" role="img" aria-label="行情图表"></canvas><canvas class="chart-cursor" aria-hidden="true"></canvas></div><div class="chart-point sr-only"></div><div class="chart-summary sr-only"></div></div>
+      <div class="chart-card-toolbar"><div class="tabbar">${TF.map(t=>`<button class="tfbtn" data-tf="${t[0]}">${t[1]}</button>`).join('')}</div>${window.PANEL_CHART_WORKSPACE?.settingsMarkup('chart-'+sym)||''}</div>
+      <div class="meter"><div class="chart-statusbar"><span class="chart-state" role="status"></span><span class="chart-style" role="group" aria-label="图形类型"><button type="button" data-chart-style="candle" aria-pressed="true"><span aria-hidden="true">╂</span> K线</button><button type="button" data-chart-style="line" aria-pressed="false"><span aria-hidden="true">⌁</span> 分时</button></span><span class="chart-modes"><button type="button" data-chart-mode="history">来源历史</button><button type="button" data-chart-mode="samples">报价采样</button></span><button type="button" class="chart-retry" hidden>重试历史</button><button type="button" class="chart-expand" title="展开图表" aria-label="展开横向行情详情">⛶</button></div><div class="ohlcbar">—</div><div class="chartframe"><canvas class="chart-main" role="img" aria-label="行情图表"></canvas><canvas class="chart-cursor" aria-hidden="true"></canvas></div><div class="chart-point sr-only"></div><div class="chart-summary sr-only"></div></div>
       ${window.PANEL_FUNDAMENTALS.markup()}
       <details class="newsbox"><summary class="newshead">相关资讯</summary><div class="newslist"><div class="newsempty">加载中…</div></div></details>
     </section>`;
@@ -119,7 +119,7 @@
     fundamentalsView.mount(q);
     detailView ||= window.PANEL_DETAIL.createDetailView({document});
     detailView.mount(q);
-    chartDetailView ||= window.PANEL_CHART_DETAIL.createChartDetailView({document,formatterFor,UP,DOWN,canPoll:canPollDetails});
+    chartDetailView ||= window.PANEL_CHART_DETAIL.createChartDetailView({document,formatterFor,UP,DOWN,canPoll:canPollDetails,quoteClock});
     chartDetailView.mount(q);
     mountBands(q);
     q.ccybtns.forEach(b => b.addEventListener('click', () => onCurrency(sym, b.dataset.ccy)));
@@ -193,54 +193,21 @@
   }
   function updateQuoteMeta(q, now = quoteClock ? quoteClock.now() : Date.now()) {
     const d = q.d; if (!d || !q.quoteMeta) return;
-    const freshness=applyStaleBadge(q,d,now);
-    const sourceNames = { 'yahoo-futures':'Yahoo · 期货', 'eastmoney-futures':'东方财富 · 期货', 'eastmoney-futures-list':'东方财富 · 期货目录（成交时间未知）', 'alpaca-iex':'Alpaca · IEX 单一交易所', 'alpaca-sip':'Alpaca · 美国 SIP 数据源', 'sina-batch':'新浪批量报价',yahoo: 'Yahoo', 'tx-cn': '腾讯', 'tx-us': '腾讯', 'tx-batch': '腾讯批量报价', 'naver-index': 'Naver 指数', 'naver-us': 'Naver 美股', 'naver-kr': 'Naver 韩股', 'naver-jp':'Naver 日股', 'twse-mis':'台湾证券交易所 · MIS', 'em-cn': '东方财富', finnhub:'Finnhub · 覆盖依账户权限','finnhub-quote':'Finnhub 报价',fixture: '测试数据' };
-    const sessionNames = { SOURCE_SNAPSHOT:'统计来自独立快照，非逐笔同步', CACHED_REGULAR: '常规时段统计', REGULAR: '常规时段统计', PRE: '盘前统计', POST: '盘后统计', CN_SNAPSHOT: '交易日快照', UNKNOWN: '统计时段未核验' };
-    const at = quoteTimeMs(d.quoteAt ?? d.ts), checked = quoteTimeMs(d.sourceCheckedAt);
-    const parts = ['报价 ' + (at ? fmtTime8(at) : '时刻未知'), sourceNames[d.src] || '来源未标明'];
-    const calendarMessage=window.PANEL_STATE.calendarStatus(d).message;if(calendarMessage)parts.push(calendarMessage);
-    const streamNames={streaming:'行情流已连接',connecting:'连接行情源中',authenticating:'行情源鉴权中',subscribing:'等待来源首笔成交',backoff:'行情源重试中',blocked:'权限受限，使用后备数据','subscription-limited':'订阅数量受限，继续轮询',TRADE_INVALIDATED:'成交已撤销，使用后备报价',NEW_SOURCE_OLDER_THAN_FALLBACK:'保留较新轮询报价'};
-    if(d.realtimeStatus)parts.push(streamNames[d.realtimeStatus]||'推送暂不可用，使用后备数据');
-    if(d.realtimeSource){
-      const connected=quoteTimeMs(d.connectionCheckedAt),healthy=d.realtimeConnectionHealthy&&connected&&connected<=now+1000&&now-connected<=90000;
-      parts.push((sourceNames[d.realtimeSource]||d.realtimeSource)+' · '+(healthy?'流连接正常':'流连接待恢复'));
-      if(d.src!==d.realtimeSource)parts.push('当前价格由轮询源提供');
-    }
-    if(freshness.noNewQuote)parts.push('本来源暂无更新报价');
-    if(freshness.declaredDelayMinutes===null)parts.push('来源延迟未核验');
-    if(d.quoteTimeBasis==='provider-published')parts.push('时间为来源发布时刻');
-    if(d.quoteTimePrecision==='minute')parts.push('来源成交时间精度为分钟');
-    const age = window.PANEL_STATE.formatQuoteAge(d.quoteAt ?? d.ts, now);
-    if (freshness.declaredDelayMinutes>0) parts.push('来源声明延迟'+freshness.declaredDelayMinutes+'分钟');
-    const publication=d.publicationSession;
-    if(publication?.kind==='index-publication'&&publication.verified===true&&publication.phase==='waiting'&&['CLOSED','HOLIDAY'].includes(d.marketState))parts.push('上一发布时段数值，等待发布');
-    else if (d.marketState === 'CLOSED') parts.push('已休市，保留最近报价');
-    if (sessionNames[d.ohlcSession]) parts.push(sessionNames[d.ohlcSession]);
-    if(checked)parts.push('来源检查 '+fmtTime8(checked));
-    const cadence=Math.max(Number(d.pollAfterMs)||0,Number(d.checkIntervalMs)||0);
-    if(d.quoteKind==='reported-trade')parts.push('逐笔接收；无新成交时年龄继续增加');
-    else if(cadence>0)parts.push('来源检查间隔 '+Math.ceil(cadence/1000)+' 秒');
-    if(d.quoteKind==='reported-trade' && d.historySource)parts.push('图表来源 '+(sourceNames[d.historySource]||d.historySource));
-    if(at&&Number.isFinite(d.gmtoff))parts.push('报价交易日 '+new Date(at+d.gmtoff*1000).toISOString().slice(0,10)+'（交易所）');
-    const fields={ohlc:'时段统计',daily:'日K',daily30:'日K',intraday:'分时图',charts:'图表',week52:'52周范围',week52Range:'52周范围',fx:'汇率'};
-    for(const [key,field] of Object.entries(d.slowFields||{}))if(field&&(field.expired||field.stale||field.refreshState==='queued'))parts.push((fields[key]||key)+(field.expired||field.stale?'缓存待更新':'排队更新中'));
-    const syncing = quoteClock && !quoteClock.status().synced ? '（校时中）' : '';
-    const ageText = '报价年龄 ' + age + syncing;
-    const checkText = '距上次成功检查 ' + (checked ? window.PANEL_STATE.formatQuoteAge(d.sourceCheckedAt, now) : '未知（尚无成功检查时间）');
-    if (q.quoteDetails && q.quoteAge && q.sourceCheckAge) {
-      const details = parts.join(' · ') + ' · ';
-      if (q.quoteDetails.textContent !== details) q.quoteDetails.textContent = details;
-      if (q.quoteAge.textContent !== ageText + ' · ') q.quoteAge.textContent = ageText + ' · ';
-      if (q.sourceCheckAge.textContent !== checkText) q.sourceCheckAge.textContent = checkText;
+    applyStaleBadge(q,d,now);
+    const at = quoteTimeMs(d.quoteAt ?? d.ts);
+    const ageText = '报价年龄 ' + window.PANEL_STATE.formatQuoteAge(d.quoteAt ?? d.ts, now);
+    // Keep source diagnostics in the source-health/detail views, not below every price.
+    if (q.quoteAge) {
+      if (q.quoteDetails) { q.quoteDetails.textContent = ''; q.quoteDetails.hidden = true; }
+      if (q.sourceCheckAge) { q.sourceCheckAge.textContent = ''; q.sourceCheckAge.hidden = true; }
+      if (q.quoteAge.textContent !== ageText) q.quoteAge.textContent = ageText;
       q.quoteAge.dataset.quoteAsofMs = at == null ? '' : String(at);
       q.quoteAge.dataset.ageComputedAtMs = String(now);
       q.quoteAge.dataset.ageTickSeq = String((Number(q.quoteAge.dataset.ageTickSeq) || 0) + 1);
-    } else q.quoteMeta.textContent = [...parts, ageText, checkText].join(' · ');
-    q.quoteMeta.title = '页面按监控偏好、市场时段和来源节奏读取快照；市场不一定有新成交，浏览器冻结期间可能暂停。' +
-      (checked ? ' 上次检查来源：' + fmtTime8(checked) + '。' : '') +
-      (Number.isFinite(d.pollAfterMs) && d.pollAfterMs > 0 ? ' 来源建议查询间隔：' + Math.ceil(d.pollAfterMs / 1000) + ' 秒。' : '') +
-      (Number.isFinite(d.checkIntervalMs) && d.checkIntervalMs > 0 ? ' 面板检查间隔：' + Math.ceil(d.checkIntervalMs / 1000) + ' 秒。' : '');
+    } else q.quoteMeta.textContent = ageText;
+    q.quoteMeta.title = '';
   }
+
   function render(q) {
     const d = q.d; if (!d) return;
     // Historical bars live in the independent store. Quote refreshes must never

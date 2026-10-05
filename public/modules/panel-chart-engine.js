@@ -50,11 +50,34 @@
     };
   }
   const sampleGap=(a,b)=>!a||a.tradingDate!==b.tradingDate||a.source!==b.source||a.currency!==b.currency||Math.floor(b.t/60)-Math.floor(a.t/60)>1;
+  const capabilityCache=new WeakMap(),intervalCache=new WeakMap();
+  const seriesRevision=q=>q.tf==='intraday'?q.d?.intradayVer:q.historyStore?.getRevision(q.tf)??q.d?.daily30Ver??q.d?.daily30Version;
+  function candleCapability(q,bars){
+    if(q._intervalUnknown||q.d?.regularChart?.intervalUnknown)
+      return {available:false,reason:'来源未声明K线周期，暂显示收盘线'};
+    if(q.tf==='intraday'&&(q._sampled||q.d?.regularChart?.pointKind==='price-point'))
+      return {available:false,reason:'报价点不含完整开高低收'};
+    const tail=bars.at(-1),key=[seriesRevision(q),bars.length,tail?.t,tail?.o,tail?.h,tail?.l,tail?.c].join(':');
+    const cached=capabilityCache.get(bars);if(cached?.key===key)return cached.value;
+    const available=bars.length>0&&bars.every(b=>['o','h','l','c'].every(k=>Number.isFinite(b[k]))&&
+      !b._sample&&b.h>=Math.max(b.o,b.c)&&b.l<=Math.min(b.o,b.c));
+    const value={available,reason:available?'':bars.length?'来源未提供完整开高低收':'等待历史数据'};
+    capabilityCache.set(bars,{key,value});return value;
+  }
+  function intradayInterval(q,history){
+    if(q._intervalUnknown||q.d?.regularChart?.intervalUnknown)return null;
+    const explicit=Number(q._intervalSeconds||q.d?.regularChart?.intervalSeconds);if(explicit>0)return explicit;
+    const key=[seriesRevision(q),history.length,history.at(-1)?.t].join(':');
+    const cached=intervalCache.get(history);if(cached?.key===key)return cached.value;
+    const deltas=history.slice(1).map((b,i)=>b.t-history[i].t).filter(v=>v>0&&v<3600).sort((a,b)=>a-b);
+    const value=deltas[Math.floor(deltas.length/2)]||300;intervalCache.set(history,{key,value});return value;
+  }
   const CHART_THEME=Object.freeze({axisText:'#596574',ma:Object.freeze({5:Object.freeze({line:'#e0a13c',text:'#875706'}),10:Object.freeze({line:'#3d8bd6',text:'#2265a3'}),20:Object.freeze({line:'#9b59b6',text:'#82409b'})})});
   // Canvas geometry and rendering have one implementation. Application state
   // supplies formatting and series helpers explicitly at construction time.
   const createChartEngine = ({ UP, DOWN, fmtDate, formatterFor, maSeries }) => {
   const seriesCache = new WeakMap();
+  const calculateStudies = window.PANEL_CHART_STUDIES?.createCalculator();
   const vwapCache = new WeakMap(), timeFormats = new Map();
   function timeFormat(zone,kind){
     const key=zone+':'+kind;
@@ -99,52 +122,81 @@
     const d = q.d; const displayData=q._chartData||d; const stored=q.tf!=='intraday'?q.historyStore?.getSeries(q.tf):null; const history = q.tf==='intraday'&&q._displayIntraday?q._displayIntraday:stored!=null?stored:((d && d.charts) && d.charts[q.tf]) || (q.tf==='daily30' ? d?.charts?.daily : []) || [];
     const live=q.tf==='intraday'&&!q._sampled?livePointFor(d):null;
     const all=live?history.concat(live):history;
-    const candle = q.tf !== 'intraday' && all.length > 0 && all.every(b=>['o','h','l','c'].every(k=>Number.isFinite(b[k]))&&b.h>=Math.max(b.o,b.c)&&b.l<=Math.min(b.o,b.c));
+    const capability=candleCapability(q,history),candle=q.chartStyle!=='line'&&capability.available;
+    const rect = q._chartWidth ? {width:q._chartWidth} : q.cv?.getBoundingClientRect?.();
+    q._chartWidth = rect?.width || 1000;
+    const W = Math.max(1, Number(rect?.width) || 1000);
     if (!q.visN) q.visN = {};
-    let vis = q.visN[q.tf] || window.PANEL_TIMEFRAMES?.get(q.tf)?.visible || (candle ? 60 : 80);
+    const defaultVisible=window.PANEL_TIMEFRAMES?.get(q.tf)?.visible || (candle ? 60 : 80);
+    // One/five-day mean the complete supplied session range until the user zooms.
+    // Keep the intended historical count when a near prewarm has only one year.
+    let vis = q.fullSession&&q.followEnd?all.length:q.visN[q.tf] || (q.tf==='intraday'?all.length:defaultVisible);
     vis = Math.max(window.PANEL_TIMEFRAMES?.get(q.tf)?.minVisible || 1, Math.min(Math.max(all.length, 1), vis));
     const maxStart = Math.max(0, all.length - vis);
     if (q.followEnd || q.winStart == null || q.winStart > maxStart) q.winStart = maxStart;
     const a = q.winStart;
     const bars = all.slice(a, a + vis);
-    const hi = b => candle ? b.h : (b.c != null ? b.c : 0);
-    const lo = b => candle ? b.l : (b.c != null ? b.c : 0);
+    const hi = b => candle&&!b._live ? b.h : (Number.isFinite(b.c) ? b.c : NaN);
+    const lo = b => candle&&!b._live ? b.l : (Number.isFinite(b.c) ? b.c : NaN);
     const revision = q.tf === 'intraday' ? d?.intradayVer : q.historyStore?.getRevision(q.tf) ?? d?.daily30Ver ?? d?.daily30Version;
-    const ma = candle ? movingAverages(history, revision) : {};
+    const settings=q.chartSettings||{}, enabled={};
+    for(const period of [5,10,20])enabled['sma'+period]=settings.studies?.['sma'+period]??q.maEnabled?.[period]!==false;
+    for(const name of ['ema20','boll20','rsi14'])enabled[name]=settings.studies?.[name]===true;
+    const studies=calculateStudies?calculateStudies(history,revision,enabled):{};
+    const ma=calculateStudies?Object.fromEntries([5,10,20].map(period=>[period,studies['sma'+period]||[]])):movingAverages(history,revision);
     let vwapSeries=null;
-    if(q._estimatedVwap&&q.tf==='intraday'&&!q._sampled){
+    if(q._estimatedVwap&&q.tf==='intraday'&&!q._sampled&&!candle){
       const values=estimatedVwap(history,revision,d?.regularChart?.exchangeZone||q._displayZone||'America/New_York');
       vwapSeries=live?values.concat(null):values;
     }
     q._vwapSeries=vwapSeries;
-    const periods=[5,10,20].filter(period=>q.maEnabled?.[period]!==false);
+    const periods=[5,10,20].filter(period=>enabled['sma'+period]);
     let maxH = -Infinity, minL = Infinity;
     for (const b of bars) { const h = hi(b), l = lo(b); if (h > maxH) maxH = h; if (l < minL) minL = l; }
     for(const period of periods)for(const value of (ma[period]||[]).slice(a,a+bars.length))if(value!=null&&Number.isFinite(value)){maxH=Math.max(maxH,value);minL=Math.min(minL,value);}
+    for(const values of [studies.ema20,studies.boll20?.upper,studies.boll20?.lower])
+      for(const value of (values||[]).slice(a,a+bars.length))if(Number.isFinite(value)){maxH=Math.max(maxH,value);minL=Math.min(minL,value);}
     for(const value of (vwapSeries||[]).slice(a,a+bars.length))if(value!=null&&Number.isFinite(value)){maxH=Math.max(maxH,value);minL=Math.min(minL,value);}
     const ref=d?.regularChart?.previousCloseReference,reference=q.tf==='intraday'&&!q._sampled&&Number.isFinite(ref?.value)&&(d?.instrumentType==='FUTURE'||ref.value>0)?ref:null;
-    if(reference){maxH=Math.max(maxH,reference.value);minL=Math.min(minL,reference.value);}
+    if(reference&&!candle){maxH=Math.max(maxH,reference.value);minL=Math.min(minL,reference.value);}
     if (!isFinite(maxH)) { maxH = 1; minL = 0; }
-    const rect = q._chartWidth ? {width:q._chartWidth} : q.cv?.getBoundingClientRect?.();
-    q._chartWidth = rect?.width || 1000;
-    const W = Math.max(1, Number(rect?.width) || 1000), H = q._chartHeight || (W < 420 ? 220 : 240), padT = 8, padB = 24;
+    const H = q._chartHeight || (W < 420 ? 280 : 300), padT = 8, padB = 24;
     const span = Math.max((maxH - minL) || 0, Math.max(Math.abs(maxH),Math.abs(minL),1) * 0.0005);
     const top = maxH + span * 0.08, bot = minL - span * 0.08;
+    const requestedScale=['linear','percent','log'].includes(settings.scale)?settings.scale:'linear';
+    let scale=requestedScale,scaleNotice='',scaleBase=null;
+    if(scale==='percent'){
+      scaleBase=Number.isFinite(bars[0]?.c)&&bars[0].c>0?bars[0].c:null;
+      if(scaleBase===null){scale='linear';scaleNotice='可见首根收盘价不是有效正值，已使用线性轴';}
+    }
+    if(scale==='log'&&!(bot>0&&top>0)){scale='linear';scaleNotice='价格或显示边界不为正，已使用线性轴';}
     const axisFont=(W<420?12:11)+'px sans-serif', measure=q.cv?.getContext?.('2d');
     if(measure)measure.font=axisFont;
     const money=formatterFor(displayData).money;
-    const labels=Array.from({length:5},(_,g)=>money(top-(top-bot)*g/4)).concat(bars.map(b=>money(b.c)));
+    const axisLabel=value=>scale==='percent'?((value-scaleBase)/scaleBase*100>=0?'+':'')+((value-scaleBase)/scaleBase*100).toFixed(2)+'%':money(value);
+    const forward=scale==='log'?Math.log:value=>value, inverse=scale==='log'?Math.exp:value=>value;
+    const transformedTop=forward(top),transformedBot=forward(bot);
+    const priceFraction=fraction=>inverse(transformedTop-(transformedTop-transformedBot)*fraction);
+    const labels=Array.from({length:5},(_,g)=>axisLabel(priceFraction(g/4))).concat(bars.map(b=>axisLabel(b.c)));
     const textWidth=Math.max(0,...labels.map(text=>measure?.measureText?.(text).width??String(text).length*7));
     const intraday=q.tf==='intraday';
     const L=intraday?Math.min(92,Math.max(54,Math.ceil(textWidth)+12)):8;
     const R=intraday?Math.min(68,Math.max(50,W-L-80)):Math.min(Math.max(40,W-L-100),Math.max(56,Math.ceil(textWidth)+18));
     const plotW = Math.max(1,W - L - R), n = bars.length;
-    const slot = plotW / Math.max(n, 1);
-    const hVol = q._chartHeight ? Math.max(56,Math.round(H*.2)) : 56, chartH = H - padT - hVol - padB - 8, yTop = padT;
-    const y = v => yTop + ((top - v) / (top - bot)) * chartH;
+    let slot = plotW / Math.max(n, 1);
+    const hVol=settings.volume===false?0:q._chartHeight?Math.max(56,Math.round(H*.2)):56;
+    const hRsi=enabled.rsi14?Math.max(48,Math.min(90,Math.round(H*.2))):0;
+    const chartH=H-padT-hVol-hRsi-padB-(hVol?8:0)-(hRsi?12:0),yTop=padT;
+    const y=value=>yTop+(transformedTop-forward(value))/(transformedTop-transformedBot)*chartH;
+    const priceAt=yy=>priceFraction((yy-yTop)/chartH);
+    const volumeTop=yTop+chartH+(hVol?8:0),rsiTop=volumeTop+hVol+(hRsi?12:0);
+    const rsiPane=hRsi?{top:rsiTop,height:hRsi,bottom:rsiTop+hRsi,y:value=>rsiTop+(100-value)/100*hRsi,valueAt:yy=>(rsiTop+hRsi-yy)/hRsi*100}:null;
+    const plotBottom=rsiPane?.bottom??(hVol?volumeTop+hVol:yTop+chartH);
     const sessions=intraday&&!q._sampled?d?.regularChart?.regularSessions||[]:[];
+    const intervalSeconds=intraday?intradayInterval(q,history):null;
+    const barClose=d?.regularChart?.pointKind==='bar-close';
     const full=vis>=all.length&&q.followEnd;
-    const start=full?sessions[0]?.open_at_ms:bars[0]?.t*1000;
+    const start=full?sessions[0]?.open_at_ms:bars[0]?.t*1000-(candle&&barClose?intervalSeconds*1000:0);
     const now=Date.now(),activeSession=sessions.find(s=>now>=s.open_at_ms&&now<s.close_at_ms);
     const latestBarAt=bars.at(-1)?.t*1000;
     const progressive=full&&!q.fullSession&&!q._fiveDay&&d?.marketState==='REGULAR'&&activeSession&&
@@ -152,7 +204,7 @@
       Number.isFinite(latestBarAt)&&latestBarAt>=start&&latestBarAt<=activeSession.close_at_ms;
     const end=progressive?Math.min(activeSession.close_at_ms,
       Math.max(start+30*60000,now+5*60000,d.quoteAt+5*60000,latestBarAt+5*60000)):
-      full?sessions.at(-1)?.close_at_ms:latestBarAt;
+      full?sessions.at(-1)?.close_at_ms:latestBarAt+(candle&&!barClose&&!bars.at(-1)?._live?intervalSeconds*1000:0);
     const visibleSessions=sessions.map(s=>({open:Math.max(start,s.open_at_ms),close:Math.min(end,s.close_at_ms)}))
       .filter(s=>Number.isFinite(s.open)&&Number.isFinite(s.close)&&s.close>s.open);
     const duration=visibleSessions.reduce((sum,s)=>sum+s.close-s.open,0);
@@ -163,25 +215,49 @@
         else if(ms>s.open){elapsed+=ms-s.open;break;}else break;}
       return L+Math.max(0,Math.min(1,elapsed/duration))*plotW;
     };
-    const x = i => timeline?xAtTime(bars[i].t*1000):L+(i+.5)*slot;
-    const deltas=bars.slice(1).map((b,i)=>b.t-bars[i].t).filter(v=>v>0&&v<3600).sort((a,b)=>a-b);
-    const gapSeconds=Math.max(600,(deltas[Math.floor(deltas.length/2)]||300)*3);
-    return { ma, vwapSeries, periods, axisFont, intraday, history, live, W, H, L, R, top, bot, n, slot, hVol, chartH,
-      yTop, y, x, xAtTime, timeline, visibleSessions, gapSeconds, reference,bars, all, candle, a, vis };
+    if(timeline&&candle)slot=Math.min(slot,plotW*intervalSeconds*1000/duration);
+    const x = i => timeline?xAtTime((bars[i].t+(candle&&!bars[i]._live?intervalSeconds*(barClose?-.5:.5):0))*1000):L+(i+.5)*slot;
+    // Drawings keep their offscreen time anchors. Unlike the visible tick helper,
+    // this projection is not clamped to the canvas and can be clipped by a layer.
+    const sessionCoordinate=ms=>{
+      if(!sessions.length)return ms;
+      if(ms<sessions[0].open_at_ms)return ms-sessions[0].open_at_ms;
+      let elapsed=0;
+      for(const session of sessions){if(ms>=session.close_at_ms)elapsed+=session.close_at_ms-session.open_at_ms;
+        else return elapsed+Math.max(0,ms-session.open_at_ms);}
+      return elapsed+Math.max(0,ms-sessions.at(-1).close_at_ms);
+    };
+    const xForTime=t=>{
+      if(!Number.isFinite(t)||!all.length)return NaN;
+      if(timeline){const quoteOnly=t===live?.t&&t!==history.at(-1)?.t;
+        const offset=candle&&!quoteOnly?intervalSeconds*(barClose?-.5:.5):0;
+        return L+(sessionCoordinate((t+offset)*1000)-sessionCoordinate(start))/duration*plotW;}
+      let low=0,high=all.length-1;
+      while(low<high){const mid=(low+high)>>1;if(all[mid].t<t)low=mid+1;else high=mid;}
+      let index=low;
+      if(all[index].t!==t&&all.length>1){const right=Math.max(1,index),left=right-1,span=all[right].t-all[left].t;
+        index=left+(span>0?(t-all[left].t)/span:0);}
+      return L+(index-a+.5)*slot;
+    };
+    const gapSeconds=intraday?Math.max(600,intervalSeconds*3):Infinity;
+    return { ma, studies, studyOptions:enabled, vwapSeries, periods, axisFont, intraday, history, live, W, H, L, R, top, bot, n, slot, hVol, chartH,
+      scale,requestedScale,scaleBase,scaleNotice,axisLabel,priceAt,rsiPane,volumeTop,plotBottom,
+      yTop, y, x, xAtTime, xForTime, timeline, visibleSessions, gapSeconds, reference,bars, all, candle, a, vis,
+      candleAvailable:capability.available,candleUnavailableReason:capability.reason,intervalSeconds };
   }
 
   function pTicks(q, p) {
     const money = formatterFor(q._chartData||q.d).money;
     const cx = p.ctx; cx.font = p.axisFont; cx.textAlign = 'left'; cx.textBaseline = 'middle';
     for (let g = 0; g <= 4; g++) {
-      const v = p.top - (p.top - p.bot) * g / 4;
+      const v = p.priceAt(p.yTop+p.chartH*g/4);
       cx.fillStyle = CHART_THEME.axisText;
       const yy=p.yTop+p.chartH*g/4;
       if(p.intraday){
-        cx.textAlign='right';cx.fillText(money(v),p.L-6,yy,p.L-8);
-        if(p.reference&&p.reference.value!==0){const pct=(v-p.reference.value)/Math.abs(p.reference.value)*100;
+        cx.textAlign='right';cx.fillText(p.axisLabel(v),p.L-6,yy,p.L-8);
+        if(p.scale!=='percent'&&p.reference&&p.reference.value!==0){const pct=(v-p.reference.value)/Math.abs(p.reference.value)*100;
           cx.textAlign='left';cx.fillText((pct>=0?'+':'')+pct.toFixed(2)+'%',p.W-p.R+5,yy,p.R-7);}
-      }else cx.fillText(money(v), p.W - p.R + 8, yy,p.R-10);
+      }else cx.fillText(p.axisLabel(v), p.W - p.R + 8, yy,p.R-10);
     }
     cx.textBaseline = 'alphabetic';
   }
@@ -201,8 +277,8 @@
     const cx = p.ctx; const { W, H, L, R, yTop, chartH, n, slot, hVol, bars, candle } = p;
     cx.clearRect(0, 0, W, H);
     if(!n)return;
-    const bw = Math.max(1.5, Math.min(slot * 0.66, 13));            // 实体宽=槽位66%, 间隙34%
-    const vtop = yTop + chartH + 8;
+    const bw = Math.max(1, Math.min(slot * 0.7, 15));
+    const vtop = p.volumeTop;
     // 横向网格 + 右侧价格轴
     cx.lineWidth = 1;
     for (let g = 0; g <= 4; g++) {
@@ -237,7 +313,7 @@
         cx.fillText(label,Math.max(L+width/2,Math.min(W-R-width/2,p.x(i))),H-7,maxWidth);previousDate=date;
       }
     }
-    if(p.reference){const yy=Math.round(p.y(p.reference.value))+.5;
+    if(p.reference&&p.reference.value>=p.bot&&p.reference.value<=p.top){const yy=Math.round(p.y(p.reference.value))+.5;
       cx.strokeStyle='rgba(96,105,115,.6)';cx.setLineDash([4,4]);cx.beginPath();cx.moveTo(L,yy);cx.lineTo(W-R,yy);cx.stroke();cx.setLineDash([]);
     }
     if(q._fiveDay&&p.timeline){let lastDay=null;for(const s of p.visibleSessions){const day=localDay(s.open,q._displayZone||'America/New_York');
@@ -245,6 +321,7 @@
       cx.strokeStyle='rgba(31,30,29,.12)';cx.beginPath();cx.moveTo(xx,yTop);cx.lineTo(xx,yTop+chartH);cx.stroke();}}
     // 成交量: 仅已核验的区间量进入尺度。null 保持缺失语义。
     const col = b => b.c >= b.o ? UP : DOWN;
+    if(hVol){
     const volumes=bars.map(b=>b.v).filter(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0);
     const maxV = volumes.length?Math.max(1,...volumes):1;
     cx.globalAlpha = 0.45;
@@ -262,30 +339,28 @@
     const unit=q.tf==='intraday'?q.d?.regularChart?.volumeUnit:q.historyStore?.getMeta(q.tf)?.meta?.volumeUnit;
     const unitText=unit==='shares'?'股':unit==='lots'?'手':unit==='contracts'?'张':'';
     cx.fillText(volumes.length?'量'+(unitText?'('+unitText+')':'')+' '+(window.PANEL_FORMAT?.fmtVol?.(maxV)||maxV):'区间成交量暂缺',L,vtop+10,Math.max(70,W-L-R));
+    }
     cx.save();cx.beginPath();cx.rect(L,yTop,Math.max(1,W-L-R),chartH);cx.clip();
     if (candle) {
       for (let i = 0; i < n; i++) {
         const b = bars[i], c2 = col(b);
         if(b._live)continue;
-        const xc = Math.round(p.x(i)) + 0.5;                        // 影线对齐像素, 清晰
-        cx.strokeStyle = c2; cx.lineWidth = 1;
-        cx.beginPath(); cx.moveTo(xc, Math.round(p.y(b.h))); cx.lineTo(xc, Math.round(p.y(b.l))); cx.stroke();
-        const ybT = Math.round(Math.min(p.y(b.o), p.y(b.c)));
-        const bh = Math.max(1, Math.round(Math.abs(p.y(b.o) - p.y(b.c))));
-        cx.fillStyle = c2; cx.fillRect(Math.round(p.x(i) - bw / 2), ybT, Math.max(1, Math.round(bw)), bh);
+        const xc=p.x(i),openY=p.y(b.o),closeY=p.y(b.c),bodyTop=Math.min(openY,closeY),bodyBottom=Math.max(openY,closeY);
+        // Retain source extrema, including sub-pixel shadows. Never lengthen a
+        // wick or change OHLC merely to make a candle look more dramatic.
+        cx.strokeStyle=c2;cx.lineWidth=Math.min(1.5,Math.max(1,slot*.18));
+        cx.beginPath();cx.moveTo(xc,p.y(b.h));cx.lineTo(xc,p.y(b.l));cx.stroke();
+        cx.fillStyle=c2;
+        if(b.o===b.c){cx.beginPath();cx.moveTo(xc-bw/2,openY);cx.lineTo(xc+bw/2,openY);cx.stroke();}
+        else cx.fillRect(xc-bw/2,bodyTop,bw,Math.max(.75,bodyBottom-bodyTop));
       }
-      p.periods.forEach(per => {const mcol=CHART_THEME.ma[per].line;
-        const ms = p.ma[per].slice(p.a, p.a + n); cx.strokeStyle = mcol; cx.lineWidth = 1.2; cx.lineJoin = 'round';
-        cx.beginPath(); let st = false;
-        ms.forEach((v, i) => { if (v == null) return; const yy = p.y(v); if (!st) { cx.moveTo(p.x(i), yy); st = true; } else cx.lineTo(p.x(i), yy); });
-        cx.stroke();
-      });
     } else {
-      const lineBars=bars.filter(b=>!b._live),closes=lineBars.map(b=>b.c);
+      const lineBars=bars.filter(b=>!b._live),closes=lineBars.map(b=>b.c).filter(Number.isFinite);
       const up = closes[closes.length - 1] >= closes[0]; const lc = up ? UP : DOWN;
       const g = cx.createLinearGradient(0, yTop, 0, yTop + chartH); g.addColorStop(0, up ? 'rgba(214,59,59,.13)' : 'rgba(26,143,78,.13)'); g.addColorStop(1, 'rgba(0,0,0,0)');
       const segments=[];let segment=[];
       lineBars.forEach((b,i)=>{
+        if(!Number.isFinite(b.c)){if(segment.length)segments.push(segment);segment=[];return;}
         const prior=lineBars[i-1],sameSession=!p.timeline||p.visibleSessions.some(s=>
           prior?.t*1000>=s.open&&b.t*1000<=s.close);
         if(prior&&(q._sampled?sampleGap(prior,b):b.t-prior.t>p.gapSeconds||!sameSession||
@@ -300,7 +375,7 @@
         if(!q._sampled){const first=indices[0],last=indices.at(-1);
           cx.lineTo(p.x(last),yTop+chartH);cx.lineTo(p.x(first),yTop+chartH);cx.closePath();cx.fillStyle=g;cx.fill();}
       }
-      if(q._sampled||lineBars.length===1){cx.fillStyle=lc;lineBars.forEach((b,i)=>{cx.beginPath();cx.arc(p.x(i),p.y(b.c),2.5,0,Math.PI*2);cx.fill();});}
+      if(q._sampled||lineBars.length===1){cx.fillStyle=lc;lineBars.forEach((b,i)=>{if(!Number.isFinite(b.c))return;cx.beginPath();cx.arc(p.x(i),p.y(b.c),2.5,0,Math.PI*2);cx.fill();});}
       if(p.vwapSeries){const values=p.vwapSeries.slice(p.a,p.a+n);let drawing=false;
         cx.beginPath();for(let i=0;i<values.length;i++){const value=values[i],b=bars[i],prior=bars[i-1];
           const joined=prior&&b.t-prior.t<=p.gapSeconds&&(!p.timeline||p.visibleSessions.some(s=>
@@ -309,6 +384,31 @@
           if(!drawing||!joined){cx.moveTo(p.x(i),p.y(value));drawing=true;}else cx.lineTo(p.x(i),p.y(value));
         }cx.strokeStyle='#e0a13c';cx.lineWidth=1.5;cx.stroke();}
     }
+    const joined=i=>!i||!(q._sampled?sampleGap(bars[i-1],bars[i]):bars[i].t-bars[i-1].t>p.gapSeconds||
+      p.timeline&&!p.visibleSessions.some(s=>bars[i-1].t*1000>=s.open&&bars[i].t*1000<=s.close));
+    const studyLine=(values,color,width=1.2,y=p.y)=>{
+      if(!values)return;cx.beginPath();let drawing=false;
+      for(let i=0;i<n;i++){const value=values[p.a+i];
+        if(!Number.isFinite(value)){drawing=false;continue;}
+        if(!drawing||!joined(i))cx.moveTo(p.x(i),y(value));else cx.lineTo(p.x(i),y(value));drawing=true;
+      }
+      cx.strokeStyle=color;cx.lineWidth=width;cx.lineJoin='round';cx.stroke();
+    };
+    const boll=p.studies.boll20;
+    if(boll){
+      let segment=[];const fillBand=()=>{if(segment.length<2){segment=[];return;}
+        cx.beginPath();segment.forEach((i,index)=>{const x=p.x(i),y=p.y(boll.upper[p.a+i]);if(index)cx.lineTo(x,y);else cx.moveTo(x,y);});
+        for(let j=segment.length-1;j>=0;j--){const i=segment[j];cx.lineTo(p.x(i),p.y(boll.lower[p.a+i]));}
+        cx.closePath();cx.fillStyle='rgba(70,130,150,.08)';cx.fill();segment=[];
+      };
+      for(let i=0;i<n;i++){
+        if(!Number.isFinite(boll.upper[p.a+i])||!Number.isFinite(boll.lower[p.a+i])){fillBand();continue;}
+        if(!joined(i))fillBand();segment.push(i);
+      }fillBand();
+      studyLine(boll.upper,'#468296');studyLine(boll.lower,'#468296');studyLine(boll.middle,'#749ca8',1);
+    }
+    for(const period of p.periods)studyLine(p.ma[period],CHART_THEME.ma[period].line);
+    studyLine(p.studies.ema20,'#c46b30',1.5);
     const liveIndex=bars.findIndex(b=>b._live);
     if(liveIndex>=0){
       const live=bars[liveIndex],previous=bars[liveIndex-1];
@@ -317,8 +417,19 @@
       cx.setLineDash([]);cx.fillStyle=cx.strokeStyle;cx.beginPath();cx.arc(p.x(liveIndex),p.y(live.c),3,0,Math.PI*2);cx.fill();
     }
     cx.restore();
+    if(p.rsiPane){const pane=p.rsiPane;
+      cx.fillStyle='rgba(130,64,155,.035)';cx.fillRect(L,pane.top,W-L-R,pane.height);
+      cx.font=p.axisFont;cx.textBaseline='middle';
+      for(const value of [30,50,70]){const yy=pane.y(value);
+        cx.strokeStyle='rgba(89,101,116,.22)';cx.setLineDash([3,3]);cx.beginPath();cx.moveTo(L,yy);cx.lineTo(W-R,yy);cx.stroke();
+        cx.fillStyle=CHART_THEME.axisText;cx.textAlign='left';cx.fillText(String(value),W-R+6,yy,R-8);
+      }
+      cx.setLineDash([]);cx.textBaseline='alphabetic';cx.textAlign='left';cx.fillStyle=CHART_THEME.axisText;cx.fillText('RSI 14',L+3,pane.top+11,65);
+      cx.save();cx.beginPath();cx.rect(L,pane.top,W-L-R,pane.height);cx.clip();studyLine(p.studies.rsi14,'#82409b',1.4,pane.y);cx.restore();
+      if(!p.studies.rsi14?.slice(p.a,p.a+n).some(Number.isFinite))cx.fillText('RSI 14 数据不足',L+72,pane.top+11,Math.max(0,W-L-R-75));
+    }
     if(q._detail&&n>1){
-      const valueHigh=b=>candle?b.h:b.c,valueLow=b=>candle?b.l:b.c;
+      const valueHigh=b=>candle&&!b._live?b.h:b.c,valueLow=b=>candle&&!b._live?b.l:b.c;
       let high=0,low=0;for(let i=1;i<n;i++){
         if(valueHigh(bars[i])>valueHigh(bars[high]))high=i;
         if(valueLow(bars[i])<valueLow(bars[low]))low=i;
@@ -335,7 +446,7 @@
     const lyp = Math.round(p.y(last.c)) + 0.5;
     cx.strokeStyle = 'rgba(31,30,29,.35)'; cx.setLineDash([4, 4]); cx.lineWidth = 1;
     cx.beginPath(); cx.moveTo(L, lyp); cx.lineTo(W - R, lyp); cx.stroke(); cx.setLineDash([]);
-    priceTag(cx, p, lyp, money(last.c), candle&&!last._live ? (last.c >= last.o ? UP : DOWN) :
+    priceTag(cx, p, lyp, p.axisLabel(last.c), candle&&!last._live ? (last.c >= last.o ? UP : DOWN) :
       (last.c >= (p.reference?.value??bars[0].c) ? UP : DOWN));
   }
   function drawCursor(q, p, hover, cx) {
@@ -344,15 +455,20 @@
     const vtop = yTop + chartH + 8;
     cx.clearRect(0, 0, W, H);
     // 十字光标 + 光标价签
-    if (hover != null && hover >= 0 && hover < n) {
+    if (hover != null && hover >= 0 && hover < n && Number.isFinite(bars[hover].c)) {
       const hiX = Math.round(p.x(hover)) + 0.5, hiY = Math.round(p.y(bars[hover].c)) + 0.5;
       cx.strokeStyle = 'rgba(31,30,29,.4)'; cx.setLineDash([3, 3]); cx.lineWidth = 1;
-      cx.beginPath(); cx.moveTo(hiX, yTop); cx.lineTo(hiX, vtop + hVol); cx.stroke();
+      cx.beginPath(); cx.moveTo(hiX, yTop); cx.lineTo(hiX, p.plotBottom); cx.stroke();
       cx.beginPath(); cx.moveTo(L, hiY); cx.lineTo(W - R, hiY); cx.stroke(); cx.setLineDash([]);
-      priceTag(cx, p, hiY, money(bars[hover].c), '#6b6967');
+      priceTag(cx, p, hiY, p.axisLabel(bars[hover].c), '#6b6967');
+      const rsi=p.studies.rsi14?.[p.a+hover];
+      if(p.rsiPane&&Number.isFinite(rsi)){
+        cx.fillStyle='#82409b';cx.beginPath();cx.arc(p.x(hover),p.rsiPane.y(rsi),2.5,0,Math.PI*2);cx.fill();
+        cx.font=p.axisFont;cx.textAlign='left';cx.fillText(rsi.toFixed(1),W-R+6,p.rsiPane.y(rsi),R-8);
+      }
     }
   }
     return Object.freeze({ computePlot, drawPlot, drawCursor });
   };
-  window.PANEL_CHART_ENGINE = Object.freeze({ createChartEngine, CHART_THEME, livePointFor, createObservationSeries, sampleGap });
+  window.PANEL_CHART_ENGINE = Object.freeze({ createChartEngine, CHART_THEME, livePointFor, createObservationSeries, sampleGap, candleCapability });
 })();

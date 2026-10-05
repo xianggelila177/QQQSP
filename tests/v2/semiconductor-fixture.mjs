@@ -11,6 +11,9 @@ export function semiUpstream(raw){
  if(u.hostname==='api.stock.naver.com'){
   if(u.pathname==='/index/.SOX/basic')return json(soxBasic);
   if(u.pathname==='/chart/foreign/index/.SOX')return json(soxIntraday);
+  if(u.pathname==='/chart/foreign/INDEX/NASDAQ/.SOX/interval/5')return json({reutersCode:'.SOX',stockExchangeType:'NASDAQ',zoneId:'EST5EDT',infoType:'index',timeFrame:'minute5',hasVolume:false,
+   candleList:soxIntraday.priceInfos.map(row=>({reutersCode:'.SOX',stockExchangeType:'NASDAQ',tradeAt:row.localDateTime==='20260918093000'?'2026-09-18T13:30Z':'2026-09-18T14:15Z',
+    openPrice:row.currentPrice-2,highPrice:row.currentPrice+3,lowPrice:row.currentPrice-4,closePrice:row.currentPrice,tradingVolume:0}))});
   if(u.pathname==='/chart/foreign/index/.SOX/day')return json(soxDaily);
  }
  if(u.hostname==='api.nasdaq.com'&&u.pathname.startsWith('/api/quote/SOXX/')){

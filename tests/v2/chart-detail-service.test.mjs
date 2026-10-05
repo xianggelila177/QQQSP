@@ -22,9 +22,10 @@ test('five-day detail keeps five real trading dates and their regular OHLCV bars
   };
   const service=createChartDetailService({readQuote,fetchChart,now:()=>now});
   const result=await service.read('AAOI',{range:'5d'});
-  assert.equal(result.fiveDay.status,'ready');assert.equal(result.fiveDay.coveredDays,5);
+  assert.equal(result.fiveDay.status,'partial');assert.equal(result.fiveDay.coveredDays,5);
   assert.equal(result.fiveDay.bars.length,10);assert.equal(result.fiveDay.days.length,5);
-  assert.ok(result.fiveDay.days.every(d=>d.status==='ready'&&d.bars.every(b=>b.v>=1000)));
+  assert.ok(result.fiveDay.days.every(d=>d.status==='partial'&&d.bars.every(b=>b.v>=1000)));
+  assert.equal(result.fiveDay.intervalCoverage.observedBars,10);assert.equal(result.fiveDay.intervalCoverage.expectedSlots,390);
   assert.equal(result.book.reason,'SOURCE_HAS_NO_BOOK');
 });
 
@@ -49,7 +50,8 @@ test('an entitled Alpaca feed supplies same-source minute OHLCV without Yahoo',a
   const service=createChartDetailService({advanced,readQuote:()=>({symbol:'AAOI',currency:'USD',instrumentType:'EQUITY'}),
     fetchChart:async()=>{yahooCalls++;throw new Error('not expected');},now:()=>now});
   const result=await service.read('AAOI',{range:'5d'});
-  assert.equal(yahooCalls,0);assert.equal(result.fiveDay.status,'ready');
+  assert.equal(yahooCalls,0);assert.equal(result.fiveDay.status,'partial');
+  assert.equal(result.fiveDay.reason,'FIVE_DAY_INTERVAL_COVERAGE_UNVERIFIED');
   assert.equal(result.fiveDay.source,'alpaca-iex');assert.equal(result.fiveDay.coverage,'single-exchange');
   assert.deepEqual(result.fiveDay.bars.map(b=>b.v),[1234,1234,1234,1234,1234]);
 });

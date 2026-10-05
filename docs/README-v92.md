@@ -15,7 +15,7 @@ cp .env.example .env
 npm start
 ```
 
-默认地址为 `http://127.0.0.1:8567`。Linux 服务、持久化目录及升级步骤见 [部署说明](部署说明.md)。升级时保留已有配置和状态。
+默认地址为 `http://127.0.0.1:8567`。Linux 服务、持久化目录及升级步骤见 [部署说明](../部署说明.md)。升级时保留已有配置和状态。
 
 ## v92 新增：供 LLM 查询的完整 JSON
 
@@ -38,11 +38,11 @@ Content-Type: application/json
 
 文档与客户端：
 
-- [接口与字段说明](public/market-context.md)
-- [OpenAPI 3.1](public/market-context.openapi.json)；运行时地址 `/api/v1/openapi.json`
-- [JSON Schema](public/market-context.schema.json)
-- [Agent 工具定义](public/market-context.tool.json) 与 [llms.txt](public/llms.txt)
-- [零运行时依赖的查询与统计脚本](scripts/market-context-client.mjs)
+- [接口与字段说明](../public/market-context.md)
+- [OpenAPI 3.1](../public/market-context.openapi.json)；运行时地址 `/api/v1/openapi.json`
+- [JSON Schema](../public/market-context.schema.json)
+- [Agent 工具定义](../public/market-context.tool.json) 与 [llms.txt](../public/llms.txt)
+- [零运行时依赖的查询与统计脚本](../scripts/market-context-client.mjs)
 
 调用脚本从私有环境文件读取 `LLM_API_KEY` 和 `LLM_API_BASE_URL`。本机测试可设置 `LLM_API_BASE_URL=http://127.0.0.1:8567`；公网使用自己的 HTTPS 地址：
 

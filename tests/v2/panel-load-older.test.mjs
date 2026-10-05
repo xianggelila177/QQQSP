@@ -39,6 +39,7 @@ test('one yearly bar with hasMore exposes 加载更早 even when slider is hidde
     abort(){}
   };
   const engine={createObservationSeries:()=>()=>({bars:[],sampled:false,note:''}),livePointFor:()=>null,
+    candleCapability:()=>({available:bars.length>0,reason:''}),
     createChartEngine:()=>({computePlot(q){
       const all=store.getSeries(),vis=Math.min(all.length,q.visN[q.tf]||20),a=q.winStart==null?Math.max(0,all.length-vis):Math.min(q.winStart,all.length-vis);
       return {W:450,H:240,vis,a,n:vis,all,history:all,bars:all.slice(a,a+vis),candle:true,periods:[],ma:{},x:()=>0};
@@ -49,7 +50,7 @@ test('one yearly bar with hasMore exposes 加载更早 even when slider is hidde
   const document={hidden:false,createElement:()=>new Element(),addEventListener(){}};
   const sandbox={window:panel,document,Date,setInterval:()=>1,clearInterval(){},requestAnimationFrame:fn=>fn(),
     IntersectionObserver:undefined,ResizeObserver:undefined};
-  vm.runInNewContext(readFileSync(new URL('../../public/modules/panel-chart-controller.js',import.meta.url),'utf8'),sandbox);
+  for(const name of ['panel-chart-viewport','panel-chart-controller'])vm.runInNewContext(readFileSync(new URL('../../public/modules/'+name+'.js',import.meta.url),'utf8'),sandbox);
   const controller=panel.PANEL_CHART_CONTROLLER.createChartController({document,client:engine,
     formatterFor:()=>({money:String}),formatKey:()=> 'TWD',flash(){},UP:'red',DOWN:'green'});
   const meter=new Element(),summary=new Element(),canvas=new Element(),cursor=new Element(),point=new Element();

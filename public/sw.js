@@ -1,6 +1,10 @@
-const VERSION = 'v111';
+const VERSION = 'v120';
 // 版本源: panel/VERSION(P1-Q5 单一来源) · 由 build_version.sh 同步 sw.js/index.html/app.js; 升版只改 VERSION 后跑一次脚本
 const CACHE = 'qqq-panel-' + VERSION;
+self.addEventListener('message',event=>{
+  if(event.data?.type==='QQQSP_GET_VERSION')
+    event.ports?.[0]?.postMessage({type:'QQQSP_VERSION',version:VERSION.slice(1)});
+});
 const CORE = ['/', '/index.html', '/style.css', '/panel.bundle.js', '/manifest.webmanifest', '/icon.svg'];
 const CORE_REQUESTS = CORE.map(resource => resource === '/' || resource === '/index.html' ? resource : resource + '?v=' + VERSION.slice(1));
 const compatibleDocument = async response => {

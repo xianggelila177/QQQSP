@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
+  <title>更新行情页面 · QQQSP</title>
+  <link rel="stylesheet" href="/api-keys.css">
+  <script src="/update.js" defer></script>
+</head>
+<body>
+  <main aria-labelledby="update-title">
+    <h1 id="update-title">更新行情页面</h1>
+    <p>正在取得最新页面。你的自选和本地设置会保留。</p>
+    <p id="update-status" role="status" aria-live="polite">正在检查更新…</p>
+    <p><progress id="update-progress" aria-label="页面更新进行中"></progress></p>
+    <p><button id="update-retry" type="button" hidden>重试更新</button></p>
+    <p>更新确认完成后，会自动返回行情页。</p>
+    <p><a href="/">返回行情页</a></p>
+    <noscript><p>请启用 JavaScript 后重新打开此页，以完成更新。</p></noscript>
+  </main>
+</body>
+</html>

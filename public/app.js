@@ -285,11 +285,17 @@
   $('btnPwa').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('btnPwa').hidden=true;}});
 
   if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('/sw.js?v=111').then((reg)=>{
-      reg.addEventListener('updatefound',()=>{ const nw=reg.installing; if(!nw)return;   // 新版本就绪提示(借鉴 openmarket ReleaseNotes 模式)
-        nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller)flash('面板已更新，刷新页面启用新版本','info',{label:'刷新页面',run:()=>location.reload()}); });
-      });
-    }).catch(()=>{});
+    const loadedScript=document.querySelector('script[src*="panel.bundle.js"]');
+    const pageVersion=new URL(loadedScript?.src||location.href,location.href).searchParams.get('v')||'';
+    const updateButton=document.createElement('button');updateButton.type='button';updateButton.className='chip';updateButton.id='panelUpdate';
+    updateButton.textContent=pageVersion?'面板 v'+pageVersion:'检查面板更新';updateButton.title='检查并安装面板更新';
+    $('btnRefresh').parentNode?.appendChild(updateButton);
+    const updates=window.PANEL_UPDATES.createPanelUpdates({window,document,navigator,location,pageVersion,onStatus:state=>{
+      updateButton.textContent=state.state==='unknown'?'版本待确认 · 点击刷新':state.version?'切换至 v'+state.version:state.state==='checking'?'检查更新中…':state.state==='installing'?'正在更新面板…':pageVersion?'面板 v'+pageVersion:'检查面板更新';
+      updateButton.title=state.state==='unknown'?'当前缓存控制器无法报告版本，点击刷新页面确认':state.state==='error'?'暂时无法检查更新，点击重试':state.version?'部署版本已就绪，点击启用':'检查并安装面板更新';
+      updateButton.setAttribute('aria-live','polite');
+    }});
+    updateButton.addEventListener('click',()=>void updates.activate());void updates.start();
   }
   // Header connection age follows the selected reading cadence. Quote/source
   // freshness is shared with cards and does not mistake a closed market for failure.

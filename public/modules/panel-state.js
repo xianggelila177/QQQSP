@@ -1,5 +1,5 @@
 (() => {
-  const MAX_WATCHLIST_SYMBOLS = 100;
+  const MAX_WATCHLIST_SYMBOLS = 100; // Generated from lib/watchlist-limits.js.
   function createSafeStorage(getStorage, onUnavailable = () => {}) {
     const memory=new Map();let storage=null,failed=false;
     const fail=()=>{if(!failed){failed=true;onUnavailable();}storage=null;};

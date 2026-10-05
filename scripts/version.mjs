@@ -15,16 +15,15 @@ export function syncReadmeVersion(root,{check=false}={}) {
 function inputs(root) {
   const version = fs.readFileSync(path.join(root, 'VERSION'), 'utf8').trim();
   if (!/^\d+$/.test(version) || !Number.isSafeInteger(Number(version))) throw new Error('VERSION must be an integer');
-  const files = ['public/sw.js', 'public/index.html', 'public/app.js'];
+  const files = ['public/sw.js', 'public/index.html'];
   const content = files.map(file => fs.readFileSync(path.join(root, file), 'utf8'));
   if ((content[0].match(/const VERSION = 'v\d+';/g) || []).length !== 1) throw new Error('Service Worker version marker missing or ambiguous');
   if ((content[1].match(/\?v=\d+/g) || []).length < 4) throw new Error('HTML version markers missing');
-  if ((content[2].match(/sw\.js\?v=\d+/g) || []).length !== 1) throw new Error('Service Worker registration version marker missing or ambiguous');
   return { version, files, content };
 }
 export function checkVersion(root) {
   const { version, content } = inputs(root);
-  const references = [content[0].match(/const VERSION = 'v(\d+)';/)[1], ...[...content[1].matchAll(/\?v=(\d+)/g)].map(match => match[1]), content[2].match(/sw\.js\?v=(\d+)/)[1]];
+  const references = [content[0].match(/const VERSION = 'v(\d+)';/)[1], ...[...content[1].matchAll(/\?v=(\d+)/g)].map(match => match[1])];
   if (references.some(value => value !== version)) throw new Error('VERSION and frontend resources differ; run bash build_version.sh');
   const core = content[0].match(/const CORE = \[([\s\S]*?)\];/);
   if (!core) throw new Error('Service Worker CORE declaration missing');
@@ -45,7 +44,6 @@ export function syncVersion(root) {
   const updated = [
     content[0].replace(/const VERSION = 'v\d+';/, `const VERSION = 'v${version}';`),
     content[1].replace(/(\?v=)\d+/g, (_, prefix) => prefix + version),
-    content[2].replace(/(sw\.js\?v=)\d+/, (_, prefix) => prefix + version),
   ];
   // Validate all markers before any write; stage complete files with original mode.
   const temporary = fs.mkdtempSync(path.join(root, '.version-stage-'));

@@ -3,6 +3,7 @@
 set -euo pipefail
 SOURCE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 source "$SOURCE/ops/release-common.sh"
+source "$SOURCE/ops/service-unit.sh"
 ROOT=${1:-/opt/qqqsp-v2}
 NEW_PORT=${2:-8568}
 SERVICE=qqqsp-v2.service
@@ -24,9 +25,13 @@ NODE_BIN=$(readlink -f -- "$NODE_BIN")
 "$NODE_BIN" -e 'const [m,n]=process.versions.node.split(".").map(Number);if(m<22 || m===22 && n<16)process.exit(1)' || { echo '需要 Node.js 22.16 或更新版本（推荐 24）。'; exit 1; }
 id qqqsp >/dev/null 2>&1 || useradd --system --no-create-home --shell /usr/sbin/nologin qqqsp
 runuser -u qqqsp -- "$NODE_BIN" --version >/dev/null || { echo 'qqqsp 用户不能执行该 Node；请使用所有用户可执行的系统 Node 路径。'; exit 1; }
-install -d -m 755 "$ROOT" "$ROOT/releases" "$ROOT/shared"
+for directory in "$ROOT" "$ROOT/releases" "$ROOT/shared"; do
+  [[ -d "$directory" ]] || install -d -m 755 "$directory"
+done
 qqqsp_release_lock "$ROOT"
-install -d -o qqqsp -g qqqsp -m 750 "$ROOT/shared/state" "$ROOT/shared/logs"
+for directory in "$ROOT/shared/state" "$ROOT/shared/logs"; do
+  [[ -d "$directory" ]] || install -d -o qqqsp -g qqqsp -m 750 "$directory"
+done
 if [[ ! -f "$ROOT/shared/.env" ]]; then
   # .env 仅作为数据交给 Node/systemd 读取，绝不 source 为 shell 脚本。
   if [[ -f "$SOURCE/.env" ]]; then
@@ -44,6 +49,8 @@ PREVIOUS=$(readlink -f "$ROOT/current" 2>/dev/null || true)
 RELEASE=$(mktemp -d "$ROOT/releases/$(date -u +%Y%m%dT%H%M%SZ)-XXXXXX")
 chmod 755 "$RELEASE"
 COMMITTED=0
+UNIT_PATH="/etc/systemd/system/$SERVICE"
+UNIT_CREATED=0
 cleanup_failed(){
   local code=$?
   if [[ "$COMMITTED" != 1 ]]; then
@@ -54,6 +61,11 @@ cleanup_failed(){
       systemctl stop "$SERVICE" || true
       [[ $(readlink -f "$ROOT/current" 2>/dev/null || true) != "$RELEASE" ]] || rm -f -- "$ROOT/current"
     fi
+    if [[ "$UNIT_CREATED" == 1 ]]; then
+      systemctl disable "$SERVICE" || true
+      rm -f -- "$UNIT_PATH"
+      systemctl daemon-reload || true
+    fi
     rm -rf -- "$RELEASE"
     rm -f -- "$ROOT/.current-$$" "$ROOT/.rollback-$$"
   fi
@@ -63,40 +75,18 @@ trap cleanup_failed EXIT
 for item in app.js server.js config.js log.mjs mkt.mjs sent.mjs VERSION package.json package-lock.json lib public data; do
   cp -a -- "$SOURCE/$item" "$RELEASE/$item"
 done
+if [[ -f "$SOURCE/release-manifest.json" ]]; then cp -a -- "$SOURCE/release-manifest.json" "$RELEASE/release-manifest.json"; fi
 chmod -R a+rX "$RELEASE"
 ln -s "$ROOT/shared/state" "$RELEASE/state"
 ln -s "$ROOT/shared/logs" "$RELEASE/logs"
 PREVIOUS=$(readlink -f "$ROOT/current" 2>/dev/null || true)
 qqqsp_switch_release "$ROOT" "$RELEASE"
-cat > "/etc/systemd/system/$SERVICE" <<EOF
-[Unit]
-Description=QQQSP v2 single-user market panel
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=simple
-User=qqqsp
-Group=qqqsp
-WorkingDirectory=$ROOT/current
-EnvironmentFile=$ROOT/shared/.env
-ExecStart=$NODE_BIN server.js
-Restart=on-failure
-RestartSec=5
-TimeoutStopSec=12
-NoNewPrivileges=true
-UMask=0027
-MemoryAccounting=true
-MemoryHigh=$MEMORY_HIGH
-MemoryMax=$MEMORY_MAX
-TasksMax=128
-LimitNOFILE=4096
-
-[Install]
-WantedBy=multi-user.target
-EOF
+if [[ ! -e "$UNIT_PATH" && ! -L "$UNIT_PATH" ]] && ! systemctl cat "$SERVICE" >/dev/null 2>&1; then
+  UNIT_CREATED=1
+  qqqsp_write_service_unit "$UNIT_PATH" "$ROOT" "$NODE_BIN" "$MEMORY_HIGH" "$MEMORY_MAX"
+fi
 systemctl daemon-reload
-systemctl enable "$SERVICE"
+if [[ "$UNIT_CREATED" == 1 ]]; then systemctl enable "$SERVICE"; fi
 if systemctl restart "$SERVICE"; then
   if qqqsp_wait_ready "$NODE_BIN" "$ACTIVE_PORT" "$(cat "$RELEASE/VERSION")" "$SERVICE"; then
    if [[ -n "$PREVIOUS" && "$PREVIOUS" != "$RELEASE" ]]; then qqqsp_switch_release "$ROOT" "$PREVIOUS" previous; fi

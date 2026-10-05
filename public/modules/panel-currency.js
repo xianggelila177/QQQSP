@@ -1,11 +1,13 @@
 (() => {
-  // Preserve source units: uppercasing GBp before this check loses the 1/100 factor.
-  const currencyUnit = value => {
-    const raw = String(value || 'USD').trim();
-    if (raw === 'GBp' || raw.toUpperCase() === 'GBX') return { unit: raw === 'GBp' ? 'GBp' : 'GBX', base: 'GBP', scale: 0.01 };
-    if (raw === 'ZAc' || raw.toUpperCase() === 'ZAC') return { unit: raw === 'ZAc' ? 'ZAc' : 'ZAC', base: 'ZAR', scale: 0.01 };
-    return { unit: raw.toUpperCase(), base: raw.toUpperCase(), scale: 1 };
-  };
+  // BEGIN GENERATED CURRENCY CONTRACT (lib/currency.js; npm run build)
+  const sourceCurrencyUnit = function currencyUnitInfo(raw='USD'){
+  const unit=String(raw||'USD').trim();
+  if(unit==='GBp'||unit.toUpperCase()==='GBX')return {unit:unit==='GBp'?'GBp':'GBX',currency:'GBP',scale:.01};
+  if(unit==='ZAc'||unit.toUpperCase()==='ZAC')return {unit:unit==='ZAc'?'ZAc':'ZAC',currency:'ZAR',scale:.01};
+  return {unit:unit.toUpperCase(),currency:unit.toUpperCase(),scale:1};
+};
+  // END GENERATED CURRENCY CONTRACT
+  const currencyUnit = value => {const {unit,currency:base,scale}=sourceCurrencyUnit(value);return {unit,base,scale};};
   const convert = (value, from, to, rates, options = {}) => {
     if (value == null || options.index) return value;
     if (to === 'NATIVE') return value;

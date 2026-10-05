@@ -11,13 +11,14 @@ test('empty history remains selected and browser quotes never accumulate samples
 });
 test('previous-day history remains selected with an explicit date; samples require a server payload',()=>{
  const select=observation({now:()=>base}),history=[{t:base/1000-86400,c:180,v:200}];
- const view=select(quote({charts:{intraday:history},marketState:'PRE',priceSession:'PRE'}));assert.strictEqual(view.bars,history);assert.equal(view.sampled,false);assert.match(view.note,/历史分时日期/);
+ const view=select(quote({regularChart:{bars:history,tradeDate:'2026-09-09'},marketState:'PRE',priceSession:'PRE'}));assert.strictEqual(view.bars,history);assert.equal(view.sampled,false);assert.match(view.note,/图表日期 2026-09-09/);
  const server=[{t:base/1000,c:190,v:null,_sample:true,currency:'USD',source:'fixture',tradingDate:'2026-09-10'}];
  assert.strictEqual(select(quote(),'samples',{points:server}).bars,server);
  assert.equal(select(quote({currency:'KRW'}),'samples',{points:server}).bars.length,0);
 });
 test('real current historical series remains authoritative; invalid quotes create no made-up point',()=>{
- const select=observation({now:()=>base});const history=[{t:base/1000-60,c:180,v:200}];const v=select(quote({charts:{intraday:history}}));assert.strictEqual(v.bars,history);assert.equal(v.sampled,false);
+ const select=observation({now:()=>base});const history=[{t:base/1000-60,c:180,v:200}];const v=select(quote({regularChart:{bars:history,tradeDate:'2026-09-10'}}));assert.strictEqual(v.bars,history);assert.equal(v.sampled,false);
+ assert.equal(select(quote({charts:{intraday:history}})).bars.length,0,'raw bars must pass regular-session projection before being selected');
  const no=observation({now:()=>base})(quote({price:null,quoteAt:null}));assert.equal(no.bars.length,0);assert.equal(no.sampled,false);
 });
 test('history enrichment is cached separately; failed refresh retains real bars and successful time',async()=>{

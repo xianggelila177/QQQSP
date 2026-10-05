@@ -23,7 +23,7 @@ function detailHarness(){
     requestAnimationFrame:()=>1,cancelAnimationFrame(){},setTimeout,clearTimeout,
     setInterval:fn=>{intervals.set(++intervalId,fn);return intervalId;},clearInterval:id=>intervals.delete(id),
     fetch:(url,{signal})=>new Promise((resolve,reject)=>{pending.push({url,resolve,reject,signal});signal.addEventListener('abort',()=>reject(Object.assign(new Error('aborted'),{name:'AbortError'})));})};
-  load(context,['panel-scheduler','panel-network','panel-timeframes','panel-format']);
+  load(context,['panel-scheduler','panel-network','panel-timeframes','panel-chart-viewport','panel-format','panel-trade-direction','panel-market-detail-model','panel-market-detail-view','panel-detail-dialog']);
   vm.runInNewContext(source('modules/panel-chart-detail.js').replace('return Object.freeze({mount,update:q=>','return Object.freeze({open,fetchDetail,chartInfo,selectPeriod,mount,update:q=>'),context);
   const view=window.PANEL_CHART_DETAIL.createChartDetailView({document,formatterFor:()=>({money:String}),UP:'red',DOWN:'green',canPoll:()=>!document.hidden||mode==='continuous'});
   const card=(symbol,extra={})=>({symbol,el:new Element(),cv:new Element(),d:{symbol,price:100,quoteAt:Date.now(),regularChart:{bars:[]},...extra}});
@@ -44,12 +44,12 @@ test('detail clears the entire previous instrument state and rejects wrong respo
   h.view.open({symbol:'PENDING',cv:new Element(),d:null});assert.match(h.field('#chart-detail-title').textContent,/PENDING/);assert.equal(h.field('.cd-price').textContent,'—');h.view.close();await settle();
 });
 
-test('detail shares futures baseline semantics and exposes stale regular-chart evidence',async()=>{
+test('detail shares futures baseline semantics and exposes stale state without verbose source diagnostics',async()=>{
   const h=detailHarness();h.view.open(h.card('CL=F',{instrumentType:'FUTURE',changeBasis:'previous-settlement',prevClose:-10,
     regularChart:{bars:[],stale:true,error:'UPSTREAM_TIMEOUT',missingReason:'CHART_SOURCE_STALE',sourceCheckedAt:Date.now()}}));
   assert.match(h.field('.cd-baseline').textContent,/较前结算基准 -10/);assert.match(h.field('.cd-facts').textContent,/前结算 -10/);
   assert.doesNotMatch(h.field('.cd-baseline').textContent,/常规收盘/);
-  const info=h.view.chartInfo({},0);assert.match(info,/缓存分时已过期/);assert.match(info,/UPSTREAM_TIMEOUT/);assert.match(info,/来源检查/);h.view.close();await settle();
+  const info=h.view.chartInfo({},0);assert.match(info,/缓存待更新/);assert.match(info,/历史来源刷新失败，保留旧图/);assert.doesNotMatch(info,/UPSTREAM_TIMEOUT|来源检查/);h.view.close();await settle();
 });
 
 test('detail obeys cooldown and economy lifecycle while continuous mode remains active',async()=>{

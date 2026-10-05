@@ -27,7 +27,13 @@ test('independent daily, weekly, monthly and yearly histories all use the verifi
  try{for(const period of ['daily','weekly','monthly','yearly']){
   const result=await service.get('XLK',period,{count:5});assert.ok(result.bars.length>0,period);assert.equal(result.source,'nasdaq-history');assert.equal(result.symbol,'XLK');
   assert.ok(result.bars.every(b=>[b.o,b.h,b.l,b.c].every(Number.isFinite)),period);
- }assert.ok(urls.every(url=>new URL(url).searchParams.get('assetclass')==='etf'));}finally{service.close();}
+ }
+ // A sparse fixture can leave the initial recent window empty and trigger an
+ // Eastmoney fallback probe before Nasdaq succeeds with the wider window.
+ const nasdaq=urls.filter(url=>new URL(url).hostname==='api.nasdaq.com');
+ assert.ok(nasdaq.length);assert.ok(nasdaq.every(url=>new URL(url).searchParams.get('assetclass')==='etf'));
+ assert.ok(urls.filter(url=>!nasdaq.includes(url)).every(url=>new URL(url).searchParams.get('secid')?.endsWith('.XLK')));
+ }finally{service.close();}
 });
 test('XLK Naver listing is explicit and its after-hours quote remains distinct from regular close',async()=>{
  const urls=[];const row={reutersCode:'XLK',symbolCode:'XLK',stockName:'State Street Technology Select Sector SPDR ETF',stockExchangeType:{code:'AMX',nameEng:'American Stock Exchange',delayTime:0},currencyType:{code:'USD'},closePriceRaw:'187.67',compareToPreviousClosePriceRaw:'2.45',localTradedAt:'2026-09-11T16:00:00-04:00',overMarketPriceInfo:{tradingSessionType:'AFTER_MARKET',overPrice:'187.66',localTradedAt:'2026-09-11T20:00:00-04:00'}};

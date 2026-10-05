@@ -51,7 +51,7 @@ test('only the exact official empty-month response is treated as empty; errors r
 test('canceling one TWSE reader leaves the other reader and producer alive',async t=>{
   let ready,complete,upstreamSignal,calls=0;
   const started=new Promise(resolve=>ready=resolve);
-  const daily=createTwseHistory({now:clock,httpsGet:async(url,headers,{signal})=>{
+  const daily=createTwseHistory({now:clock,maxMonths:1,httpsGet:async(url,headers,{signal})=>{
     calls++;upstreamSignal=signal;ready();return new Promise(resolve=>complete=resolve);
   }});
   t.after(()=>daily.close());
@@ -68,7 +68,7 @@ test('canceling one TWSE reader leaves the other reader and producer alive',asyn
 
 test('last TWSE reader cancellation aborts the producer without caching its failure; close can reopen',async()=>{
   const pending=[];
-  const daily=createTwseHistory({now:clock,httpsGet:async(url,headers,{signal})=>new Promise((resolve,reject)=>{
+  const daily=createTwseHistory({now:clock,maxMonths:1,httpsGet:async(url,headers,{signal})=>new Promise((resolve,reject)=>{
     pending.push({signal,resolve});signal.addEventListener('abort',()=>reject(signal.reason),{once:true});
   })});
   const started=async()=>{while(!pending.length)await new Promise(resolve=>setImmediate(resolve));};

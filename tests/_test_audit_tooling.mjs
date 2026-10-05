@@ -47,8 +47,8 @@ try {
     const fixture = path.join(temp, 'version'); mkdirSync(fixture);
     cpSync(path.join(root, 'public'), path.join(fixture, 'public'), { recursive: true });
     writeFileSync(path.join(fixture, 'VERSION'), '987\n');
-    const appPath = path.join(fixture, 'public', 'app.js');
-    writeFileSync(appPath, readFileSync(appPath, 'utf8').replace(/sw\.js\?v=\d+/, 'worker-without-version.js'));
+    const swPath = path.join(fixture, 'public', 'sw.js');
+    writeFileSync(swPath, readFileSync(swPath, 'utf8').replace(/const VERSION = 'v\d+';/, 'const INVALID_VERSION = null;'));
     const before = ['app.js', 'index.html', 'sw.js'].map(file => readFileSync(path.join(fixture, 'public', file), 'utf8'));
     assert.throws(() => syncVersion(fixture), /version marker missing/);
     assert.deepEqual(['app.js', 'index.html', 'sw.js'].map(file => readFileSync(path.join(fixture, 'public', file), 'utf8')), before);

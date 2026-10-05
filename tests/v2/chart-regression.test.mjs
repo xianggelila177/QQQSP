@@ -21,7 +21,7 @@ function engineSandbox(clock=Date){const s={window:{},Date:clock};vm.runInNewCon
 function historySandbox(){const s={window:{},URLSearchParams,AbortController,AbortSignal,setTimeout,clearTimeout,Date};for(const f of ['panel-timeframes.js','panel-scheduler.js','panel-network.js','panel-history-store.js'])vm.runInNewContext(fs.readFileSync(new URL('../../public/modules/'+f,import.meta.url),'utf8'),s);return s.window;}
 
 test('REGRESSION: Yahoo 429 cannot disable US daily/weekly/monthly/yearly at the real HTTP boundary',async t=>{
- const calls=[];
+ const calls=[],historyReads=[],readsByPeriod=[],barsByPeriod=new Map();
  const app=createApplication({env:{HISTORY_BACKGROUND_ENABLED:'0',HISTORY_STATE_PATH:'',MACRO_BACKGROUND_ENABLED:'0',MACRO_STATE_PATH:'',PORT:0,REALTIME_SNAPSHOTS:'0',PUBLIC_SOURCE_REDUNDANCY:'0'},now:()=>asOf,telemetry:createTelemetry(),upstream:async url=>{
   calls.push(url);
   if(url.includes('api.nasdaq.com')&&url.includes('/historical')){
@@ -30,6 +30,8 @@ test('REGRESSION: Yahoo 429 cannot disable US daily/weekly/monthly/yearly at the
     const [month,day,year]=row.date.split('/');const date=`${year}-${month}-${day}`;
     return date>=from&&date<=through;
    }).slice(0,Number(params.get('limit')));
+   const oldest=rows.at(-1)?.date.split('/');
+   historyReads.push({from,through,limit:Number(params.get('limit')),oldestDate:oldest&&`${oldest[2]}-${oldest[0]}-${oldest[1]}`});
    return {status:200,headers:{},body:JSON.stringify({data:{symbol:'NVDA',totalRecords:rows.length,tradesTable:{rows}},status:{rCode:200}})};
   }
   return {status:429,headers:{'retry-after':'120'},body:''};
@@ -41,16 +43,43 @@ test('REGRESSION: Yahoo 429 cannot disable US daily/weekly/monthly/yearly at the
   if(period==='yearly'){
    assert.equal(j.coverage.stopReason,'fallback-window');
    assert.equal(j.coverage.sourceStopReason,'bounded-pages');
-   assert.equal(j.hasMore,null);
+   assert.equal(j.hasMore,true,'a bounded provider budget must leave older history reachable');
+   assert.equal(j.nextBefore,j.bars[0].periodStart,'continuation uses the earliest returned period boundary');
   }
   assert.ok(j.bars.every(b=>b.o>0&&b.l<=b.o&&b.h>=b.c));assert.equal(j.exchangeTimeZone,'America/New_York');
   if(period==='daily')assert.equal(j.bars.at(-1).lastTradingDate,'2026-09-09');
+  readsByPeriod.push([period,historyReads.length]);barsByPeriod.set(period,j.bars);
  }
- const historyCalls=calls.filter(u=>u.includes('/historical'));
- assert.equal(historyCalls.length,3,'daily/weekly/monthly share one recent page; yearly adds at most two older pages');
- assert.ok(new URL(historyCalls[1]).searchParams.get('fromdate')<new URL(historyCalls[0]).searchParams.get('fromdate'));
- await fetch(origin+'/api/history?symbol=NVDA&period=yearly&count=12');
- assert.equal(calls.filter(u=>u.includes('/historical')).length,3,'repeated yearly read reuses cache');
+ // The recent tier intentionally avoids fetching a year for twelve daily bars.
+ // Each long expansion is bounded to two pages; monthly reuses the weekly raw window.
+ assert.deepEqual(readsByPeriod,[['daily',1],['weekly',3],['monthly',3],['yearly',5]],JSON.stringify(historyReads));
+ assert.ok(Date.parse(historyReads[0].from)>=asOf-45*864e5,'daily starts with a bounded recent window');
+ assert.equal(historyReads[0].through,'2026-09-10');
+ for(const [i,page] of historyReads.entries()){
+  assert.ok(Date.parse(page.through)-Date.parse(page.from)<=366*864e5,'each provider page stays bounded');
+  assert.ok(page.limit<=300&&page.oldestDate,'provider pages contain usable rows within the row budget');
+  if(i){
+   assert.ok(page.from<historyReads[i-1].from,'each expansion reaches older history');
+   assert.ok(page.through<historyReads[i-1].oldestDate,'backfill never requests an already fetched trading day');
+  }
+ }
+ const fetched=historyReads.length;
+ for(const period of ['daily','weekly','monthly','yearly']){
+  const r=await fetch(`${origin}/api/history?symbol=NVDA&period=${period}&count=12`),j=await r.json();
+  assert.equal(r.status,200,JSON.stringify(j));assert.equal(j.status,'ready');
+  if(period==='yearly'){
+   assert.ok(j.bars[0].periodStart<barsByPeriod.get(period)[0].periodStart,'an unsatisfied long request continues into older history');
+   assert.ok(historyReads.length>fetched&&historyReads.length<=fetched+2,'continuation stays within the two-page provider budget');
+   assert.equal(j.hasMore,true);assert.equal(j.nextBefore,j.bars[0].periodStart);
+   for(let i=fetched;i<historyReads.length;i++){
+    assert.ok(historyReads[i].through<historyReads[i-1].oldestDate,'continuation never rereads a previously fetched trading day');
+    assert.ok(Date.parse(historyReads[i].through)-Date.parse(historyReads[i].from)<=366*864e5,'continuation pages stay bounded');
+   }
+  }else{
+   assert.deepEqual(j.bars,barsByPeriod.get(period));
+   assert.equal(historyReads.length,fetched,`satisfied ${period} request reuses its cache`);
+  }
+ }
  assert.ok(calls.filter(u=>/yahoo\.com/.test(u)).length<=1,'Yahoo cooldown is shared');
 });
 
@@ -60,10 +89,11 @@ test('REGRESSION: HTTP 200 with empty chart is not a successful source when a us
  const got=await get('NVDA','?interval=1d');assert.equal(got.source,'backup');assert.equal(used,1);
 });
 
-test('REGRESSION: intraday OHLC provider payload must still render as a line, never accidental candles',()=>{
+test('REGRESSION: intraday OHLC supports candles and an explicit line preference',()=>{
  const api=engineSandbox(),engine=api.createChartEngine({UP:'red',DOWN:'green',fmtDate:()=>'',formatterFor:()=>({money:n=>String(n)}),maSeries:a=>a.map(()=>null)});
  const q={tf:'intraday',d:{charts:{intraday:[{t:100,o:90,h:104,l:89,c:100},{t:160,o:100,h:101,l:97,c:99}]}},followEnd:true,_chartWidth:400};
- const p=engine.computePlot(q);assert.equal(p.candle,false);
+ const p=engine.computePlot(q);assert.equal(p.candle,true);assert.equal(p.intraday,true);
+ q.chartStyle='line';assert.equal(engine.computePlot(q).candle,false);
 });
 
 test('REGRESSION: early regular-session points fill the live viewport; full view still shows the closing bell',()=>{

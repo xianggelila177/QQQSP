@@ -71,7 +71,7 @@ test('v94 movers use provider SIP universe, keep gains/losses/volume and separat
  const r=await p.movers({market:'us',range:'1d',top:10});assert.match(r.coverage.scope,/not the local watchlist/);assert.equal(r.losers[0].change_percent,-10);assert.equal(r.active[0].volume,100);assert.notEqual(r.as_of_ms,r.active_as_of_ms);
 });
 test('v94 batch failures are isolated and temporary memberships are released',async t=>{
- const watched=new Set(),engine={watch([s]){if(s==='FAIL')throw Error('single source failure');watched.add(s);return()=>watched.delete(s);},poke(){},subscribe(){return()=>{};},read(symbols){return symbols.map(symbol=>({symbol,price:100,currency:'USD',instrumentType:'EQUITY',quoteAt:now,sourceCheckedAt:now,src:'fixture'}));}};
+ const watched=new Set(),engine={watch([s]){if(s==='FAIL')throw Error('single source failure');watched.add(s);return()=>watched.delete(s);},poke(){},subscribe(){return()=>{};},read(symbols){return symbols.map(symbol=>symbol==='FAIL'?{symbol,pending:true}:{symbol,price:100,currency:'USD',instrumentType:'EQUITY',quoteAt:now,sourceCheckedAt:now,src:'fixture'});}};
  const service=createMarketContextService({engine,now:()=>now});t.after(()=>service.close());const out=await service.query({symbols:['NVDA','FAIL','SPY'],include:['quote'],max_wait_ms:100});assert.equal(out.results.length,3);assert.equal(out.results[1].status,'unavailable');assert.equal(out.status,'partial');assert.equal(out.coverage.quota_cost,3);assert.equal(watched.size,0);
 });
 test('v94 historical lookup error cannot borrow current quote charts and says what failed',async t=>{

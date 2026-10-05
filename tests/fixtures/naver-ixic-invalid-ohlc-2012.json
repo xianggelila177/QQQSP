@@ -1,0 +1,13 @@
+{
+  "observedAt": "2026-10-05T02:07:50.007Z",
+  "endpoint": "https://api.stock.naver.com/chart/foreign/index/.IXIC/day?startDateTime=200412290000&endDateTime=202610052359",
+  "scope": "Six verbatim rows selected from one HTTP 200 response containing 4084 rows. This fixture does not assert complete coverage.",
+  "rows": [
+    {"localDate":"20100709","closePrice":2196.45,"openPrice":2174.2,"highPrice":2196.95,"lowPrice":2170.76,"accumulatedTradingVolume":450661},
+    {"localDate":"20121019","closePrice":3005.62,"openPrice":3066.56,"highPrice":3066.56,"lowPrice":3000.27,"accumulatedTradingVolume":581820},
+    {"localDate":"20121022","closePrice":3016.96,"openPrice":3005.92,"highPrice":3005.92,"lowPrice":2995.78,"accumulatedTradingVolume":366631},
+    {"localDate":"20121023","closePrice":2990.46,"openPrice":2989.44,"highPrice":3006.59,"lowPrice":2974.07,"accumulatedTradingVolume":408041},
+    {"localDate":"20180102","closePrice":7006.9,"openPrice":6937.65,"highPrice":7006.91,"lowPrice":6924.08,"accumulatedTradingVolume":462202},
+    {"localDate":"20261002","closePrice":27190.864,"openPrice":27216.907,"highPrice":27353.68,"lowPrice":27112.241,"accumulatedTradingVolume":1386147}
+  ]
+}

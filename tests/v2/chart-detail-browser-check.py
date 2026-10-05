@@ -62,7 +62,7 @@ with sync_playwright() as playwright:
         page.evaluate("() => { HTMLDialogElement.prototype.requestFullscreen=function(){return Promise.reject(new Error('orientation unavailable'))}; return true; }")
         page.add_script_tag(path=str(ROOT / 'public' / 'modules' / 'panel-chart.js'))
         page.add_script_tag(path=str(ROOT / 'public' / 'modules' / 'panel-timeframes.js'))
-        for module in ['panel-scheduler', 'panel-network', 'panel-format']:
+        for module in ['panel-scheduler', 'panel-network', 'panel-format', 'panel-trade-direction', 'panel-chart-viewport', 'panel-market-detail-model', 'panel-market-detail-view', 'panel-detail-dialog']:
             page.add_script_tag(path=str(ROOT / 'public' / 'modules' / (module + '.js')))
         page.add_script_tag(path=str(ROOT / 'public' / 'modules' / 'panel-chart-engine.js'))
         page.evaluate("""() => { const original=window.PANEL_CHART_ENGINE;

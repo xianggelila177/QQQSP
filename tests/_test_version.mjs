@@ -1,6 +1,6 @@
 // TDD 测试(P1-Q5): 前端资源版本号必须有单一来源 panel/VERSION 且处处一致
 // 覆盖: public/sw.js(const VERSION + CACHE 模板) / public/index.html(?v= x4 + 来源注释)
-//       / public/app.js(sw.js?v=) / build_version.sh 升版演练
+//       / 稳定SW注册地址 / build_version.sh 升版演练
 import { readFileSync, mkdtempSync, cpSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
@@ -35,8 +35,8 @@ if (N !== null) {
   assert(/build_version\.sh|panel\/VERSION/.test(html), "index.html 有版本源注释(build_version.sh/panel/VERSION)");
 
   const app = readFileSync(path.join(pub, 'app.js'), 'utf8');
-  const mApp = app.match(/sw\.js\?v=(\d+)/);
-  assert(!!mApp && mApp[1] === N, "app.js 的 sw.js?v= 等于 " + N);
+  const updates = readFileSync(path.join(pub, 'modules', 'panel-updates.js'), 'utf8');
+  assert(updates.includes("'/sw.js'") && !/sw\.js\?v=/.test(updates), 'SW注册使用稳定URL');
 
   // 升版演练: 复制到临时目录, VERSION+1 后跑 build_version.sh, 三处都应同步
   let tmp;
@@ -56,9 +56,8 @@ if (N !== null) {
     const app2 = readFileSync(path.join(tmp, 'panel', 'public', 'app.js'), 'utf8');
     const swOk = new RegExp("const VERSION = 'v" + M + "'").test(sw2);
     const htmlVs = [...html2.matchAll(/\?v=(\d+)/g)].map((m) => m[1]);
-    const appM = (app2.match(/sw\.js\?v=(\d+)/) || [])[1];
-    assert(swOk && htmlVs.length >= 4 && htmlVs.every((v) => v === M) && appM === M,
-      "build_version.sh 把 " + M + " 同步到了 sw.js/index.html/app.js");
+    assert(swOk && htmlVs.length >= 4 && htmlVs.every((v) => v === M) && app2 === app,
+      "build_version.sh 同步资源版本并保持稳定的应用注册代码");
   } catch (e) {
     no('build_version.sh 演练失败: ' + ((e && e.message) || e));
   } finally { if (tmp) rmSync(tmp, { recursive: true, force: true }); }

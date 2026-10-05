@@ -3,6 +3,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import {releaseProvenance} from './release-provenance.mjs';
 import * as tar from 'tar';
 import { sourceFiles } from './files.mjs';
 import { scanTree } from './secret-scan.mjs';
@@ -33,7 +34,7 @@ export function releaseFiles(root) {
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 export async function createRelease(root, outputDirectory, options = {}) {
   const version = checkVersion(root);
-  const { sources: expectedSources } = requireCompleteVerification(root, options);
+  const { sources: expectedSources,evidence } = requireCompleteVerification(root, options);
   await checkCalendar(root, options.now ?? Date.now());
   const expectedDigests = new Map(expectedSources.map(entry => [entry.path, entry.sha256]));
   const findings = scanTree(root);
@@ -41,7 +42,7 @@ export async function createRelease(root, outputDirectory, options = {}) {
   const files = releaseFiles(root);
   for (const required of ['server.js', 'package.json', 'package-lock.json', 'VERSION', 'public/app.js', 'public/sw.js', 'data/market-calendars.json']) if (!files.includes(required)) throw new Error(`Missing required release file: ${required}`);
   const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'qqqsp-release-'));
-  const manifest = { format: 1, version, files: [] };
+  const manifest = { format: 1, version, provenance:releaseProvenance(root,evidence), files: [] };
   try {
     for (const file of files) {
       const input = path.join(root, file); const target = path.join(temporary, file);

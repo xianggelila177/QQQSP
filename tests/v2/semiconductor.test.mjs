@@ -33,7 +33,9 @@ test('SOX and Nikkei share the service without mixing identity, caches or 7s/70s
  try{
   const first=await index.fetchSnapshotBatch(['^N225','^SOX']);assert.equal(first.quotes.length,2);assert.equal(first.quotes.find(q=>q.symbol==='^SOX').price,11752.61);assert.equal(first.nextPollAtBySymbol['^SOX'],clock+7000);assert.equal(first.nextPollAtBySymbol['^N225'],clock+70000);
   clock+=7100;await index.fetchSnapshotBatch(['^N225','^SOX']);assert.equal(calls.filter(u=>u.includes('.SOX')).length,2);assert.equal(calls.filter(u=>u.includes('.N225')).length,1);
-  assert.equal((await index.fetchChart('^SOX','?interval=5m')).meta.symbol,'^SOX');assert.equal((await index.fetchChart('^N225','?interval=5m')).meta.symbol,'^N225');
+  const sox=await index.fetchChart('^SOX','?interval=5m');assert.equal(sox.meta.symbol,'^SOX');assert.equal(sox.source,'naver-index-candles');assert.equal(sox.meta.chartTimeBasis,'bar-start');assert.equal(sox.meta.chartIntervalSeconds,300);
+  assert.ok(sox.indicators.quote[0].high.every((h,i)=>h>sox.indicators.quote[0].close[i]));assert.ok(sox.indicators.quote[0].volume.every(v=>v===null));
+  assert.equal((await index.fetchChart('^N225','?interval=5m')).meta.symbol,'^N225');
  }finally{index.close();}
 });
 test('one failed index cannot block a healthy sibling; failure keeps its retry deadline',async()=>{

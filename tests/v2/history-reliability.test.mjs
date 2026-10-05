@@ -28,13 +28,13 @@ test('Nasdaq intraday accepts source epoch, keeps latest NY date and never fabri
  assert.deepEqual(j.timestamp,[(at-60000)/1000]);assert.deepEqual(j.indicators.quote[0].volume,[null]);assert.equal(j.meta.dataGranularity,'1m');
 });
 test('empty Nasdaq table uses Eastmoney, then identical requests use the shared cached result',async()=>{
- let calls=[];const source=createPublicHistory({now:()=>at,httpsGet:async url=>{calls.push(url);return url.includes('nasdaq')?ok({data:{symbol:'MRVL',tradesTable:{rows:[]}}}):ok(east());}});
+ let calls=[];const source=createPublicHistory({now:()=>at,getQuote:()=>({instrumentType:'EQUITY',instrumentTypeSource:'provider'}),httpsGet:async url=>{calls.push(url);return url.includes('nasdaq')?ok({data:{symbol:'MRVL',tradesTable:{rows:[]}}}):ok(east());}});
  const first=await source('MRVL','?interval=1d&range=2y');const second=await source('MRVL','?interval=1d&range=2y');assert.strictEqual(first,second);assert.equal(first.source,'eastmoney-history');assert.equal(calls.length,2);
 });
 test('daily to yearly while source request is in flight uses bounded Nasdaq pages, not undersized cache',async()=>{
- let release,calls=[];const dates=['09/09/2026','09/04/2026','09/05/2025'];
- const source=createPublicHistory({now:()=>at,httpsGet:async url=>{calls.push(url);if(calls.length===1)await new Promise(r=>release=r);return ok(ndq('NVDA',dates[calls.length-1]));}});
- const short=source('NVDA','?interval=1d&period1='+Date.parse('2025-01-01')/1000);
+ let release,calls=[];
+ const source=createPublicHistory({now:()=>at,getQuote:()=>({instrumentType:'EQUITY',instrumentTypeSource:'provider'}),httpsGet:async url=>{calls.push(url);if(calls.length===1)await new Promise(r=>release=r);const end=new URL(url).searchParams.get('todate');return ok(ndq('NVDA',new Date(Date.parse(end)-86400000).toISOString().slice(0,10)));}});
+ const short=source('NVDA','?interval=1d&period1='+Date.parse('2026-01-01')/1000);
  const long=source('NVDA','?interval=1d&period1='+Date.parse('1990-01-01')/1000);
  release();const [recent,wider]=await Promise.all([short,long]);
  assert.equal(calls.length,3);assert.equal(recent.coverage.pages,1);assert.equal(wider.coverage.pages,2);
@@ -44,7 +44,8 @@ test('daily to yearly while source request is in flight uses bounded Nasdaq page
  assert.ok(calls.every(url=>new URL(url).searchParams.get('fromdate')>'1990-01-01'));
 });
 test('a failed older Nasdaq page preserves the recent daily bars with explicit partial coverage',async()=>{
- const calls=[];const source=createPublicHistory({now:()=>at,httpsGet:async url=>{
+ const calls=[];const source=createPublicHistory({now:()=>at,getQuote:()=>({instrumentType:'EQUITY',instrumentTypeSource:'provider'}),httpsGet:async url=>{
+  if(!url.includes('nasdaq'))return ok({data:null});
   calls.push(url);if(calls.length===2)throw Object.assign(new Error('upstream timeout'),{code:'ETIMEDOUT'});
   return ok(ndq('TSM'));
  }});
@@ -55,7 +56,9 @@ test('a failed older Nasdaq page preserves the recent daily bars with explicit p
  assert.deepEqual(source.diagnostics().recentFailures[0].range,{from:new URL(calls[1]).searchParams.get('fromdate'),
   through:new URL(calls[1]).searchParams.get('todate')});
  assert.equal(source.diagnostics().recentFailures[0].code,'ETIMEDOUT');
- assert.strictEqual(await source('TSM',query),first);assert.equal(calls.length,2);
+ await assert.rejects(source('TSM',query),{code:'HISTORY_SOURCE_UNAVAILABLE'});
+ assert.strictEqual(await source('TSM','?interval=1d&period1='+Date.parse('2026-08-01')/1000),first);
+ assert.equal(calls.length,2,'failed expansion is cooled while the covered recent range still uses its cache');
 });
 test('wide history failure cools that range but permits a narrower TSM read',async()=>{
  let calls=0;const service=createHistoryService({now:()=>at,fetchChart:async(_symbol,query)=>{
@@ -66,7 +69,9 @@ test('wide history failure cools that range but permits a narrower TSM read',asy
  try{
   await assert.rejects(service.get('TSM','yearly',{count:20}),{code:'HISTORY_TIMEOUT'});
   const recent=await service.get('TSM','daily',{count:30});
-  assert.equal(recent.symbol,'TSM');assert.equal(recent.bars.length,1);assert.equal(calls,2);
+  assert.equal(recent.symbol,'TSM');assert.equal(recent.bars.length,1);
+  assert.equal(calls,3,'one wider recent retry confirms this fixture makes no coverage progress');
+  assert.equal(recent.hasMore,null,'one row without listing provenance cannot imply exhausted history');
  }finally{service.close();}
 });
 test('a true 429 keeps narrower requests in cooldown, while targeted invalidation can reread one symbol',async()=>{

@@ -7,7 +7,7 @@ class Element{
   constructor(){this.children=[];this.fields=new Map();this.listeners={};this.dataset={};this.value='';this._text='';this.open=false;
     this.style={setProperty(){}};this.classList={contains:()=>false,toggle(){}};}
   set textContent(value){this._text=String(value);this.children=[];}
-  get textContent(){return this._text;}
+  get textContent(){return this._text+this.children.map(child=>child.textContent).join(' ');}
   querySelector(selector){if(!this.fields.has(selector))this.fields.set(selector,new Element());return this.fields.get(selector);}
   querySelectorAll(){return [];}
   appendChild(child){this.children.push(child);return child;}
@@ -26,16 +26,16 @@ function harness(){
     setTimeout:fn=>{const id=++timeoutId;timeouts.set(id,fn);return id;},clearTimeout:id=>timeouts.delete(id),
     fetch:(url,{signal})=>new Promise((resolve,reject)=>{pending.push({url,signal,resolve,reject});signal.addEventListener('abort',()=>reject(new Error('aborted')));})};
   const source=readFileSync(new URL('../../public/modules/panel-chart-detail.js',import.meta.url),'utf8');
-  for(const name of ['panel-scheduler','panel-network','panel-timeframes','panel-format'])vm.runInNewContext(readFileSync(new URL('../../public/modules/'+name+'.js',import.meta.url),'utf8'),context);
+  for(const name of ['panel-scheduler','panel-network','panel-timeframes','panel-chart-viewport','panel-format','panel-trade-direction','panel-market-detail-model','panel-market-detail-view','panel-detail-dialog'])vm.runInNewContext(readFileSync(new URL('../../public/modules/'+name+'.js',import.meta.url),'utf8'),context);
   vm.runInNewContext(source.replace('return Object.freeze({mount,update:q=>',
-    'return Object.freeze({open,fetchDetail,selectTapeSession,setPeriod:value=>{tf=value;},mount,update:q=>'),context);
+    'return Object.freeze({open,fetchDetail,fetchFive,selectPeriod,getFive:()=>five,selectTapeSession,setPeriod:value=>{tf=value;},mount,update:q=>'),context);
   const view=panel.PANEL_CHART_DETAIL.createChartDetailView({document,formatterFor:()=>({money:v=>'$'+v}),UP:'red',DOWN:'green'});
   const quote={symbol:'NVDA',currency:'USD',price:110,quoteAt:Date.parse('2026-09-25T20:02:03Z'),
     regularChart:{exchangeZone:'America/New_York',tradeDate:'2026-09-25',bars:[{t:1,c:109,v:20}]}};
   const card={symbol:'NVDA',d:quote,cv:new Element()};view.open(card);
   const dialog=elements[0];
   const respond=async(index,tape)=>{pending[index].resolve({ok:true,json:async()=>({symbol:'NVDA',range:new URL(pending[index].url,'https://panel.test').searchParams.get('range'),tape})});for(let n=0;n<20;n++)await Promise.resolve();};
-  return {view,pending,dialog,card,respond,field:selector=>dialog.querySelector(selector)};
+  return {view,pending,dialog,card,respond,rows:()=>dialog.querySelector('.cd-tape-list').children[0]?.children[1]?.children||[],field:selector=>dialog.querySelector(selector)};
 }
 const trade={at:Date.parse('2026-09-25T20:02:03Z'),price:110,size:10,source:'nasdaq-public-trades',reportState:'reported',eventId:null,side:null};
 const publicTape=(events=[{...trade},{...trade}])=>({session:'post',tradeDate:'2026-09-25',source:'nasdaq-public-trades',sourceLabel:'Nasdaq 公开成交',
@@ -47,16 +47,16 @@ const publicTape=(events=[{...trade},{...trade}])=>({session:'post',tradeDate:'2
 test('public tape preserves identical rows, shows seconds and window limits, and replaces the prior snapshot',async()=>{
   const h=harness(),originalChart=JSON.stringify(h.card.d.regularChart);
   assert.match(h.pending[0].url,/tapeSession=auto/);await h.respond(0,publicTape());
-  const status=h.field('.cd-tape-status').textContent,rows=h.field('.cd-tape-list').children;
-  for(const expected of ['Nasdaq 公开成交','盘后','2026-09-25','最近成交窗口','2 笔','非完整逐笔','延迟未核验','更正/撤销未提供'])assert.ok(status.includes(expected),expected);
+  const status=h.field('.cd-tape-status').textContent,rows=h.rows();
+  for(const expected of ['盘后','2026-09-25','最近 2 笔'])assert.ok(status.includes(expected),expected);
   assert.doesNotMatch(status,/subscribing|WAITING_FOR_TRADE|重连/);
   assert.equal(rows.length,2);assert.equal(rows[0].textContent,rows[1].textContent);assert.match(rows[0].textContent,/16:02:03/);
-  assert.match(h.field('.cd-tape-stats').textContent,/当前窗口 2 笔 · 窗口成交量 20 股/);
-  assert.match(h.field('.cd-tape-stats').textContent,/不是全天成交统计/);
+  assert.match(h.field('.cd-tape-stats').textContent,/当前窗口 2 笔 · 20 股/);
+  assert.match(h.field('.cd-tape-stats').title,/不是全天成交量/);
   const next=h.view.fetchDetail();await h.respond(1,publicTape([{...trade,size:7,price:122.9478}]));await next;
-  assert.equal(h.field('.cd-tape-list').children.length,1);assert.match(h.field('.cd-tape-stats').textContent,/窗口成交量 7 股/);
-  assert.match(h.field('.cd-tape-list').children[0].textContent,/\$122\.9478.*Nasdaq 公开成交/);
-  assert.doesNotMatch(h.field('.cd-tape-list').children[0].textContent,/nasdaq-public-trades/);
+  assert.equal(h.rows().length,1);assert.match(h.field('.cd-tape-stats').textContent,/7 股/);
+  assert.match(h.rows()[0].textContent,/\$122\.9478/);
+  assert.doesNotMatch(h.rows()[0].textContent,/nasdaq-public-trades/);
   assert.equal(JSON.stringify(h.card.d.regularChart),originalChart);h.view.close();
 });
 
@@ -80,7 +80,7 @@ test('empty public tape reasons are translated and clear previous rows and total
     PUBLIC_TRADES_UNAVAILABLE:'公开逐笔来源暂不可用',SOURCE_COOLDOWN:'逐笔来源限流冷却中'};
   for(const [reason,label]of Object.entries(reasons)){
     const job=h.view.fetchDetail();await h.respond(h.pending.length-1,{...publicTape([]),reason,status:'unavailable',stale:true});await job;
-    assert.ok(h.field('.cd-tape-status').textContent.includes(label));assert.match(h.field('.cd-tape-status').textContent,/缓存已过期/);
+    assert.ok(h.field('.cd-tape-status').textContent.includes(label));
     assert.equal(h.field('.cd-tape-list').children.length,0);assert.doesNotMatch(h.field('.cd-tape-stats').textContent,/20 股/);
   }h.view.close();
 });
@@ -98,4 +98,20 @@ test('a failed refresh clears prior successful rows and totals while retaining t
   const request=h.view.fetchDetail();h.pending[1].reject(new Error('HTTP 503'));await request;
   assert.equal(h.field('.cd-tape-list').children.length,0);assert.doesNotMatch(h.field('.cd-tape-stats').textContent,/20 股/);
   assert.match(h.field('.cd-tape-status').textContent,/详情接口暂不可用：HTTP 503/);h.view.close();
+});
+
+
+test('five-day chart requests are independent of tape and cached across reopen; failed refresh preserves the chart',async()=>{
+  const h=harness();await h.respond(0,publicTape());
+  const selecting=h.view.selectPeriod('fiveDay');
+  const index=h.pending.findIndex(p=>p.url.includes('sections=chart'));
+  assert.ok(index>0);assert.ok(h.pending.some(p=>p.url.includes('sections=market')));
+  const five={currency:'USD',tradeDates:['2026-09-21','2026-09-22','2026-09-23','2026-09-24','2026-09-25'],bars:[{t:1,o:100,h:105,l:99,c:104}],sourceCheckedAt:1000};
+  h.pending[index].resolve({ok:true,json:async()=>({symbol:'NVDA',range:'5d',fiveDay:five})});await selecting;
+  assert.equal(h.view.getFive().bars[0].h,105,'chart completes while market request is still pending');
+  h.view.close();h.view.open(h.card);
+  const reopened=h.view.selectPeriod('fiveDay');assert.equal(h.view.getFive().sourceCheckedAt,1000,'same stock paints cached chart before network');
+  h.pending.at(-1).reject(new Error('HTTP 503'));await reopened;
+  assert.equal(h.view.getFive().bars[0].h,105);assert.equal(h.view.getFive().stale,true);
+  h.view.close();h.card.d.currency='TWD';h.view.open(h.card);assert.equal(h.view.getFive(),null,'currency identity cannot reuse cache');h.view.close();
 });

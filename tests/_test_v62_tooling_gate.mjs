@@ -13,7 +13,7 @@ try {
   put('VERSION', '62'); put('server.js', 'export const app = true;'); put('package.json', '{"type":"module"}'); put('package-lock.json', '{}');
   put('mkt.mjs', 'export const calendarCoverageStatus = now => ({ok:now < Date.UTC(2090,0,1)});');
   put('data/market-calendars.json', '{}');
-  put('public/app.js', "navigator.serviceWorker.register('/sw.js?v=62');");
+  put('public/app.js', "navigator.serviceWorker.register('/sw.js', {updateViaCache:'none'});");
   put('public/sw.js', "const VERSION = 'v62';\nconst CORE = ['/','/app.js?v=62'];");
   put('public/index.html', '<script src="/app.js?v=62"></script><a href="/app.js?v=62"></a><a href="/app.js?v=62"></a><a href="/app.js?v=62"></a>');
   put('release-manifest.json', '{"old":true}');
