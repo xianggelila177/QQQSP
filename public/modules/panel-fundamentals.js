@@ -30,9 +30,12 @@
   ].map(([key,label,type,description],index)=>Object.freeze({key,label,type,description,extra:index>=16})));
   const sourceNames={'naver-financial':'Naver 财务指标','naver-company':'Naver 公司资料','naver-financial+naver-company':'Naver 财务指标 / 公司资料','tencent-financial':'腾讯基础指标','naver-us':'Naver 美股','naver-kr':'Naver 韩股','yahoo-summary':'Yahoo 财务摘要','finnhub-metric':'Finnhub 基础财务','yahoo-summary+finnhub-metric':'Yahoo / Finnhub','sina-batch':'新浪行情','tx-batch':'腾讯行情','tx-cn':'腾讯行情','tx-us':'腾讯行情',fixture:'离线测试数据'};
   const reasonNames={disabled:'财务资料功能已关闭',expired:'资料已超过最长保留期',loading:'财务资料后台读取中','source-missing':'来源未提供该字段','instrument-type':'当前品种不适用该公司指标','no-trade-amount':'来源未提供累计成交金额','no-regular-volume':'缺少已核验的常规时段成交量','no-shares':'缺少同一证券的可靠股本分母','no-regular-range':'缺少常规时段高低价或有效昨收','float-exceeds-total':'流通股大于总股本，停止相关计算','no-five-day-minute-baseline':'尚无前五个交易日的每分钟均量基准','no-order-book':'尚无明确范围的委托买卖盘','negative-earnings':'来源确认盈利为负','zero-earnings':'盈利口径无有效正值','nonpositive-book':'净资产口径不是有效正值','nonpositive-denominator':'分母不是有效正值','nonpositive-revenue':'营业收入口径不是有效正值'};
-  const states={'ready':'财务资料已取得','stale':'财务缓存待更新','expired':'财务资料已过期','disabled':'财务资料已关闭','loading':'财务资料后台读取中','unavailable':'财务资料暂缺','not-applicable':'按品种显示适用指标'};
+  const states={'ready':'财务资料已取得','stale':'基础资料时效待核验','expired':'财务资料已过期','disabled':'财务资料已关闭','loading':'财务资料后台读取中','unavailable':'财务资料暂缺','not-applicable':'按品种显示适用指标'};
+  reasonNames['source-disagreement']='可比来源存在明显分歧，停止使用该字段继续估算';
   Object.assign(sourceNames,{'naver-basic':'Naver 基础资料','naver-statements':'Naver 财报','nasdaq-summary':'Nasdaq 基础资料','nasdaq-dividends':'Nasdaq 实际派息','nasdaq-statements':'Nasdaq 财报','naver-realtime':'Naver 行情统计'});
-  Object.assign(states,{complete:'基础资料完整',partial:'基础资料部分取得'});
+  Object.assign(sourceNames,{'twse-valuations':'TWSE 日度估值','twse-company':'TWSE 公司资料'});
+  Object.assign(states,{complete:'适用字段已取得',partial:'基础资料部分取得或待核验'});
+  const freshnessNames={'report-period-unknown':'来源未提供报告期，无法核验财报时效','effective-date-unknown':'来源未提供字段有效日期，无法核验时效','valuation-effective-date-unknown':'来源未给出估值有效时点，报告期不能证明估值与当前价同步','valuation-effective-date-old':'估值时点已超过十四天，近期报告期不能替代价格时效','report-period-old':'报告期超过保守年龄窗口，不能按新资料使用','effective-date-old':'字段有效日期较旧','invalid-report-period':'报告期格式无效','future-report-period':'报告期落在未来','future-effective-date':'字段有效日期落在未来'};
   const sourceName=value=>String(value||'').split('+').map(v=>sourceNames[v]||v).join(' / ');
   const failureNames={FUNDAMENTALS_IDENTITY:'证券身份不符',FUNDAMENTALS_EMPTY:'未提供有效字段',FUNDAMENTALS_CURRENCY:'币种不符',FUNDAMENTALS_INCOMPLETE:'历史资料不完整',FUNDAMENTALS_UNSUPPORTED:'不支持该证券',RATE_LIMITED:'来源限流',SOURCE_COOLDOWN:'来源冷却中',DEADLINE_EXCEEDED:'来源超时',FUNDAMENTALS_SOURCE:'来源暂不可用'};
   const formulas={'regular-price / trailing-EPS':'常规报价 ÷ 最近十二个月每股收益','regular-price / fiscal-year-EPS':'常规报价 ÷ 最近完整财年每股收益','regular-price / book-value-per-share':'常规报价 ÷ 每股净资产','market-cap / trailing-revenue':'总市值 ÷ 最近十二个月营业收入','paid-dividends-12m / regular-price * 100':'过去十二个月已派股息 ÷ 常规报价 × 100%','sum of cash payments in the past 12 months':'合计过去十二个月已实际支付的现金股息','regular-volume / shares * 100':'常规时段成交量 ÷ 股数或份额 × 100%'};
@@ -62,6 +65,7 @@
     if(def.key==='sharesOutstanding'&&fund)label='总份额';
     if(def.key==='floatShares'&&fund)label='流通份额';
     if(def.key==='lotSize'&&fund)label='每手份数';
+    if(field.source==='twse-valuations')label=def.key==='peTTM'?'市盈率·日度':def.key==='priceToBook'?'市净率·日度':label;
     const unit=fund?'份':quote.instrumentType==='FUTURE'?'张':'股';
     if(field.status==='not-applicable')text='不适用';
     else if(field.status==='loss')text='亏损';
@@ -89,7 +93,10 @@
     const pending=field.attempts?.some(a=>a.state==='loading');
     if(text==='—'&&quote.fundamentals?.coverage)text=pending?'补充中':'暂无';
     const attempts=(field.attempts||[]).map(a=>sourceName(a.source)+'：'+(a.state==='loading'?'补充中':failureNames[a.code]||'未提供该字段')+(a.retryAt?'，下次检查 '+fmtTime8(a.retryAt):'')).join('；');
-    const details=[def.description,full&&'显示值：'+full,reasonNames[pending?'loading':field.reason],field.source&&'字段来源：'+sourceName(field.source),field.backup&&'由补充信源提供',field.asOf?'字段时点（北京时间）：'+fmtTime8(field.asOf):!simple[def.key]?'字段时点：来源未提供':null,field.fetchedAt&&'取得时间：'+fmtTime8(field.fetchedAt),field.tradeDate&&'统计交易日：'+field.tradeDate,field.financialPeriod&&'财报期间：'+field.financialPeriod,field.historical&&'来源财年末估值，不是按当前价重算',field.formula&&'计算口径：'+(formulas[field.formula]||field.formula),field.quoteReferenceAt&&'参考报价时点（非财务日期）：'+fmtTime8(field.quoteReferenceAt),field.shareSource&&'股本来源：'+sourceName(field.shareSource),field.denominator!=null&&'计算分母：'+field.denominator.toLocaleString('zh-CN')+unit,field.shareSource&&!field.shareAsOf&&'股本日期：来源未提供',field.estimated&&'估算值，非来源直接报告值',field.stale&&'缓存资料待更新，不代表新报价',attempts];
+    const freshness=field.contentFreshness,comparison=field.comparison;
+    const quality=[freshnessNames[freshness?.reason],freshness?.status==='within-age-window'&&'日期处于保守年龄窗口内，尚未独立确认是否已有新一期披露',field.identityBasis==='requested-symbol-route'&&'证券身份依据请求路径；子响应未全部回显证券代码',comparison?.status==='disagreement'&&'可比来源数值差异超过 10%，保留选定值供核查',comparison?.status==='not-comparable'&&'其他来源缺少一致口径、报告期或时点，不能作为交叉核验',comparison?.status==='consistent'&&'可比来源数值在 10% 容差内，不等于独立审计',comparison?.candidates?.length&&'比对值：'+comparison.candidates.map(candidate=>sourceName(candidate.source)+' '+candidate.value).join(' / ')];
+    const fieldDate=field.dateBasis==='dataset-publication'&&field.businessDate?'来源发布日：'+field.businessDate+'（不是股本变更生效日）':field.datePrecision==='day'&&field.businessDate?'来源业务日期：'+field.businessDate+'（按日发布，午夜时间仅用于日期编码）':field.asOf?'字段时点（北京时间）：'+fmtTime8(field.asOf):!simple[def.key]?'字段时点：来源未提供':null;
+    const details=[def.description,full&&'显示值：'+full,reasonNames[pending?'loading':field.reason],field.source&&'字段来源：'+sourceName(field.source),field.backup&&'由补充信源提供',fieldDate,field.fetchedAt&&'取得时间：'+fmtTime8(field.fetchedAt),field.tradeDate&&'统计交易日：'+field.tradeDate,field.financialPeriod&&'财报期间：'+field.financialPeriod,...quality,field.historical&&'来源财年末估值，不是按当前价重算',field.formula&&'计算口径：'+(formulas[field.formula]||field.formula),field.quoteReferenceAt&&'参考报价时点（非财务日期）：'+fmtTime8(field.quoteReferenceAt),field.shareSource&&'股本来源：'+sourceName(field.shareSource),field.denominator!=null&&'计算分母：'+field.denominator.toLocaleString('zh-CN')+unit,field.shareSource&&!field.shareAsOf&&'股本日期：来源未提供',field.estimated&&'估算值，非来源直接报告值',field.cacheStale&&'缓存取得时间已过刷新期限',field.stale&&'资料待核验或更新，不代表新报价',attempts];
     return {label,text,detail:details.filter(Boolean).join('；'),status:pending?'loading':field.status||(value!=null||def.type==='text'&&typeof field.value==='string'&&field.value.trim()?'available':'unavailable'),stale:!!field.stale};
   }
   function createView({document,cards,formatterFor,onLayout=()=>{}}){
@@ -118,6 +125,7 @@
       const f=q.d.fundamentals,parts=[states[f?.status]||'财务资料暂缺'];
       if(f?.coverage)parts.push(f.coverage.available+'/'+f.coverage.applicable+' 项已取得');
       if(f?.loading&&f.status!=='loading')parts.push('后台补充中');
+      if(f?.qualityWarnings?.length)parts.push('部分日期或来源待核验');
       if(f?.statisticsDate)parts.push((f.retainedStatistics?'保留上一交易日统计 ':'统计交易日 ')+f.statisticsDate);
       if(f?.fetchedAt)parts.push('取得 '+fmtTime8(f.fetchedAt));
       setText(q.statisticsStatus,parts.join(' · ')+'；金额标注币种，≈为估算或参考换汇。');
@@ -133,7 +141,7 @@
       dialogOwner=q.symbol;opener=q.statisticsHelp;
       setText(dialog.querySelector('h2'),q.symbol+' · 基础信息');
       const f=q.d?.fundamentals;
-      setText(dialog.querySelector('.metrics-dialog-intro'),'以下是打开说明时的快照。'+(f?.fetchedAt?'资料取得时间（北京时间）：'+new Date(f.fetchedAt+8*3600000).toISOString().replace('T',' ').slice(0,19)+'。':'资料取得时间：尚无成功记录。')+(f?.source?'资料来源：'+sourceName(f.source)+'。':'')+'成交统计随行情刷新；公开基础指标每分钟检查，财报摘要最多缓存六小时。失败后保留未过期旧值并退避重试。取得时间不等于财报或股本日期。'+(f?.financialPeriod?'来源最近财报季度：'+f.financialPeriod+'。':'来源未提供最近财报季度。'));
+      setText(dialog.querySelector('.metrics-dialog-intro'),'以下是打开说明时的快照。'+(f?.fetchedAt?'资料取得时间（北京时间）：'+new Date(f.fetchedAt+8*3600000).toISOString().replace('T',' ').slice(0,19)+'。':'资料取得时间：尚无成功记录。')+(f?.source?'资料来源：'+sourceName(f.source)+'。':'')+'成交统计随行情刷新；公开基础指标通常每分钟检查，摘要中的价格敏感估值默认每五分钟检查，报表字段最多缓存六小时。失败后保留未过期旧值并退避重试。取得时间不等于财报或股本日期；报告期年龄筛查也不保证已取得最新披露。'+(f?.financialPeriod?'来源财报季度：'+f.financialPeriod+'。':'各字段报告期请分别查看。'));
       const formatter=formatterFor(q.d||{});
       dialog.querySelector('dl').innerHTML=definitions.map(def=>{const item=formatMetric(def,q.d||{},formatter);return '<div><dt>'+esc(item.label)+' <strong>'+esc(item.text)+'</strong></dt><dd>'+esc(item.detail)+'</dd></div>';}).join('');
       dialog.showModal();

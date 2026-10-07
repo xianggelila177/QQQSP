@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "scope": "Google News RSS source URL publisher admission; no independent fact checking",
+  "scope": "Article hosting and Google News RSS source URL classification; no independent fact checking",
   "publishers": [
     {
       "id": "reuters",

@@ -3,16 +3,23 @@
     const { esc, fmtTime8 } = window.PANEL_FORMAT;
     let inFlight=null, generation=0;
     const data={}, metadata={};
-  function sentTag(value) {
-    const sentiment = ['利好', '利空', '中性'].includes(value) ? value : '中性';
-    return '<span class="stag s-' + sentiment + '" title="标题关键词规则判断，存在误判可能">规则·' + sentiment + '</span>';
+  function sentTag(tone) {
+    if(tone?.scope!=='headline_only')return '';
+    const sentiment = {positive:'利好',negative:'利空',neutral:'中性'}[tone.value] || '中性';
+    const label={'利好':'积极','利空':'消极','中性':'中性'}[sentiment];
+    return '<span class="stag s-' + sentiment + '" title="仅描述标题关键词语气，未判定对当前证券的利好或利空，也未核验新闻事实">标题·' + label + '</span>';
+  }
+  function sourceLabel(item){
+    const classification=item.provenance?.publisher_classification;
+    const label=classification?.status!=='registered_domain'?'来源域名未登记':({'newsroom':'媒体报道','official':'官方来源','press_release':'新闻稿'}[classification.category]||'已登记来源');
+    return '<span class="nsrc" title="'+esc(label+'；仅核对来源域名，不代表内容已核实')+'">'+esc(item.src)+' · '+esc(label)+'</span>';
   }
   function renderNews(q, items, meta = {}) {
     if (!q.newslist) return;
     if (q.newshead) q.newshead.textContent = meta.pending ? '资讯 · 正在获取' : meta.stale || meta.error ? '资讯 · 缓存/刷新暂不可用' : '相关资讯 · 近7天';
     const clock=now();
     const list = (items || []).filter(n=>Number.isFinite(n.t)&&n.t>0&&n.t<=clock&&n.t>=clock-7*864e5&&n.title&&n.src&&/^https?:\/\//i.test(n.link||'')&&PANEL.safeURL(n.link)&&n.linkScope!=='feed'&&n.provenance?.link_scope!=='feed').slice().sort((a, b) => b.t - a.t).slice(0, 6);
-    const sig = JSON.stringify([list.map(n => [n.id,n.title, n.t, n.link, n.src, n.sent, !!n.general]),!!meta.pending,!!meta.stale,!!meta.error]);
+    const sig = JSON.stringify([list.map(n => [n.id,n.title, n.t, n.link, n.src, n.headlineTone, n.provenance?.publisher_classification, !!n.general]),!!meta.pending,!!meta.stale,!!meta.error]);
     if (sig === q._newsSig) return;
     q._newsSig = sig;
     const box=q.newslist,doc=box.ownerDocument||document,rows=q._newsRows ||= new Map();
@@ -25,16 +32,16 @@
       let row=rows.get(key);
       if(row&&row.tag!==tag){row.el.remove();rows.delete(key);row=null;}
       if(!row){row={el:doc.createElement(tag),tag,sig:null};row.el.className='newsitem';rows.set(key,row);}
-      const itemSig=JSON.stringify([n.title,n.t,n.src,n.sent,!!n.general,link]);
+      const itemSig=JSON.stringify([n.title,n.t,n.src,n.headlineTone,n.provenance?.publisher_classification,!!n.general,link]);
       if(row.sig!==itemSig){
         if(link){row.el.href=link;row.el.target='_blank';row.el.rel='noopener noreferrer';}
-        row.el.innerHTML=sentTag(n.sent)+(n.general?'<span class="general-news">市场资讯</span>':'')+'<span class="ntime">'+fmtTime8(n.t)+'</span><span class="nsrc">'+esc(n.src)+'</span><span class="ntitle">'+esc(n.title)+'</span>';
+        row.el.innerHTML=sentTag(n.headlineTone)+(n.general?'<span class="general-news">市场资讯</span>':'')+'<span class="ntime">'+fmtTime8(n.t)+'</span>'+sourceLabel(n)+'<span class="ntitle">'+esc(n.title)+'</span>';
         row.sig=itemSig;
       }
       if(box.children[index]!==row.el){if(box.insertBefore)box.insertBefore(row.el,box.children[index]||null);else box.appendChild(row.el);}index++;
     }
     for(const [key,row] of rows)if(!used.has(key)){row.el.remove();rows.delete(key);}
-    if(!used.size){const empty=doc.createElement('div');empty.className='newsempty';empty.textContent=meta.pending?'正在获取资讯…':meta.stale||meta.error?'资讯暂不可用，将自动重试':'近7天暂无可核验出处的相关资讯';box.appendChild(empty);}
+    if(!used.size){const empty=doc.createElement('div');empty.className='newsempty';empty.textContent=meta.pending?'正在获取资讯…':meta.stale||meta.error?'资讯暂不可用，将自动重试':'近7天暂无符合来源与时间条件的相关资讯';box.appendChild(empty);}
     if(activeIndex>=0){
       const kept=[...rows.values()].some(row=>row.el===active);
       const links=[...rows.values()].filter(row=>row.tag==='a').map(row=>row.el);

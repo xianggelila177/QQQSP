@@ -176,6 +176,12 @@
     } else if(['quote-time-unknown','quote-time-invalid','source-time-unknown','source-time-invalid'].includes(freshness.reason)){
       q.staleWarn.textContent=freshness.reason.startsWith('quote-')?'报价时间未核验':'来源检查时间未核验';
       q.staleWarn.title='原始时间缺失或异常，不能用本次页面响应时间替代。';
+    } else if(freshness.reason==='quote-source-conflict'){
+      q.staleWarn.textContent='报价来源有分歧';
+      q.staleWarn.title='同证券、币种及交易时段的相近时刻报价存在明显差异。保留所选来源原值；请在详情核对，未自动判定哪一源正确。';
+    } else if(['quote-calendar-unverified','quote-calendar-refresh-needed'].includes(freshness.reason)){
+      q.staleWarn.textContent='交易日校验待更新';
+      q.staleWarn.title='尚未核验报价是否覆盖最近完成交易日，保留最后价格和来源时间。';
     } else if(d.stale){
       q.staleWarn.textContent='数据延迟';
       q.staleWarn.title='部分数据延迟，正在自动重试';
@@ -193,19 +199,20 @@
   }
   function updateQuoteMeta(q, now = quoteClock ? quoteClock.now() : Date.now()) {
     const d = q.d; if (!d || !q.quoteMeta) return;
-    applyStaleBadge(q,d,now);
+    const freshness=applyStaleBadge(q,d,now);
     const at = quoteTimeMs(d.quoteAt ?? d.ts);
     const ageText = '报价年龄 ' + window.PANEL_STATE.formatQuoteAge(d.quoteAt ?? d.ts, now);
-    // Keep source diagnostics in the source-health/detail views, not below every price.
+    const coverage=d.feedCoverage==='us-sip'?'全美综合报价':d.feedCoverage==='us-iex'?'IEX 单一交易所':'覆盖未核验';
+    const delay=typeof d.feedDelayMinutes==='number'&&Number.isFinite(d.feedDelayMinutes)&&d.feedDelayMinutes>=0?(d.feedDelayMinutes?'延迟 '+d.feedDelayMinutes+' 分钟':'来源声明实时'):'延迟未声明';
     if (q.quoteAge) {
-      if (q.quoteDetails) { q.quoteDetails.textContent = ''; q.quoteDetails.hidden = true; }
+      if (q.quoteDetails) { q.quoteDetails.textContent = [d.src||'来源未提供',coverage,delay,freshness.noNewQuote?'本来源暂无更新报价':null].filter(Boolean).join(' · ')+' · '; q.quoteDetails.hidden = false; }
       if (q.sourceCheckAge) { q.sourceCheckAge.textContent = ''; q.sourceCheckAge.hidden = true; }
       if (q.quoteAge.textContent !== ageText) q.quoteAge.textContent = ageText;
       q.quoteAge.dataset.quoteAsofMs = at == null ? '' : String(at);
       q.quoteAge.dataset.ageComputedAtMs = String(now);
       q.quoteAge.dataset.ageTickSeq = String((Number(q.quoteAge.dataset.ageTickSeq) || 0) + 1);
     } else q.quoteMeta.textContent = ageText;
-    q.quoteMeta.title = '';
+    q.quoteMeta.title = d.feedCoverage||'市场覆盖范围尚未核验';
   }
 
   function render(q) {

@@ -17,9 +17,9 @@ test('v95 fresh-cache reads, peek and failure retention all enforce publication 
  const first=await svc.requestNews('AAOI');assert.deepEqual(first.items.map(x=>x.title),['boundary']);assert.equal(first.quality.rejected_items,6);now++;assert.equal(svc.peek('AAOI').items.length,0);assert.equal((await svc.requestNews('AAOI')).items.length,0);
  fail=true;now+=999999999;assert.equal((await svc.requestNews('AAOI')).items.length,0);
 });
-test('v95 demand refresh rotates eligible news sources after TTL without duplicate in-flight requests',async()=>{
+test('news demand refresh aggregates both eligible sources after TTL without duplicate in-flight requests',async()=>{
  let now=NOW,yahoo=0,google=0;const svc=createNewsService({now:()=>now,ttl:100,log,yahooNews:async()=>{yahoo++;return [item('current Yahoo')];},httpsGet:async()=>{google++;return {status:200,body:rss()};}});
- await Promise.all([svc.requestNews('AAOI'),svc.requestNews('AAOI')]);assert.equal(yahoo,1);assert.equal(google,0);now+=101;await svc.requestNews('AAOI');assert.equal(google,1);now+=101;await svc.requestNews('AAOI');assert.equal(yahoo,2);
+ await Promise.all([svc.requestNews('AAOI'),svc.requestNews('AAOI')]);assert.equal(yahoo,1);assert.equal(google,1);now+=101;await svc.requestNews('AAOI');assert.equal(google,2);now+=101;await svc.requestNews('AAOI');assert.equal(yahoo,3);assert.equal(google,3);
 });
 test('v95 all macro sources share strict seven-day cutoff, reject future/feed-homepage records',async()=>{
  const svc=createMacroService({now:()=>NOW,log,googleNewsTopic:async()=>[item('future report',NOW+1),item('six day report',NOW-6*DAY)],yahooNews:async()=>[],httpsGet:noFlash,officialNews:{getNews:async()=>({items:[{title:'29 day announcement',source:'Federal Reserve',link:'https://www.federalreserve.gov/newsevents/old.htm',pubDate:new Date(NOW-29*DAY).toUTCString()}],updatedAt:NOW})}});
@@ -44,9 +44,9 @@ test('v95 shared news cancellation removes only the departing reader and no API 
  let finish,producerSignal;const a=new AbortController(),b=new AbortController();const svc=createNewsService({now:()=>NOW,log,newsLoader:(_,opts)=>{producerSignal=opts.signal;return new Promise(resolve=>finish=resolve);}});
  const first=svc.requestNews('AAOI',{activate:false,signal:a.signal}),second=svc.requestNews('AAOI',{activate:false,signal:b.signal});await new Promise(r=>setImmediate(r));a.abort();await assert.rejects(first);assert.equal(producerSignal.aborted,false);finish([item('real report')]);assert.equal((await second).items.length,1);assert.equal(svc.activeSyms.size,0);
 });
-test('v95 the final canceled news reader stops the producer, fallback and late cache writes',async()=>{
+test('the final canceled news reader stops the producer and late cache writes after both sources start',async()=>{
  let google=0,yahooSignal;const c=new AbortController();const svc=createNewsService({now:()=>NOW,log,yahooNews:(_, {signal})=>{yahooSignal=signal;return new Promise((_,reject)=>signal.addEventListener('abort',()=>reject(signal.reason),{once:true}));},httpsGet:async()=>{google++;return {status:200,body:rss()};}});
- const p=svc.requestNews('AAOI',{activate:false,signal:c.signal});await new Promise(r=>setImmediate(r));c.abort();await assert.rejects(p);await new Promise(r=>setImmediate(r));assert.equal(yahooSignal.aborted,true);assert.equal(google,0);assert.equal(svc.newsCache.size,0);
+ const p=svc.requestNews('AAOI',{activate:false,signal:c.signal});await new Promise(r=>setImmediate(r));c.abort();await assert.rejects(p);await new Promise(r=>setImmediate(r));assert.equal(yahooSignal.aborted,true);assert.equal(google,1);assert.equal(svc.newsCache.size,0);
 });
 test('v95 survey grouping never replaces the first article publication time with a later fragment',()=>{
  const first=item('英国央行表示，8月Savanta民调显示，民众对未来一年的通胀预期为3.2%。',NOW-60000),second=item('英国央行表示，8月份Savanta民调显示，受访者对五年后的通胀预期为3.2%。',NOW-1000,{link:'https://www.reuters.com/article/five-year'});

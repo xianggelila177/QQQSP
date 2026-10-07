@@ -33,19 +33,33 @@ const table=(columns,types)=>object({...common,columns:{type:'array',const:colum
 const ext=object({price:num,quote_at_ms:time,change:num,change_percent:num,reference_price:num,reference_trade_date:nullableString});
 export const orderBookSchema=object({...common,data:object({bid:object({price:num,size:num,exchange:nullableString}),ask:object({price:num,size:num,exchange:nullableString}),spread:num,currency:nullableString,size_unit:nullableString,retained:{type:'boolean'}})});
 export const financialFieldSchema=object({value:num,status:str,unit:nullableString,currency:nullableString,source_id:nullableString,as_of_ms:time,source_checked_at_ms:time,financial_period:nullableString,basis:nullableString,stale:{type:'boolean'},calculated:{type:'boolean'},estimated:{type:'boolean'},formula:nullableString,missing_reason:nullableString,
+ business_date:nullableString,date_precision:nullableString,date_basis:nullableString,source_published_at_ms:time,cache_stale:{type:'boolean'},identity_basis:nullableString,quality_warnings:strings,
+ content_freshness:object({status:str,reason:nullableString,reference_at_ms:time,age_days:num,max_age_days:num,basis:nullableString,latest_report_verified:{const:false}}),
+ comparison:object({status:str,reason:nullableString,threshold_fraction:num,candidates:{type:'array',maxItems:8,items:object({source_id:nullableString,value:num,as_of_ms:time,financial_period:nullableString})}}),
  denominator:num,share_source_id:nullableString,share_as_of_ms:time,quote_reference_at_ms:time,depth:num,historical:{type:'boolean'},backup:{type:'boolean'},
  inputs:{type:'array',maxItems:16,items:object({name:nullableString,value:num,source_id:nullableString,as_of_ms:time,financial_period:nullableString})},
  attempts:{type:'array',maxItems:16,items:object({source_id:nullableString,state:nullableString,code:nullableString,last_success_at_ms:time,retry_at_ms:time})}});
 const quoteData=object({price:{type:'number',exclusiveMinimum:0},currency:nullableString,price_unit:nullableString,previous_close:num,previous_close_trade_date:nullableString,previous_close_source_id:nullableString,previous_close_as_of_ms:time,previous_close_status:nullableString,previous_close_missing_reason:nullableString,change_basis:nullableString,change:num,change_percent:num,quote_at_ms:time,observed_at_ms:time,source_checked_at_ms:time,quote_time_basis:nullableString,session:nullableString,market_state:nullableString,regular:ext,pre:ext,post:ext,open:num,high:num,low:num,volume:num,volume_unit:nullableString,statistics_trading_date:nullableString,statistics_as_of_ms:time,statistics_session:nullableString,retained:{type:'boolean'},order_book:orderBookSchema});
 Object.assign(quoteData.properties,{trade_received_at_ms:{...time,description:'Server receipt time of the selected stream trade; not a heartbeat or exchange event time'},connection_checked_at_ms:{...time,description:'Last verified frame from the associated stream; never substitutes for quote_at_ms'},stream_source_id:nullableString,stream_status:nullableString,stream_connection_healthy:{type:['boolean','null'],description:'Health of the associated stream, which can differ from the selected price source; null when no stream is associated'}});
 quoteData.required.push('trade_received_at_ms','connection_checked_at_ms','stream_source_id','stream_status','stream_connection_healthy');
+const quoteEvidence={price_source_id:nullableString,price_basis:nullableString,source_currency:nullableString,price_scale:num,quote_time_precision:nullableString,
+ statistics_source_id:nullableString,statistics_source_checked_at_ms:time,statistics_status:str,statistics_retained:{type:'boolean'},
+ source_comparison:object({status:str,threshold_percent:num,max_time_gap_ms:num,method:nullableString,
+  comparisons:{type:'array',items:object({source_id:nullableString,price:num,currency:nullableString,quote_at_ms:time,source_checked_at_ms:time,session:nullableString,time_gap_ms:num,difference_percent:num,status:nullableString})}})};
+Object.assign(quoteData.properties,quoteEvidence);quoteData.required.push(...Object.keys(quoteEvidence));
 const named=data=>object({...common,data});
 const rowTime={type:'number',minimum:0},rowPrice={type:'number',exclusiveMinimum:0};
 const newsItemSchema=object({title:str,source:nullableString,published_at_ms:time,url:nullableString,
- provenance:object({publisher:str,publisher_url:nullableString,article_url:nullableString,link_scope:{enum:['article','aggregator']},timestamp_basis:{const:'publisher_reported'},verification:{const:'feed_metadata_not_independent_fact_check'}}),
+ provenance:object({publisher:str,publisher_url:nullableString,article_url:nullableString,link_scope:{enum:['article','aggregator']},timestamp_basis:{const:'publisher_reported'},verification:{const:'feed_metadata_not_independent_fact_check'},
+  publisher_classification:object({registry_id:nullableString,category:str,domain:nullableString,status:{enum:['registered_domain','unregistered_domain']},basis:{enum:['article_host','aggregator_reported_source_url']},registered_name:nullableString})}),
+ headline_tone:{anyOf:[{type:'null'},object({value:nullableString,scope:{const:'headline_only'},method:{const:'keyword_rules'},target_direction:{const:'unknown'}})]},
  association:object({symbol:nullableString,basis:str})});
 const newsQualitySchema=object({policy:{const:'published_within_7_days'},window_ms:{const:604800000},cutoff_ms:time,checked_at_ms:time,
  accepted_items:{type:'integer',minimum:0},rejected_items:{type:'integer',minimum:0},rejected_by_reason:{type:'object',additionalProperties:{type:'integer',minimum:0}},verification:{const:'publisher_feed_metadata_only'}});
+Object.assign(newsQualitySchema.properties,{
+ source_attempts:{type:'array',maxItems:2,items:object({source:str,status:str,checkedAt:time,returnedItems:{type:'integer',minimum:0},error:str},['source','status','checkedAt'])},
+ selection:{const:'latest_5_from_two_sources'},completeness:{const:'bounded_search_results_not_exhaustive'},unregistered_publisher_items:{type:'integer',minimum:0}
+});
 export const sectionSchemas={
  quote:named({anyOf:[quoteData,{type:'null'}]}),
  intraday:table(['time_ms','trade_date','price','volume','session'],[rowTime,nullableString,rowPrice,num,str]),

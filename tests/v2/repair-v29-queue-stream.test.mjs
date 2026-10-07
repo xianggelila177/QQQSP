@@ -30,9 +30,10 @@ test('R01 delayed, unknown-delay, disconnected and resumed feeds have explicit a
  assert.equal(streamAvailability('NVDA',trade(fixtureNow+60000),fixtureNow).usable,false);
 });
 test('R01 market closure accepts last legal trade but never changes its quoteAt',()=>{
- const saturday=Date.parse('2026-09-12T14:00:00Z'),value=trade(saturday-864e5,{connectionCheckedAt:saturday});
+ const saturday=Date.parse('2026-09-12T14:00:00Z'),value=trade(Date.parse('2026-09-11T20:00:00Z'),{connectionCheckedAt:saturday});
  assert.equal(streamAvailability('NVDA',value,saturday).closed,true);assert.equal(streamAvailability('NVDA',value,saturday).usable,true);
  assert.equal(mergeAlpacaQuote(null,value,saturday).quoteAt,value.trade.quoteAt);
+ assert.equal(streamAvailability('NVDA',trade(saturday-864e5,{connectionCheckedAt:saturday}),saturday).usable,false,'Friday morning is not a verified latest closing-session value');
 });
 test('R01 real service switches its enrichment cadence when a per-security trade ages',async()=>{
  let clock=fixtureNow,calls=0;const initial=trade(clock);const provider={supports:()=>true,touch:()=>true,read:()=>({...initial,connectionCheckedAt:clock}),start(){},stop(){},diagnostics:()=>({})};

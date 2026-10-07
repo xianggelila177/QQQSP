@@ -40,12 +40,14 @@
     const declaredDelayMinutes=typeof data.feedDelayMinutes==='number'&&Number.isFinite(data.feedDelayMinutes)&&data.feedDelayMinutes>=0?data.feedDelayMinutes:null;
     const delayMs=(declaredDelayMinutes||0)*60000;
     const sessionStartedAt=timestampMs(data.sessionStartedAt);
-    const closed=['CLOSED','HOLIDAY'].includes(data.marketState);
+    const policy=data.quoteFreshnessPolicy,state=policy?.state||data.marketState;
+    const closed=['CLOSED','HOLIDAY'].includes(state);
     // Event age is independent of transport and polling cadence. Both website
     // and stream prices keep a finite age budget, including outside sessions.
     const ordinaryBudgetMs=Math.max(300000,delayMs+30000);
-    const quoteBudgetMs=closed?14*86400000:ordinaryBudgetMs+(data.marketState==='BREAK'&&sessionStartedAt&&sessionStartedAt<=now?now-sessionStartedAt:0);
-    const active=['REGULAR','PRE','POST','AUCTION','BREAK'].includes(data.marketState);
+    const cutoff=timestampMs(policy?.minEventAt),verifiedClosed=closed&&policy?.kind==='last_completed_regular_session'&&policy.calendarVerified===true&&cutoff;
+    const quoteBudgetMs=verifiedClosed?Math.max(0,now-cutoff):ordinaryBudgetMs+(state==='BREAK'&&sessionStartedAt&&sessionStartedAt<=now?now-sessionStartedAt:0);
+    const active=['REGULAR','PRE','POST','AUCTION','BREAK'].includes(state);
     let reason=data.recovery?'offline-cache':data.staleInfo?.reason || (data.stale||data.staleInfo?'provider-stale':null);
     if(!reason&&!quoteAt)reason='quote-time-unknown';
     if(!reason&&quoteAt>now+1000)reason='quote-time-invalid';
@@ -53,6 +55,9 @@
     if(!reason&&checkedAt>now+1000)reason='source-time-invalid';
     if(!reason&&!streamHealthy&&checkedAt&&now-checkedAt>checkBudgetMs)reason='source-overdue';
     if(!reason&&quoteAt&&now-quoteAt>quoteBudgetMs)reason='quote-overdue';
+    if(!reason&&closed&&!verifiedClosed)reason='quote-calendar-unverified';
+    if(!reason&&policy&&timestampMs(data.nextMarketTransitionAt)&&policy.evaluatedAt<data.nextMarketTransitionAt&&now>=data.nextMarketTransitionAt)reason='quote-calendar-refresh-needed';
+    if(!reason&&data.quoteComparison?.status==='conflict')reason='quote-source-conflict';
     const quietBudgetMs=delayMs+Math.max(30000,data.quoteTimePrecision==='minute'?60000:0);
     const noNewQuote=!reason&&active&&now-quoteAt>quietBudgetMs;
     return {stale:!!reason,reason,noNewQuote,declaredDelayMinutes,quoteAt,checkedAt,cadence,checkBudgetMs,quoteBudgetMs};

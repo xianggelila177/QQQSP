@@ -4,6 +4,8 @@
   const units={percent:'%',ratio:'倍',shares:'股',money:'',price:'',points:'点',lots:'手',round_lots:'整手（每手股数未核验）','money-per-share':'/股'};
   const groups={trading:'交易统计',capital:'市值与股本',valuation:'估值',dividends:'股息与分红',inputs:'计算输入与财务依据'};
   const sessions={REGULAR:'正常交易',PRE:'盘前',POST:'盘后',CLOSED:'休市',BREAK:'午间休市',AUCTION:'集合竞价',UNKNOWN:'状态未核验'};
+  const freshnessStates={unverified:'资料时效未核验',stale:'资料有效日期较旧',invalid:'资料日期异常','within-age-window':'资料日期处于保守年龄窗口内，尚未独立确认是否已有更新披露'};
+  const financialReasons={'report-period-unknown':'来源未提供报告期','effective-date-unknown':'来源未提供字段有效日期','valuation-effective-date-unknown':'估值有效时点未提供，报告期不能证明与当前价同步','valuation-effective-date-old':'估值有效时点已超过年龄窗口','report-period-old':'报告期已超过年龄窗口','effective-date-old':'字段有效日期已超过年龄窗口','invalid-report-period':'报告期格式异常','future-report-period':'报告期落在未来','future-effective-date':'字段有效日期落在未来','source-disagreement':'可比来源数值存在分歧'};
   const numeric=value=>typeof value==='number'&&Number.isFinite(value);
   const formatted=(value,digits=6)=>numeric(value)?value.toLocaleString('zh-CN',{maximumFractionDigits:digits}):'—';
   const time=value=>numeric(value)&&value>0?new Date(value).toLocaleString('zh-CN',{hour12:false,timeZone:'Asia/Shanghai'})+'（北京时间）':'时间未提供';
@@ -30,11 +32,19 @@
     function evidence(field){
       const details=node('details',undefined,'detail-evidence');details.append(node('summary','口径、时间与来源'));
       const lines=[field.description,field.missing_reason?'说明：'+reason(field.missing_reason):null,
-        '来源：'+sourceName(field.source_id),'资料时间：'+time(field.as_of_ms),'成功检查：'+time(field.source_checked_at_ms),
+        '来源：'+sourceName(field.source_id),field.date_precision==='day'&&field.business_date?'来源业务日期：'+field.business_date+'（按日发布，时间戳仅作日期编码）':'资料时间：'+time(field.as_of_ms),'成功检查：'+time(field.source_checked_at_ms),
         field.financial_period?'财务期间：'+field.financial_period:null,field.basis?'统计口径：'+field.basis:null,
+        field.content_freshness?'资料时效：'+(freshnessStates[field.content_freshness.status]||'尚未核验'):null,
+        financialReasons[field.content_freshness?.reason]||null,
+        field.comparison?.status==='disagreement'?'可比来源数值存在分歧；保留选定值供核查，未判定哪一来源正确。':null,
+        field.comparison?.status==='consistent'?'可比来源数值在容差内；这不等于独立审计。':null,
+        field.comparison?.status==='not-comparable'?'其他来源的口径、报告期或时点不足以直接比较。':null,
+        field.cache_stale?'取得记录已超过缓存刷新期限':null,
         field.formula?'公式：'+field.formula:null,field.denominator!==null?'计算分母：'+formatted(field.denominator):null,
         field.share_source_id?'股本来源：'+sourceName(field.share_source_id)+'；'+time(field.share_as_of_ms):null];
       for(const line of lines)if(line)details.append(node('p',line));
+      for(const warning of field.quality_warnings||[])details.append(node('p','质量提示：'+(financialReasons[warning]||reason(warning)),'detail-warning'));
+      for(const candidate of field.comparison?.candidates||[])details.append(node('p','比对来源：'+sourceName(candidate.source_id)+'；值 '+formatted(candidate.value)+'；'+time(candidate.as_of_ms)+(candidate.financial_period?'；报告期 '+candidate.financial_period:'')));
       for(const input of field.inputs||[])details.append(node('p',(input.name||'输入')+'：'+formatted(input.value)+'；'+sourceName(input.source_id)+'；'+time(input.as_of_ms)+(input.financial_period?'；'+input.financial_period:'')));
       for(const item of field.attempts||[])details.append(node('p','尝试来源：'+sourceName(item.source_id)+'；状态：'+(statuses[item.state]||item.state||'未知')+(item.code?'；'+item.code:'')+(item.retry_at_ms?'；下次允许重试：'+time(item.retry_at_ms):'')));
       return details;
@@ -52,6 +62,10 @@
       const overview=node('div',undefined,'detail-overview'),price=q?.data?.price;
       overview.append(node('strong',formatted(price),'detail-price'),node('span',(instrument.price_unit||'单位未提供')+' · '+(sessions[q?.data?.market_state]||q?.data?.market_state||'市场状态待核验')));
       if(q?.data){const timeLabel=q.data.quote_time_basis==='provider-published'?(instrument.type==='INDEX'?'指数发布时间':'来源发布时间'):'成交时间';overview.append(node('p','涨跌 '+formatted(q.data.change)+' / '+formatted(q.data.change_percent)+'%'),node('p',timeLabel+'：'+time(q.data.quote_at_ms)),node('p','来源检查：'+time(q.data.source_checked_at_ms)+' · 延迟 '+(q.delay_minutes==null?'未声明':q.delay_minutes+' 分钟')));}
+      if(q?.data){overview.append(node('p','价格来源：'+sourceName(q.data.price_source_id)+' · '+(q.coverage?.feed_scope||'覆盖范围未核验')+' · 时间精度 '+(q.data.quote_time_precision||'未提供')));
+        if(q.data.source_comparison?.status==='conflict')overview.append(node('p','报价来源存在分歧，当前价格仅为所选来源的原值；异常筛查不等于核定哪个价格正确。','detail-warning'));
+        for(const candidate of q.data.source_comparison?.comparisons||[])if(candidate.status==='conflict')overview.append(node('p',sourceName(candidate.source_id)+'：'+formatted(candidate.price)+' '+(candidate.currency||'')+' · '+time(candidate.quote_at_ms)+' · 差异 '+formatted(candidate.difference_percent,2)+'%','detail-small'));
+      }
       body.append(overview);
       const market=section('最新成交与当日统计');
       for(const [key,label] of [['open','今开'],['previous_close','昨收'],['high','最高'],['low','最低'],['volume','成交量']]){
@@ -59,6 +73,7 @@
         market.grid.append(fieldCard(label,formatted(value)+(value!=null?' '+unit:''),value==null?'来源暂缺':null));
       }
       market.container.append(node('p','统计交易日：'+(q?.data?.statistics_trading_date||'未提供')+' · 统计时段：'+(sessions[q?.data?.statistics_session]||q?.data?.statistics_session||'未核验')+' · '+time(q?.data?.statistics_as_of_ms),'detail-small'));
+      market.container.append(node('p','统计来源：'+sourceName(q?.data?.statistics_source_id)+' · '+(statuses[q?.data?.statistics_status]||'待核验')+' · 成功检查 '+time(q?.data?.statistics_source_checked_at_ms)+(q?.data?.statistics_retained?' · 保留的旧交易日统计':''),'detail-small'));
       const depth=section('买卖盘口 · 最优一档');
       for(const [side,label] of [['bid','买一'],['ask','卖一']]){
         const v=book?.data?.[side];depth.grid.append(fieldCard(label,formatted(v?.price),formatted(v?.size)+' '+(units[book?.data?.size_unit]||book?.data?.size_unit||'数量单位未提供')));
@@ -70,7 +85,7 @@
       const groupNodes=new Map();
       for(const field of Object.values(f?.data?.fields||{})){
         const group=field.group||'inputs';if(!groupNodes.has(group))groupNodes.set(group,section(groups[group]||group));
-        const state=statuses[field.status]||field.status,known=field.value!==null;
+        const state=field.comparison?.status==='disagreement'?'来源数值有分歧':field.value!==null&&['unverified','invalid'].includes(field.content_freshness?.status)?freshnessStates[field.content_freshness.status]:statuses[field.status]||field.status,known=field.value!==null;
         const value=known?(field.estimated?'≈ ':'')+formatted(field.value,['percent','ratio'].includes(field.unit)?2:6)+(field.unit==='percent'?'%':field.unit==='ratio'?' 倍':''):(['loss','nonpositive-book'].includes(field.status)?state:'—');
         const card=fieldCard(field.label||field.key,value,[state,field.stale?'旧值待更新':null,field.currency,known&&field.unit&&!['percent','ratio'].includes(field.unit)?units[field.unit]||field.unit:null].filter(Boolean).join(' · '));
         card.dataset.field=field.key;card.append(evidence(field));groupNodes.get(group).grid.append(card);

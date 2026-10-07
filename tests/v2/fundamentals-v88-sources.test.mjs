@@ -9,7 +9,9 @@ function setup({code='NVDA.O',token='test-token'}={}){
  const batch={resolveNaverCode:async()=>code,tencent:async syms=>parser.parseTencentBatch(raw,syms)};
  const httpsGet=async(url,headers,options)=>{
   assert.ok(options.signal);calls.push({url,headers});let body;
-  if(url.includes('wisereport'))body=read('naver-kr-company.html','fundamentals-live');
+  if(url.includes('/exchangeReport/BWIBBU_d'))body=JSON.stringify([{Code:'2330',Date:'20260914',FiscalYearQuarter:'2026Q2',PEratio:'23.12',PBratio:'6.3'}]);
+  else if(url.includes('/opendata/t187ap03_L'))body=JSON.stringify([{'公司代號':'2330','出表日期':'1150914','已發行普通股數或TDR原股發行股數':'25932524000'}]);
+  else if(url.includes('wisereport'))body=read('naver-kr-company.html','fundamentals-live');
   else if(url.includes('/integration'))body=read('naver-kr-detail.json','fundamentals-live');
   else if(url.includes('/basic'))body=JSON.stringify(json('basic-NVDA'));
   else if(url.includes('/finance/'))body=read((url.endsWith('/summary')?'statements':url.endsWith('/quarter')?'quarter':'annual')+'-NVDA.json');
@@ -24,7 +26,7 @@ function setup({code='NVDA.O',token='test-token'}={}){
 }
 test('production source descriptors fetch their own fields, scopes and TTLs',async()=>{
  const {sources,calls}=setup(),signal=new AbortController().signal,quote={symbol:'NVDA',instrumentType:'EQUITY',currency:'USD'};
- for(const s of sources){const kr=s.id==='naver-company',symbol=kr?'000660.KS':'NVDA';const r=await s.load(symbol,{signal,quote:{...quote,symbol}});assert.equal(r.symbol,symbol);assert.ok(Object.keys(r.fields).length,s.id);}
+ for(const s of sources){const kr=s.id==='naver-company',tw=s.id.startsWith('twse-'),symbol=kr?'000660.KS':tw?'2330.TW':'NVDA';const r=await s.load(symbol,{signal,quote:{...quote,symbol,currency:tw?'TWD':kr?'KRW':'USD'}});assert.equal(r.symbol,symbol);assert.ok(Object.keys(r.fields).length,s.id);}
  assert.equal(calls.filter(c=>c.url.includes('/basic')).length,1,'statement source reuses a validated basic response');
  assert.ok(calls.find(c=>c.url.includes('finnhub')).headers['X-Finnhub-Token']);assert.ok(calls.every(c=>!c.url.includes('test-token')));
  for(const s of sources){if(s.match){s.match({symbol:'QQQ',currency:'USD',instrumentType:'ETF'});s.match({symbol:'000660.KS',currency:'KRW',instrumentType:'EQUITY'});s.match({symbol:'BTC-USD',currency:'USD',instrumentType:'CRYPTOCURRENCY'});}}
@@ -34,12 +36,12 @@ test('production source descriptors fetch their own fields, scopes and TTLs',asy
 test('HTTP rate-limit, unsupported identifier, identity mismatch and cancellation stay distinct',async()=>{
  for(const [status,code] of [[429,'RATE_LIMITED'],[404,'FUNDAMENTALS_UNSUPPORTED'],[503,'FUNDAMENTALS_SOURCE']]){
   const sources=createFinancialSources({batch:{resolveNaverCode:async()=> 'NVDA.O'},now:()=>now,httpsGet:async()=>({status,headers:{'retry-after':'120'}})});
-  await assert.rejects(sources[1].load('NVDA',{signal:new AbortController().signal}),e=>e.code===code&&e.retryAt>=now+120000);
+  await assert.rejects(sources.find(s=>s.id==='naver-basic').load('NVDA',{signal:new AbortController().signal}),e=>e.code===code&&e.retryAt>=now+120000);
  }
- const missing=setup({code:null});await assert.rejects(missing.sources[1].load('NVDA',{}),{code:'FUNDAMENTALS_UNSUPPORTED'});
- const bad=createFinancialSources({batch:{resolveNaverCode:async()=> 'NVDA.O'},httpsGet:async()=>({status:200,body:JSON.stringify({symbolCode:'OTHER',reutersCode:'NVDA.O'})})});await assert.rejects(bad[1].load('NVDA',{}),{code:'FUNDAMENTALS_IDENTITY'});
- const abort=new AbortController();abort.abort();await assert.rejects(bad[1].load('NVDA',{signal:abort.signal}));
- const empty=createFinancialSources({batch:{tencent:async()=>[]}});await assert.rejects(empty[0].load('NVDA',{}),{code:'FUNDAMENTALS_EMPTY'});
+ const missing=setup({code:null});await assert.rejects(missing.sources.find(s=>s.id==='naver-basic').load('NVDA',{}),{code:'FUNDAMENTALS_UNSUPPORTED'});
+ const bad=createFinancialSources({batch:{resolveNaverCode:async()=> 'NVDA.O'},httpsGet:async()=>({status:200,body:JSON.stringify({symbolCode:'OTHER',reutersCode:'NVDA.O'})})});await assert.rejects(bad.find(s=>s.id==='naver-basic').load('NVDA',{}),{code:'FUNDAMENTALS_IDENTITY'});
+ const abort=new AbortController();abort.abort();await assert.rejects(bad.find(s=>s.id==='naver-basic').load('NVDA',{signal:abort.signal}));
+ const empty=createFinancialSources({batch:{tencent:async()=>[]}});await assert.rejects(empty.find(s=>s.id==='tencent-financial').load('NVDA',{}),{code:'FUNDAMENTALS_EMPTY'});
 });
 test('a missing quarterly table does not suppress the independently returned annual PER',async()=>{
  const {batch,httpsGet}=setup();const sources=createFinancialSources({batch,now:()=>now,httpsGet:async(url,...rest)=>url.endsWith('/quarter')?{status:503,headers:{}}:httpsGet(url,...rest)});

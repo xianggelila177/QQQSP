@@ -1236,12 +1236,14 @@
     const declaredDelayMinutes=typeof data.feedDelayMinutes==='number'&&Number.isFinite(data.feedDelayMinutes)&&data.feedDelayMinutes>=0?data.feedDelayMinutes:null;
     const delayMs=(declaredDelayMinutes||0)*60000;
     const sessionStartedAt=timestampMs(data.sessionStartedAt);
-    const closed=['CLOSED','HOLIDAY'].includes(data.marketState);
+    const policy=data.quoteFreshnessPolicy,state=policy?.state||data.marketState;
+    const closed=['CLOSED','HOLIDAY'].includes(state);
     // Event age is independent of transport and polling cadence. Both website
     // and stream prices keep a finite age budget, including outside sessions.
     const ordinaryBudgetMs=Math.max(300000,delayMs+30000);
-    const quoteBudgetMs=closed?14*86400000:ordinaryBudgetMs+(data.marketState==='BREAK'&&sessionStartedAt&&sessionStartedAt<=now?now-sessionStartedAt:0);
-    const active=['REGULAR','PRE','POST','AUCTION','BREAK'].includes(data.marketState);
+    const cutoff=timestampMs(policy?.minEventAt),verifiedClosed=closed&&policy?.kind==='last_completed_regular_session'&&policy.calendarVerified===true&&cutoff;
+    const quoteBudgetMs=verifiedClosed?Math.max(0,now-cutoff):ordinaryBudgetMs+(state==='BREAK'&&sessionStartedAt&&sessionStartedAt<=now?now-sessionStartedAt:0);
+    const active=['REGULAR','PRE','POST','AUCTION','BREAK'].includes(state);
     let reason=data.recovery?'offline-cache':data.staleInfo?.reason || (data.stale||data.staleInfo?'provider-stale':null);
     if(!reason&&!quoteAt)reason='quote-time-unknown';
     if(!reason&&quoteAt>now+1000)reason='quote-time-invalid';
@@ -1249,6 +1251,9 @@
     if(!reason&&checkedAt>now+1000)reason='source-time-invalid';
     if(!reason&&!streamHealthy&&checkedAt&&now-checkedAt>checkBudgetMs)reason='source-overdue';
     if(!reason&&quoteAt&&now-quoteAt>quoteBudgetMs)reason='quote-overdue';
+    if(!reason&&closed&&!verifiedClosed)reason='quote-calendar-unverified';
+    if(!reason&&policy&&timestampMs(data.nextMarketTransitionAt)&&policy.evaluatedAt<data.nextMarketTransitionAt&&now>=data.nextMarketTransitionAt)reason='quote-calendar-refresh-needed';
+    if(!reason&&data.quoteComparison?.status==='conflict')reason='quote-source-conflict';
     const quietBudgetMs=delayMs+Math.max(30000,data.quoteTimePrecision==='minute'?60000:0);
     const noNewQuote=!reason&&active&&now-quoteAt>quietBudgetMs;
     return {stale:!!reason,reason,noNewQuote,declaredDelayMinutes,quoteAt,checkedAt,cadence,checkBudgetMs,quoteBudgetMs};
@@ -1867,9 +1872,12 @@
   ].map(([key,label,type,description],index)=>Object.freeze({key,label,type,description,extra:index>=16})));
   const sourceNames={'naver-financial':'Naver 财务指标','naver-company':'Naver 公司资料','naver-financial+naver-company':'Naver 财务指标 / 公司资料','tencent-financial':'腾讯基础指标','naver-us':'Naver 美股','naver-kr':'Naver 韩股','yahoo-summary':'Yahoo 财务摘要','finnhub-metric':'Finnhub 基础财务','yahoo-summary+finnhub-metric':'Yahoo / Finnhub','sina-batch':'新浪行情','tx-batch':'腾讯行情','tx-cn':'腾讯行情','tx-us':'腾讯行情',fixture:'离线测试数据'};
   const reasonNames={disabled:'财务资料功能已关闭',expired:'资料已超过最长保留期',loading:'财务资料后台读取中','source-missing':'来源未提供该字段','instrument-type':'当前品种不适用该公司指标','no-trade-amount':'来源未提供累计成交金额','no-regular-volume':'缺少已核验的常规时段成交量','no-shares':'缺少同一证券的可靠股本分母','no-regular-range':'缺少常规时段高低价或有效昨收','float-exceeds-total':'流通股大于总股本，停止相关计算','no-five-day-minute-baseline':'尚无前五个交易日的每分钟均量基准','no-order-book':'尚无明确范围的委托买卖盘','negative-earnings':'来源确认盈利为负','zero-earnings':'盈利口径无有效正值','nonpositive-book':'净资产口径不是有效正值','nonpositive-denominator':'分母不是有效正值','nonpositive-revenue':'营业收入口径不是有效正值'};
-  const states={'ready':'财务资料已取得','stale':'财务缓存待更新','expired':'财务资料已过期','disabled':'财务资料已关闭','loading':'财务资料后台读取中','unavailable':'财务资料暂缺','not-applicable':'按品种显示适用指标'};
+  const states={'ready':'财务资料已取得','stale':'基础资料时效待核验','expired':'财务资料已过期','disabled':'财务资料已关闭','loading':'财务资料后台读取中','unavailable':'财务资料暂缺','not-applicable':'按品种显示适用指标'};
+  reasonNames['source-disagreement']='可比来源存在明显分歧，停止使用该字段继续估算';
   Object.assign(sourceNames,{'naver-basic':'Naver 基础资料','naver-statements':'Naver 财报','nasdaq-summary':'Nasdaq 基础资料','nasdaq-dividends':'Nasdaq 实际派息','nasdaq-statements':'Nasdaq 财报','naver-realtime':'Naver 行情统计'});
-  Object.assign(states,{complete:'基础资料完整',partial:'基础资料部分取得'});
+  Object.assign(sourceNames,{'twse-valuations':'TWSE 日度估值','twse-company':'TWSE 公司资料'});
+  Object.assign(states,{complete:'适用字段已取得',partial:'基础资料部分取得或待核验'});
+  const freshnessNames={'report-period-unknown':'来源未提供报告期，无法核验财报时效','effective-date-unknown':'来源未提供字段有效日期，无法核验时效','valuation-effective-date-unknown':'来源未给出估值有效时点，报告期不能证明估值与当前价同步','valuation-effective-date-old':'估值时点已超过十四天，近期报告期不能替代价格时效','report-period-old':'报告期超过保守年龄窗口，不能按新资料使用','effective-date-old':'字段有效日期较旧','invalid-report-period':'报告期格式无效','future-report-period':'报告期落在未来','future-effective-date':'字段有效日期落在未来'};
   const sourceName=value=>String(value||'').split('+').map(v=>sourceNames[v]||v).join(' / ');
   const failureNames={FUNDAMENTALS_IDENTITY:'证券身份不符',FUNDAMENTALS_EMPTY:'未提供有效字段',FUNDAMENTALS_CURRENCY:'币种不符',FUNDAMENTALS_INCOMPLETE:'历史资料不完整',FUNDAMENTALS_UNSUPPORTED:'不支持该证券',RATE_LIMITED:'来源限流',SOURCE_COOLDOWN:'来源冷却中',DEADLINE_EXCEEDED:'来源超时',FUNDAMENTALS_SOURCE:'来源暂不可用'};
   const formulas={'regular-price / trailing-EPS':'常规报价 ÷ 最近十二个月每股收益','regular-price / fiscal-year-EPS':'常规报价 ÷ 最近完整财年每股收益','regular-price / book-value-per-share':'常规报价 ÷ 每股净资产','market-cap / trailing-revenue':'总市值 ÷ 最近十二个月营业收入','paid-dividends-12m / regular-price * 100':'过去十二个月已派股息 ÷ 常规报价 × 100%','sum of cash payments in the past 12 months':'合计过去十二个月已实际支付的现金股息','regular-volume / shares * 100':'常规时段成交量 ÷ 股数或份额 × 100%'};
@@ -1899,6 +1907,7 @@
     if(def.key==='sharesOutstanding'&&fund)label='总份额';
     if(def.key==='floatShares'&&fund)label='流通份额';
     if(def.key==='lotSize'&&fund)label='每手份数';
+    if(field.source==='twse-valuations')label=def.key==='peTTM'?'市盈率·日度':def.key==='priceToBook'?'市净率·日度':label;
     const unit=fund?'份':quote.instrumentType==='FUTURE'?'张':'股';
     if(field.status==='not-applicable')text='不适用';
     else if(field.status==='loss')text='亏损';
@@ -1926,7 +1935,10 @@
     const pending=field.attempts?.some(a=>a.state==='loading');
     if(text==='—'&&quote.fundamentals?.coverage)text=pending?'补充中':'暂无';
     const attempts=(field.attempts||[]).map(a=>sourceName(a.source)+'：'+(a.state==='loading'?'补充中':failureNames[a.code]||'未提供该字段')+(a.retryAt?'，下次检查 '+fmtTime8(a.retryAt):'')).join('；');
-    const details=[def.description,full&&'显示值：'+full,reasonNames[pending?'loading':field.reason],field.source&&'字段来源：'+sourceName(field.source),field.backup&&'由补充信源提供',field.asOf?'字段时点（北京时间）：'+fmtTime8(field.asOf):!simple[def.key]?'字段时点：来源未提供':null,field.fetchedAt&&'取得时间：'+fmtTime8(field.fetchedAt),field.tradeDate&&'统计交易日：'+field.tradeDate,field.financialPeriod&&'财报期间：'+field.financialPeriod,field.historical&&'来源财年末估值，不是按当前价重算',field.formula&&'计算口径：'+(formulas[field.formula]||field.formula),field.quoteReferenceAt&&'参考报价时点（非财务日期）：'+fmtTime8(field.quoteReferenceAt),field.shareSource&&'股本来源：'+sourceName(field.shareSource),field.denominator!=null&&'计算分母：'+field.denominator.toLocaleString('zh-CN')+unit,field.shareSource&&!field.shareAsOf&&'股本日期：来源未提供',field.estimated&&'估算值，非来源直接报告值',field.stale&&'缓存资料待更新，不代表新报价',attempts];
+    const freshness=field.contentFreshness,comparison=field.comparison;
+    const quality=[freshnessNames[freshness?.reason],freshness?.status==='within-age-window'&&'日期处于保守年龄窗口内，尚未独立确认是否已有新一期披露',field.identityBasis==='requested-symbol-route'&&'证券身份依据请求路径；子响应未全部回显证券代码',comparison?.status==='disagreement'&&'可比来源数值差异超过 10%，保留选定值供核查',comparison?.status==='not-comparable'&&'其他来源缺少一致口径、报告期或时点，不能作为交叉核验',comparison?.status==='consistent'&&'可比来源数值在 10% 容差内，不等于独立审计',comparison?.candidates?.length&&'比对值：'+comparison.candidates.map(candidate=>sourceName(candidate.source)+' '+candidate.value).join(' / ')];
+    const fieldDate=field.dateBasis==='dataset-publication'&&field.businessDate?'来源发布日：'+field.businessDate+'（不是股本变更生效日）':field.datePrecision==='day'&&field.businessDate?'来源业务日期：'+field.businessDate+'（按日发布，午夜时间仅用于日期编码）':field.asOf?'字段时点（北京时间）：'+fmtTime8(field.asOf):!simple[def.key]?'字段时点：来源未提供':null;
+    const details=[def.description,full&&'显示值：'+full,reasonNames[pending?'loading':field.reason],field.source&&'字段来源：'+sourceName(field.source),field.backup&&'由补充信源提供',fieldDate,field.fetchedAt&&'取得时间：'+fmtTime8(field.fetchedAt),field.tradeDate&&'统计交易日：'+field.tradeDate,field.financialPeriod&&'财报期间：'+field.financialPeriod,...quality,field.historical&&'来源财年末估值，不是按当前价重算',field.formula&&'计算口径：'+(formulas[field.formula]||field.formula),field.quoteReferenceAt&&'参考报价时点（非财务日期）：'+fmtTime8(field.quoteReferenceAt),field.shareSource&&'股本来源：'+sourceName(field.shareSource),field.denominator!=null&&'计算分母：'+field.denominator.toLocaleString('zh-CN')+unit,field.shareSource&&!field.shareAsOf&&'股本日期：来源未提供',field.estimated&&'估算值，非来源直接报告值',field.cacheStale&&'缓存取得时间已过刷新期限',field.stale&&'资料待核验或更新，不代表新报价',attempts];
     return {label,text,detail:details.filter(Boolean).join('；'),status:pending?'loading':field.status||(value!=null||def.type==='text'&&typeof field.value==='string'&&field.value.trim()?'available':'unavailable'),stale:!!field.stale};
   }
   function createView({document,cards,formatterFor,onLayout=()=>{}}){
@@ -1955,6 +1967,7 @@
       const f=q.d.fundamentals,parts=[states[f?.status]||'财务资料暂缺'];
       if(f?.coverage)parts.push(f.coverage.available+'/'+f.coverage.applicable+' 项已取得');
       if(f?.loading&&f.status!=='loading')parts.push('后台补充中');
+      if(f?.qualityWarnings?.length)parts.push('部分日期或来源待核验');
       if(f?.statisticsDate)parts.push((f.retainedStatistics?'保留上一交易日统计 ':'统计交易日 ')+f.statisticsDate);
       if(f?.fetchedAt)parts.push('取得 '+fmtTime8(f.fetchedAt));
       setText(q.statisticsStatus,parts.join(' · ')+'；金额标注币种，≈为估算或参考换汇。');
@@ -1970,7 +1983,7 @@
       dialogOwner=q.symbol;opener=q.statisticsHelp;
       setText(dialog.querySelector('h2'),q.symbol+' · 基础信息');
       const f=q.d?.fundamentals;
-      setText(dialog.querySelector('.metrics-dialog-intro'),'以下是打开说明时的快照。'+(f?.fetchedAt?'资料取得时间（北京时间）：'+new Date(f.fetchedAt+8*3600000).toISOString().replace('T',' ').slice(0,19)+'。':'资料取得时间：尚无成功记录。')+(f?.source?'资料来源：'+sourceName(f.source)+'。':'')+'成交统计随行情刷新；公开基础指标每分钟检查，财报摘要最多缓存六小时。失败后保留未过期旧值并退避重试。取得时间不等于财报或股本日期。'+(f?.financialPeriod?'来源最近财报季度：'+f.financialPeriod+'。':'来源未提供最近财报季度。'));
+      setText(dialog.querySelector('.metrics-dialog-intro'),'以下是打开说明时的快照。'+(f?.fetchedAt?'资料取得时间（北京时间）：'+new Date(f.fetchedAt+8*3600000).toISOString().replace('T',' ').slice(0,19)+'。':'资料取得时间：尚无成功记录。')+(f?.source?'资料来源：'+sourceName(f.source)+'。':'')+'成交统计随行情刷新；公开基础指标通常每分钟检查，摘要中的价格敏感估值默认每五分钟检查，报表字段最多缓存六小时。失败后保留未过期旧值并退避重试。取得时间不等于财报或股本日期；报告期年龄筛查也不保证已取得最新披露。'+(f?.financialPeriod?'来源财报季度：'+f.financialPeriod+'。':'各字段报告期请分别查看。'));
       const formatter=formatterFor(q.d||{});
       dialog.querySelector('dl').innerHTML=definitions.map(def=>{const item=formatMetric(def,q.d||{},formatter);return '<div><dt>'+esc(item.label)+' <strong>'+esc(item.text)+'</strong></dt><dd>'+esc(item.detail)+'</dd></div>';}).join('');
       dialog.showModal();
@@ -1990,6 +2003,8 @@
   const units={percent:'%',ratio:'倍',shares:'股',money:'',price:'',points:'点',lots:'手',round_lots:'整手（每手股数未核验）','money-per-share':'/股'};
   const groups={trading:'交易统计',capital:'市值与股本',valuation:'估值',dividends:'股息与分红',inputs:'计算输入与财务依据'};
   const sessions={REGULAR:'正常交易',PRE:'盘前',POST:'盘后',CLOSED:'休市',BREAK:'午间休市',AUCTION:'集合竞价',UNKNOWN:'状态未核验'};
+  const freshnessStates={unverified:'资料时效未核验',stale:'资料有效日期较旧',invalid:'资料日期异常','within-age-window':'资料日期处于保守年龄窗口内，尚未独立确认是否已有更新披露'};
+  const financialReasons={'report-period-unknown':'来源未提供报告期','effective-date-unknown':'来源未提供字段有效日期','valuation-effective-date-unknown':'估值有效时点未提供，报告期不能证明与当前价同步','valuation-effective-date-old':'估值有效时点已超过年龄窗口','report-period-old':'报告期已超过年龄窗口','effective-date-old':'字段有效日期已超过年龄窗口','invalid-report-period':'报告期格式异常','future-report-period':'报告期落在未来','future-effective-date':'字段有效日期落在未来','source-disagreement':'可比来源数值存在分歧'};
   const numeric=value=>typeof value==='number'&&Number.isFinite(value);
   const formatted=(value,digits=6)=>numeric(value)?value.toLocaleString('zh-CN',{maximumFractionDigits:digits}):'—';
   const time=value=>numeric(value)&&value>0?new Date(value).toLocaleString('zh-CN',{hour12:false,timeZone:'Asia/Shanghai'})+'（北京时间）':'时间未提供';
@@ -2016,11 +2031,19 @@
     function evidence(field){
       const details=node('details',undefined,'detail-evidence');details.append(node('summary','口径、时间与来源'));
       const lines=[field.description,field.missing_reason?'说明：'+reason(field.missing_reason):null,
-        '来源：'+sourceName(field.source_id),'资料时间：'+time(field.as_of_ms),'成功检查：'+time(field.source_checked_at_ms),
+        '来源：'+sourceName(field.source_id),field.date_precision==='day'&&field.business_date?'来源业务日期：'+field.business_date+'（按日发布，时间戳仅作日期编码）':'资料时间：'+time(field.as_of_ms),'成功检查：'+time(field.source_checked_at_ms),
         field.financial_period?'财务期间：'+field.financial_period:null,field.basis?'统计口径：'+field.basis:null,
+        field.content_freshness?'资料时效：'+(freshnessStates[field.content_freshness.status]||'尚未核验'):null,
+        financialReasons[field.content_freshness?.reason]||null,
+        field.comparison?.status==='disagreement'?'可比来源数值存在分歧；保留选定值供核查，未判定哪一来源正确。':null,
+        field.comparison?.status==='consistent'?'可比来源数值在容差内；这不等于独立审计。':null,
+        field.comparison?.status==='not-comparable'?'其他来源的口径、报告期或时点不足以直接比较。':null,
+        field.cache_stale?'取得记录已超过缓存刷新期限':null,
         field.formula?'公式：'+field.formula:null,field.denominator!==null?'计算分母：'+formatted(field.denominator):null,
         field.share_source_id?'股本来源：'+sourceName(field.share_source_id)+'；'+time(field.share_as_of_ms):null];
       for(const line of lines)if(line)details.append(node('p',line));
+      for(const warning of field.quality_warnings||[])details.append(node('p','质量提示：'+(financialReasons[warning]||reason(warning)),'detail-warning'));
+      for(const candidate of field.comparison?.candidates||[])details.append(node('p','比对来源：'+sourceName(candidate.source_id)+'；值 '+formatted(candidate.value)+'；'+time(candidate.as_of_ms)+(candidate.financial_period?'；报告期 '+candidate.financial_period:'')));
       for(const input of field.inputs||[])details.append(node('p',(input.name||'输入')+'：'+formatted(input.value)+'；'+sourceName(input.source_id)+'；'+time(input.as_of_ms)+(input.financial_period?'；'+input.financial_period:'')));
       for(const item of field.attempts||[])details.append(node('p','尝试来源：'+sourceName(item.source_id)+'；状态：'+(statuses[item.state]||item.state||'未知')+(item.code?'；'+item.code:'')+(item.retry_at_ms?'；下次允许重试：'+time(item.retry_at_ms):'')));
       return details;
@@ -2038,6 +2061,10 @@
       const overview=node('div',undefined,'detail-overview'),price=q?.data?.price;
       overview.append(node('strong',formatted(price),'detail-price'),node('span',(instrument.price_unit||'单位未提供')+' · '+(sessions[q?.data?.market_state]||q?.data?.market_state||'市场状态待核验')));
       if(q?.data){const timeLabel=q.data.quote_time_basis==='provider-published'?(instrument.type==='INDEX'?'指数发布时间':'来源发布时间'):'成交时间';overview.append(node('p','涨跌 '+formatted(q.data.change)+' / '+formatted(q.data.change_percent)+'%'),node('p',timeLabel+'：'+time(q.data.quote_at_ms)),node('p','来源检查：'+time(q.data.source_checked_at_ms)+' · 延迟 '+(q.delay_minutes==null?'未声明':q.delay_minutes+' 分钟')));}
+      if(q?.data){overview.append(node('p','价格来源：'+sourceName(q.data.price_source_id)+' · '+(q.coverage?.feed_scope||'覆盖范围未核验')+' · 时间精度 '+(q.data.quote_time_precision||'未提供')));
+        if(q.data.source_comparison?.status==='conflict')overview.append(node('p','报价来源存在分歧，当前价格仅为所选来源的原值；异常筛查不等于核定哪个价格正确。','detail-warning'));
+        for(const candidate of q.data.source_comparison?.comparisons||[])if(candidate.status==='conflict')overview.append(node('p',sourceName(candidate.source_id)+'：'+formatted(candidate.price)+' '+(candidate.currency||'')+' · '+time(candidate.quote_at_ms)+' · 差异 '+formatted(candidate.difference_percent,2)+'%','detail-small'));
+      }
       body.append(overview);
       const market=section('最新成交与当日统计');
       for(const [key,label] of [['open','今开'],['previous_close','昨收'],['high','最高'],['low','最低'],['volume','成交量']]){
@@ -2045,6 +2072,7 @@
         market.grid.append(fieldCard(label,formatted(value)+(value!=null?' '+unit:''),value==null?'来源暂缺':null));
       }
       market.container.append(node('p','统计交易日：'+(q?.data?.statistics_trading_date||'未提供')+' · 统计时段：'+(sessions[q?.data?.statistics_session]||q?.data?.statistics_session||'未核验')+' · '+time(q?.data?.statistics_as_of_ms),'detail-small'));
+      market.container.append(node('p','统计来源：'+sourceName(q?.data?.statistics_source_id)+' · '+(statuses[q?.data?.statistics_status]||'待核验')+' · 成功检查 '+time(q?.data?.statistics_source_checked_at_ms)+(q?.data?.statistics_retained?' · 保留的旧交易日统计':''),'detail-small'));
       const depth=section('买卖盘口 · 最优一档');
       for(const [side,label] of [['bid','买一'],['ask','卖一']]){
         const v=book?.data?.[side];depth.grid.append(fieldCard(label,formatted(v?.price),formatted(v?.size)+' '+(units[book?.data?.size_unit]||book?.data?.size_unit||'数量单位未提供')));
@@ -2056,7 +2084,7 @@
       const groupNodes=new Map();
       for(const field of Object.values(f?.data?.fields||{})){
         const group=field.group||'inputs';if(!groupNodes.has(group))groupNodes.set(group,section(groups[group]||group));
-        const state=statuses[field.status]||field.status,known=field.value!==null;
+        const state=field.comparison?.status==='disagreement'?'来源数值有分歧':field.value!==null&&['unverified','invalid'].includes(field.content_freshness?.status)?freshnessStates[field.content_freshness.status]:statuses[field.status]||field.status,known=field.value!==null;
         const value=known?(field.estimated?'≈ ':'')+formatted(field.value,['percent','ratio'].includes(field.unit)?2:6)+(field.unit==='percent'?'%':field.unit==='ratio'?' 倍':''):(['loss','nonpositive-book'].includes(field.status)?state:'—');
         const card=fieldCard(field.label||field.key,value,[state,field.stale?'旧值待更新':null,field.currency,known&&field.unit&&!['percent','ratio'].includes(field.unit)?units[field.unit]||field.unit:null].filter(Boolean).join(' · '));
         card.dataset.field=field.key;card.append(evidence(field));groupNodes.get(group).grid.append(card);
@@ -2928,6 +2956,12 @@
     } else if(['quote-time-unknown','quote-time-invalid','source-time-unknown','source-time-invalid'].includes(freshness.reason)){
       q.staleWarn.textContent=freshness.reason.startsWith('quote-')?'报价时间未核验':'来源检查时间未核验';
       q.staleWarn.title='原始时间缺失或异常，不能用本次页面响应时间替代。';
+    } else if(freshness.reason==='quote-source-conflict'){
+      q.staleWarn.textContent='报价来源有分歧';
+      q.staleWarn.title='同证券、币种及交易时段的相近时刻报价存在明显差异。保留所选来源原值；请在详情核对，未自动判定哪一源正确。';
+    } else if(['quote-calendar-unverified','quote-calendar-refresh-needed'].includes(freshness.reason)){
+      q.staleWarn.textContent='交易日校验待更新';
+      q.staleWarn.title='尚未核验报价是否覆盖最近完成交易日，保留最后价格和来源时间。';
     } else if(d.stale){
       q.staleWarn.textContent='数据延迟';
       q.staleWarn.title='部分数据延迟，正在自动重试';
@@ -2945,19 +2979,20 @@
   }
   function updateQuoteMeta(q, now = quoteClock ? quoteClock.now() : Date.now()) {
     const d = q.d; if (!d || !q.quoteMeta) return;
-    applyStaleBadge(q,d,now);
+    const freshness=applyStaleBadge(q,d,now);
     const at = quoteTimeMs(d.quoteAt ?? d.ts);
     const ageText = '报价年龄 ' + window.PANEL_STATE.formatQuoteAge(d.quoteAt ?? d.ts, now);
-    // Keep source diagnostics in the source-health/detail views, not below every price.
+    const coverage=d.feedCoverage==='us-sip'?'全美综合报价':d.feedCoverage==='us-iex'?'IEX 单一交易所':'覆盖未核验';
+    const delay=typeof d.feedDelayMinutes==='number'&&Number.isFinite(d.feedDelayMinutes)&&d.feedDelayMinutes>=0?(d.feedDelayMinutes?'延迟 '+d.feedDelayMinutes+' 分钟':'来源声明实时'):'延迟未声明';
     if (q.quoteAge) {
-      if (q.quoteDetails) { q.quoteDetails.textContent = ''; q.quoteDetails.hidden = true; }
+      if (q.quoteDetails) { q.quoteDetails.textContent = [d.src||'来源未提供',coverage,delay,freshness.noNewQuote?'本来源暂无更新报价':null].filter(Boolean).join(' · ')+' · '; q.quoteDetails.hidden = false; }
       if (q.sourceCheckAge) { q.sourceCheckAge.textContent = ''; q.sourceCheckAge.hidden = true; }
       if (q.quoteAge.textContent !== ageText) q.quoteAge.textContent = ageText;
       q.quoteAge.dataset.quoteAsofMs = at == null ? '' : String(at);
       q.quoteAge.dataset.ageComputedAtMs = String(now);
       q.quoteAge.dataset.ageTickSeq = String((Number(q.quoteAge.dataset.ageTickSeq) || 0) + 1);
     } else q.quoteMeta.textContent = ageText;
-    q.quoteMeta.title = '';
+    q.quoteMeta.title = d.feedCoverage||'市场覆盖范围尚未核验';
   }
 
   function render(q) {
@@ -3255,16 +3290,23 @@
     const { esc, fmtTime8 } = window.PANEL_FORMAT;
     let inFlight=null, generation=0;
     const data={}, metadata={};
-  function sentTag(value) {
-    const sentiment = ['利好', '利空', '中性'].includes(value) ? value : '中性';
-    return '<span class="stag s-' + sentiment + '" title="标题关键词规则判断，存在误判可能">规则·' + sentiment + '</span>';
+  function sentTag(tone) {
+    if(tone?.scope!=='headline_only')return '';
+    const sentiment = {positive:'利好',negative:'利空',neutral:'中性'}[tone.value] || '中性';
+    const label={'利好':'积极','利空':'消极','中性':'中性'}[sentiment];
+    return '<span class="stag s-' + sentiment + '" title="仅描述标题关键词语气，未判定对当前证券的利好或利空，也未核验新闻事实">标题·' + label + '</span>';
+  }
+  function sourceLabel(item){
+    const classification=item.provenance?.publisher_classification;
+    const label=classification?.status!=='registered_domain'?'来源域名未登记':({'newsroom':'媒体报道','official':'官方来源','press_release':'新闻稿'}[classification.category]||'已登记来源');
+    return '<span class="nsrc" title="'+esc(label+'；仅核对来源域名，不代表内容已核实')+'">'+esc(item.src)+' · '+esc(label)+'</span>';
   }
   function renderNews(q, items, meta = {}) {
     if (!q.newslist) return;
     if (q.newshead) q.newshead.textContent = meta.pending ? '资讯 · 正在获取' : meta.stale || meta.error ? '资讯 · 缓存/刷新暂不可用' : '相关资讯 · 近7天';
     const clock=now();
     const list = (items || []).filter(n=>Number.isFinite(n.t)&&n.t>0&&n.t<=clock&&n.t>=clock-7*864e5&&n.title&&n.src&&/^https?:\/\//i.test(n.link||'')&&PANEL.safeURL(n.link)&&n.linkScope!=='feed'&&n.provenance?.link_scope!=='feed').slice().sort((a, b) => b.t - a.t).slice(0, 6);
-    const sig = JSON.stringify([list.map(n => [n.id,n.title, n.t, n.link, n.src, n.sent, !!n.general]),!!meta.pending,!!meta.stale,!!meta.error]);
+    const sig = JSON.stringify([list.map(n => [n.id,n.title, n.t, n.link, n.src, n.headlineTone, n.provenance?.publisher_classification, !!n.general]),!!meta.pending,!!meta.stale,!!meta.error]);
     if (sig === q._newsSig) return;
     q._newsSig = sig;
     const box=q.newslist,doc=box.ownerDocument||document,rows=q._newsRows ||= new Map();
@@ -3277,16 +3319,16 @@
       let row=rows.get(key);
       if(row&&row.tag!==tag){row.el.remove();rows.delete(key);row=null;}
       if(!row){row={el:doc.createElement(tag),tag,sig:null};row.el.className='newsitem';rows.set(key,row);}
-      const itemSig=JSON.stringify([n.title,n.t,n.src,n.sent,!!n.general,link]);
+      const itemSig=JSON.stringify([n.title,n.t,n.src,n.headlineTone,n.provenance?.publisher_classification,!!n.general,link]);
       if(row.sig!==itemSig){
         if(link){row.el.href=link;row.el.target='_blank';row.el.rel='noopener noreferrer';}
-        row.el.innerHTML=sentTag(n.sent)+(n.general?'<span class="general-news">市场资讯</span>':'')+'<span class="ntime">'+fmtTime8(n.t)+'</span><span class="nsrc">'+esc(n.src)+'</span><span class="ntitle">'+esc(n.title)+'</span>';
+        row.el.innerHTML=sentTag(n.headlineTone)+(n.general?'<span class="general-news">市场资讯</span>':'')+'<span class="ntime">'+fmtTime8(n.t)+'</span>'+sourceLabel(n)+'<span class="ntitle">'+esc(n.title)+'</span>';
         row.sig=itemSig;
       }
       if(box.children[index]!==row.el){if(box.insertBefore)box.insertBefore(row.el,box.children[index]||null);else box.appendChild(row.el);}index++;
     }
     for(const [key,row] of rows)if(!used.has(key)){row.el.remove();rows.delete(key);}
-    if(!used.size){const empty=doc.createElement('div');empty.className='newsempty';empty.textContent=meta.pending?'正在获取资讯…':meta.stale||meta.error?'资讯暂不可用，将自动重试':'近7天暂无可核验出处的相关资讯';box.appendChild(empty);}
+    if(!used.size){const empty=doc.createElement('div');empty.className='newsempty';empty.textContent=meta.pending?'正在获取资讯…':meta.stale||meta.error?'资讯暂不可用，将自动重试':'近7天暂无符合来源与时间条件的相关资讯';box.appendChild(empty);}
     if(activeIndex>=0){
       const kept=[...rows.values()].some(row=>row.el===active);
       const links=[...rows.values()].filter(row=>row.tag==='a').map(row=>row.el);

@@ -18,3 +18,10 @@ test('v95 related-news clock tick removes an expired row without another network
  const c=window.PANEL_NEWS_CONTROLLER.createNewsController({now:()=>now,network:{request:async()=>{calls++;return {ok:true,json:async()=>({AAOI:[item('boundary',NOW-7*DAY+1)]}),headers:{}};}},client:{safeURL:safeUrl,decodeNewsMetadata:()=>({})},getWatchlist:()=>['AAOI'],getCards:()=>[['AAOI',q]]});
  await c.refreshNews();assert.match(q.newslist.children[0].innerHTML,/boundary/);now+=2;c.tick();assert.equal(calls,1);assert.ok(q.newslist.children[0].classList.contains('newsempty'));
 });
+test('related news labels headline tone and provenance without reviving legacy security sentiment',()=>{
+ const {window,doc}=env('panel-news-controller.js'),q={newshead:doc.createElement('summary'),newslist:doc.createElement('div')};
+ const controller=window.PANEL_NEWS_CONTROLLER.createNewsController({now:()=>NOW,network:{},client:{safeURL:safeUrl},getWatchlist:()=>[],getCards:()=>[]});
+ const news={...item('Nvidia falls while AMD surges'),sent:'利好',headlineTone:{value:'positive',scope:'headline_only'},provenance:{publisher_classification:{category:'newsroom',status:'registered_domain'}}};
+ controller.renderNews(q,[news]);const html=q.newslist.children[0].innerHTML;assert.match(html,/标题·积极/);assert.match(html,/未判定对当前证券/);assert.match(html,/媒体报道/);assert.doesNotMatch(html,/规则·利好/);
+ controller.renderNews(q,[{...news,headlineTone:null,provenance:null}]);assert.doesNotMatch(q.newslist.children[0].innerHTML,/标题·积极|规则·利好/);assert.match(q.newslist.children[0].innerHTML,/来源域名未登记/);
+});
