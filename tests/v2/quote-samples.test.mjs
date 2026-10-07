@@ -10,6 +10,16 @@ import {createQuoteEngine} from '../../lib/quote-engine.js';
 const stamp=Date.parse,at=stamp('2026-09-11T14:00:00Z');
 const quote=(t=at,overrides={})=>({symbol:'NVDA',price:218.26,quoteAt:t,sourceCheckedAt:t,src:'naver-us',currency:'USD',marketState:'REGULAR',priceSession:'REGULAR',...overrides});
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
+function pokeAndWaitForQuote(engine,symbol,at){
+ return new Promise((resolve,reject)=>{
+  const timeout=setTimeout(()=>{release();reject(Error('quote update timed out'));},1000);
+  const release=engine.subscribe(()=>{
+   if(engine.read([symbol],{lease:false})[0]?.quoteAt!==at)return;
+   clearTimeout(timeout);release();resolve();
+  });
+  engine.poke(symbol);
+ });
+}
 for(const [date,expected] of [
  ['2026-09-13T13:00:00Z',['2026-09-09','2026-09-10','2026-09-11']],
  ['2026-09-14T07:59:00Z',['2026-09-09','2026-09-10','2026-09-11']],
@@ -71,7 +81,7 @@ test('server membership survives zero browser clients and removal stops sampling
  try{
   engine.start();await samples.start();await flush();samples.runDue();assert.equal(samples.snapshot('NVDA').points.length,1);
   const before=calls,unwatch=engine.watch(['NVDA']);await flush();assert.equal(calls,before);unwatch();
-  clock+=60000;engine.poke('NVDA');await flush();samples.runDue();assert.equal(samples.snapshot('NVDA').points.length,2);
+  clock+=60000;await pokeAndWaitForQuote(engine,'NVDA',clock);samples.runDue();assert.equal(samples.snapshot('NVDA').points.length,2);
   list=[];samples.runDue();assert.equal(engine.diagnostics().active.length,0);clock+=60000;engine.poke('NVDA');await flush();assert.equal(samples.snapshot('NVDA').points.length,2);
   assert.equal(samples.snapshot('NVDA').collecting,false);
  }finally{await samples.stop();engine.stop();}

@@ -8,6 +8,16 @@ import {createApplication} from '../../app.js';
 import {createTelemetry} from '../../log.mjs';
 import {readSseEvent} from '../support/read-sse.mjs';
 const pause=()=>new Promise(r=>setImmediate(r));
+function pokeAndWaitForQuote(engine,symbol,at){
+ return new Promise((resolve,reject)=>{
+  const timeout=setTimeout(()=>{release();reject(Error('quote update timed out'));},1000);
+  const release=engine.subscribe(()=>{
+   if(engine.read([symbol],{lease:false})[0]?.quoteAt!==at)return;
+   clearTimeout(timeout);release();resolve();
+  });
+  engine.poke(symbol);
+ });
+}
 test('samples API is read-only; durable watchlist collects with no client and SSE resynchronizes',async t=>{
  const directory=await fs.mkdtemp(path.join(os.tmpdir(),'samples-http-'));let clock=Date.parse('2026-09-11T14:00:00Z'),calls=0;
  const app=createApplication({now:()=>clock,env:{PORT:0,HISTORY_STATE_PATH:'',MACRO_BACKGROUND_ENABLED:'0',MACRO_STATE_PATH:'',SAMPLES_STATE_PATH:directory,RECOVERY_PATH:'',PUBLIC_SOURCE_REDUNDANCY:'0',REALTIME_SNAPSHOTS:'0',CACHE_MS:1},telemetry:createTelemetry(),upstream:async()=>{throw Error('unstubbed');},providerOverrides:{fetchChart:async()=>{throw Error('no history');},fetchQuote:async symbol=>{calls++;return {symbol,price:218.26,quoteAt:clock,sourceCheckedAt:clock,src:'fixture',currency:'USD',marketState:'REGULAR'};}}});
@@ -21,6 +31,6 @@ test('samples API is read-only; durable watchlist collects with no client and SS
  await fetch(url+'/api/samples?symbol=AAPL');assert.equal(calls,before);assert.deepEqual(app.services.samples.diagnostics().watchlist,['NVDA']);
  const controller=new AbortController();const response=await fetch(url+'/api/stream?symbols=NVDA',{signal:controller.signal});const reader=response.body.getReader();
  try{const reset=await readSseEvent(reader,{event:'samples'});assert.match(reset,/"reset":true/);assert.ok(reset.length<1000);}finally{controller.abort();await reader.cancel().catch(()=>{});}
- clock+=60000;app.services.engine.poke('NVDA');await pause();await pause();app.services.samples.runDue();assert.equal(app.services.samples.snapshot('NVDA').points.length,2);
+ clock+=60000;await pokeAndWaitForQuote(app.services.engine,'NVDA',clock);app.services.samples.runDue();assert.equal(app.services.samples.snapshot('NVDA').points.length,2);
  await app.stop();assert.ok((await fs.readdir(directory)).some(x=>x.endsWith('.json')));
 });
