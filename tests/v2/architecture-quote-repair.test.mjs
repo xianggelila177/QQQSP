@@ -26,9 +26,12 @@ async function engineHarness(t,seed=fixture()){
  await engine.refreshNow(['NVDA']);
  return {engine,seed,async refresh(value,at=clock){candidate=value;clock=at;return (await engine.refreshNow(['NVDA']))[0];}};
 }
-async function countDateFormats(fn){
+async function countDateFormats(fn,bars){
  const original=Intl.DateTimeFormat.prototype.formatToParts;let count=0;
- Intl.DateTimeFormat.prototype.formatToParts=function(...args){count++;return original.apply(this,args);};
+ // Count candle-date work, excluding the constant current-clock evaluation
+ // that publishes quote freshness/session transitions independently of bars.
+ const dates=new Set(bars.map(bar=>bar.t*1000));
+ Intl.DateTimeFormat.prototype.formatToParts=function(...args){if(dates.has(Number(args[0])))count++;return original.apply(this,args);};
  try{await fn();return count;}finally{Intl.DateTimeFormat.prototype.formatToParts=original;}
 }
 
@@ -40,7 +43,7 @@ test('late QuoteEngine reads retain unchanged immutable history without repeatin
    assert.equal(value.price,seed.price);assert.equal(value.quoteAt,seed.quoteAt);
    assert.strictEqual(value.regularChart,seed.regularChart);
   }
- });
+ },seed.regularChart.bars);
  assert.equal(count,0,'already retained immutable chart should not reformat its 390 bar dates on every read');
 });
 
@@ -100,6 +103,6 @@ test('clock changes and a new trading session still evaluate current chart const
 test('frozen arrays containing mutable candles still use normal validation',async t=>{
  const frozen=fixture(),seed={...frozen,regularChart:{...frozen.regularChart,bars:Object.freeze(frozen.regularChart.bars.map(b=>({...b})))}};
  const {refresh}=await engineHarness(t,seed);
- const count=await countDateFormats(()=>refresh(older(seed)));
+ const count=await countDateFormats(()=>refresh(older(seed)),seed.regularChart.bars);
  assert.equal(count,390);
 });

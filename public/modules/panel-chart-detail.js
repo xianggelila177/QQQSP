@@ -4,7 +4,7 @@
       fmtDate:window.PANEL_FORMAT.fmtDate,formatterFor,maSeries:window.PANEL_CHART.maSeries});
     const fmt=window.PANEL_FORMAT,periods=window.PANEL_TIMEFRAMES.all.flatMap(period=>period.key==='intraday'?[['intraday','一日'],['fiveDay','五日']]:[[period.key,period.label]]);
     let dialog=null,current=null,tf='intraday',tapeSession='auto',five=null,remote=null,poll=null,
-      drawFrame=null,resizeObserver=null,manualRotate=null,
+      drawFrame=null,resizeObserver=null,manualRotate=null,drawKey=null,drawBars=null,drawStore=null,
       hover=null,drag=null,lastTap=null,view={},pageAway=false,pollingAllowed=null;
     const historyReadAt=new Map(),fiveCache=new Map(),savedViews=new Map(),olderAttempts=new Map();
     let marketView=null,historyUnsubscribe=null,olderJob=null,currentViews=null;
@@ -203,10 +203,27 @@
       dialog.querySelector('.cd-chart-quality').textContent=quality.detail;
       return [label,mode,quality.short,...issues].filter(Boolean).join(' · ');
     }
+    function plotKey(model,dpr,now){
+      const {data,bars,candle}=model,last=bars.at(-1),chart=candle?null:data.regularChart,format=formatterFor(data);
+      const live=tf==='intraday'?window.PANEL_CHART_ENGINE.livePointFor?.(data):null;
+      // The active session's progressive axis uses wall time even without a new bar.
+      // Keep that path live; closed/history charts need no quote-driven recomputation.
+      const progressive=tf==='intraday'&&view.followEnd&&!view.fullSession&&data.marketState==='REGULAR'&&
+        chart?.regularSessions?.some(session=>now>=session.open_at_ms&&now<session.close_at_ms);
+      return JSON.stringify([current.symbol,tf,data.currency,data.instrumentType,data.regularChart?.intervalUnknown,drawingIdentity,
+        candle?current.historyStore?.getRevision?.(tf):tf==='fiveDay'?five?.revision:data.intradayVer,
+        bars.length,last?.t,last?.o,last?.h,last?.l,last?.c,last?.v,
+        chart&&[chart.tradeDate,chart.previousCloseReference,chart.regularSessions,chart.exchangeZone,
+          chart.pointKind,chart.intervalSeconds,chart.intervalUnknown,chart.volumeUnit],live,
+        tf==='intraday'?[data.marketState,progressive?data.quoteAt:null,progressive?now:null]:null,
+        view.winStart,view.followEnd,view.fullSession,view.visN?.[view.tf],chartStyle,chartSettings,
+        view._chartWidth,view._chartHeight,dpr,view._volumeUnit,view._displayZone,
+        format.unit,format.canConvert,format.convert?.(1),format.money(1),format.money(1000)]);
+    }
     function draw(){drawFrame=null;if(!current||!dialog?.open)return;
       updateOlderButton();
       const model=chartModel(),cv=dialog.querySelector('.cd-canvas'),cursor=dialog.querySelector('.cd-cursor'),drawingCanvas=dialog.querySelector('.cd-drawing-layer');
-      if(!model||!model.bars.length){view.plot=null;drawingDraft=null;drawingIdentity=null;dialog.querySelectorAll('[data-chart-style]').forEach(button=>{button.disabled=button.dataset.chartStyle==='candle';button.setAttribute('aria-pressed','false');});for(const c of [cv,cursor,drawingCanvas])c.getContext('2d').clearRect(0,0,c.width,c.height);
+      if(!model||!model.bars.length){view.plot=null;drawKey=null;drawBars=null;drawStore=null;drawingDraft=null;drawingIdentity=null;dialog.querySelectorAll('[data-chart-style]').forEach(button=>{button.disabled=button.dataset.chartStyle==='candle';button.setAttribute('aria-pressed','false');});for(const c of [cv,cursor,drawingCanvas])c.getContext('2d').clearRect(0,0,c.width,c.height);
         dialog.querySelector('.cd-chart-info').textContent=chartInfo(model,0);
         dialog.querySelector('.cd-point').textContent='该周期历史暂不可用';dialog.querySelector('.cd-studies').textContent='';dialog.querySelector('.chart-scale-note').textContent='';dialog.querySelector('.cd-range-state').textContent='';return;}
       const identityMeta=model.candle?model.meta:tf==='fiveDay'?five:model.data.regularChart;
@@ -226,7 +243,9 @@
         chartStyle,followEnd:view.followEnd??true,winStart:view.winStart??null,
         _chartWidth:Math.max(220,Math.round(width)),_chartHeight:Math.max(180,Math.round(height))};
       if(view.anchor&&!view.followEnd){view.winStart=viewport.restoreAnchor(model.bars,view.anchor,{visible:view.visible||1});view.anchor=null;}
-      const p=engine.computePlot(view);view.plot=p;
+      const now=Date.now(),key=plotKey(model,dpr,now);
+      const redraw=!view.plot||drawBars!==model.bars||drawStore!==current.historyStore||drawKey!==key;
+      const p=redraw?engine.computePlot(view):view.plot;view.plot=p;
       if(hover!=null)hover=Math.max(0,Math.min(p.n-1,hover));
       dialog.querySelector('[data-chart-style="line"]').textContent=model.candle||view._intervalUnknown?'收盘线':'分时线';
       dialog.querySelectorAll('[data-chart-style]').forEach(button=>{
@@ -234,9 +253,18 @@
         button.setAttribute('aria-pressed',String(button.dataset.chartStyle===(p.candle?'candle':'line')));
         button.title=button.disabled?p.candleUnavailableReason||'当前来源只提供价格点，无法绘制真实高低影线':'';
       });
-      for(const c of [cv,drawingCanvas,cursor]){c.width=Math.round(p.W*dpr);c.height=Math.round(p.H*dpr);c.style.width=p.W+'px';c.style.height=p.H+'px';}
-      p.ctx=cv.getContext('2d');p.ctx.setTransform(cv.width/p.W,0,0,cv.height/p.H,0,0);
-      engine.drawPlot(view,p,hover);paintDrawings();paintCursor();
+      if(redraw){
+        for(const c of [cv,drawingCanvas,cursor]){
+          const width=Math.round(p.W*dpr),height=Math.round(p.H*dpr);
+          if(c.width!==width)c.width=width;if(c.height!==height)c.height=height;
+          if(c.style.width!==p.W+'px')c.style.width=p.W+'px';if(c.style.height!==p.H+'px')c.style.height=p.H+'px';
+        }
+        p.ctx=cv.getContext('2d');p.ctx.setTransform(cv.width/p.W,0,0,cv.height/p.H,0,0);
+        engine.drawPlot(view,p,hover);paintDrawings();
+        // computePlot normalizes winStart; retain the post-layout viewport key.
+        drawKey=plotKey(model,dpr,now);drawBars=model.bars;drawStore=current.historyStore;
+      }
+      paintCursor();
       dialog.querySelector('.chart-scale-note').textContent=p.scaleNotice||(p.scale==='percent'&&number(p.scaleBase)!=null?'0% = '+formatterFor(model.data).money(p.scaleBase)+'（可见首根收盘）':'');
       dialog.querySelector('.cd-range-state').textContent='可见 '+p.n+' / 已加载 '+p.all.length+' 根';
       dialog.querySelectorAll('[data-range]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.range==='all'?view.fullSession===true:!view.fullSession&&view.visN?.[view.tf]===Number(b.dataset.range))));
@@ -423,7 +451,7 @@
       document.removeEventListener('visibilitychange',syncVisibility);window.removeEventListener('pagehide',onPageHide);window.removeEventListener('pageshow',onPageShow);
       if(drawFrame!=null)cancelAnimationFrame(drawFrame);drawFrame=null;
       modal.close(fromPop);
-      remote=null;five=null;fiveIdentityKey=null;view={};hover=null;drag=null;lastTap=null;manualRotate=null;pollingAllowed=null;historyReadAt.clear();historyAnchors.clear();
+      remote=null;five=null;fiveIdentityKey=null;view={};drawKey=null;drawBars=null;drawStore=null;hover=null;drag=null;lastTap=null;manualRotate=null;pollingAllowed=null;historyReadAt.clear();historyAnchors.clear();
     }
     function open(q,opener){ensure();if(current)close();current=q;
       const key=JSON.stringify([q.symbol,q.d?.currency]);currentViews=savedViews.get(key)||{};savedViews.delete(key);savedViews.set(key,currentViews);
@@ -457,7 +485,9 @@
       });
     }
     return Object.freeze({mount,update:q=>{if(current===q){
-        if(fiveKey(q)!==fiveIdentityKey){fiveIdentityKey=fiveKey(q);five=cachedFive(q);drawingDraft=null;cancelChart();if(tf==='fiveDay')void fetchFive();}
+        if(fiveKey(q)!==fiveIdentityKey){fiveIdentityKey=fiveKey(q);five=cachedFive(q);
+          if(drawingDraft){drawingDraft=null;paintDrawings();dialog.querySelector('.cd-draw-state').textContent='点击起点，再点击终点';}
+          cancelChart();if(tf==='fiveDay')void fetchFive();}
         renderSummary();renderMarket();queueDraw();}},
       remove:q=>{if(current===q)close();for(const key of savedViews.keys())if(JSON.parse(key)[0]===q.symbol)savedViews.delete(key);},close,syncVisibility});
   };

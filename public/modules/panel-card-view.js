@@ -56,9 +56,9 @@
     }
   function cardHTML(sym) {
     return `
-    <section class="price-card" id="card-${esc(sym)}" data-sym="${esc(sym)}">
+    <section class="price-card" id="card-${esc(sym)}" data-sym="${esc(sym)}" aria-labelledby="card-heading-${esc(sym)}">
       <div class="cardhead">
-        <div class="headname"><span class="friendly"></span><span class="mkttag" data-mkt=""></span><span class="instrument-tag">待识别</span><span class="sym">${esc(sym)}</span></div>
+        <h2 class="headname" id="card-heading-${esc(sym)}"><span class="friendly"></span><span class="mkttag" data-mkt=""></span><span class="instrument-tag">待识别</span><span class="sym">${esc(sym)}</span></h2>
         <span class="card-actions"><span class="chip stale-warn" hidden>数据延迟</span><span class="chip state"></span><button class="cardretry" hidden type="button">重试</button><button class="cardclose" title="移除自选">×</button></span>
       </div>
       <div class="quote-meta"><span class="quote-details"></span><span class="quote-age" data-testid="quote-age"></span><span class="source-check-age"></span></div>
@@ -153,8 +153,8 @@
     return {html,regularPriceShown:matches(data.regularPrice)&&money(base)===money(data.regularPrice)};
   }
   // T2: 卡片头部延迟徽标分级 — staleInfo.reason 细分原因, title 写详细说明; 文案只承诺重试
-  function applyStaleBadge(q, d, now=quoteClock ? quoteClock.now() : Date.now()){
-    const freshness=window.PANEL_STATE.selectFreshness(d,now,{readIntervalMs:getReadIntervalMs()});
+  function applyStaleBadge(q, d, now, readIntervalMs){
+    const freshness=window.PANEL_STATE.selectFreshness(d,now,{readIntervalMs});
     if(!q.staleWarn) return freshness;
     const si=d.staleInfo;
     if(d.recovery||si?.reason==='offline-cache'){
@@ -197,9 +197,9 @@
     const n = Number(value);
     return Number.isFinite(n) && n > 0 ? (n < 1e12 ? n * 1000 : n) : null;
   }
-  function updateQuoteMeta(q, now = quoteClock ? quoteClock.now() : Date.now()) {
+  function updateQuoteMeta(q, now = quoteClock ? quoteClock.now() : Date.now(), readIntervalMs = getReadIntervalMs()) {
     const d = q.d; if (!d || !q.quoteMeta) return;
-    const freshness=applyStaleBadge(q,d,now);
+    const freshness=applyStaleBadge(q,d,now,readIntervalMs);
     const at = quoteTimeMs(d.quoteAt ?? d.ts);
     const ageText = '报价年龄 ' + window.PANEL_STATE.formatQuoteAge(d.quoteAt ?? d.ts, now);
     const coverage=d.feedCoverage==='us-sip'?'全美综合报价':d.feedCoverage==='us-iex'?'IEX 单一交易所':'覆盖未核验';
@@ -215,13 +215,13 @@
     q.quoteMeta.title = d.feedCoverage||'市场覆盖范围尚未核验';
   }
 
-  function render(q) {
+  function render(q, {now = quoteClock ? quoteClock.now() : Date.now(), readIntervalMs = getReadIntervalMs()} = {}) {
     const d = q.d; if (!d) return;
     // Historical bars live in the independent store. Quote refreshes must never
     // copy them into d.charts, where a later quote response can overwrite them.
     const format = formatterFor(d), money = format.money;
     q.currency = d.currency || 'USD';
-    updateQuoteMeta(q);
+    updateQuoteMeta(q,now,readIntervalMs);
     const up = d.change == null ? null : d.change >= 0;
     // 价格 flash
     q.cur.className = 'cur';
@@ -256,7 +256,6 @@
     const typeTag=q.el.querySelector('.instrument-tag');
     if(typeTag)typeTag.textContent=d.instrumentTypeSource==='inferred'?'待识别':({EQUITY:'股票',ETF:'ETF',MUTUALFUND:'基金',INDEX:'指数',FUTURE:'期货',CURRENCY:'汇率'}[d.instrumentType]||'待识别');
     if (q.mkttag) { const mk = d.market || '市场未核验'; q.mkttag.dataset.mkt = mk; q.mkttag.textContent = mk; }
-    applyStaleBadge(q, d);   // T2: stale 徽标分级 — 上游限流(含重试倒计时)/冷却重试/旧后端 d.stale 兼容
     const calendarEstimate = d.calendarCoverage && d.calendarCoverage.known === false;
     const calendar=window.PANEL_STATE.calendarStatus(d);
     const stName={REGULAR:(calendarEstimate ? '常规时段·节假日未核验' : '交易中'),PRE:'盘前',POST:'盘后',AUCTION:'集合竞价',BREAK:'午间休市',CLOSED:'已收盘',HOLIDAY:'休市',UNKNOWN:calendar.pending?'交易时段待公布':'时段未核验'}[d.marketState]||'时段未核验';

@@ -163,8 +163,11 @@
           marketStore.prepareQuote(d);
           const q=ensureCard(d.symbol); q.d=d;
           setFetchStatus(q,'success');
-          render(q); renderStrip(d);
         });
+        // All members must see this batch's policy, including a market that just
+        // opened. Compute it once after installing every incoming quote.
+        const renderContext={now:quoteClock.now(),readIntervalMs:currentPollingPolicy().marketMs};
+        incoming.forEach(d=>{render(cardCache.get(d.symbol),renderContext);renderStrip(d);});
         lastErrorCount=[...cardCache.values()].filter(q=>q.fetchStatus==='error').length;
         // Remove state belonging to symbols deleted while the request was in flight.
         for (const [sym, q] of cardCache) if (removedRequested.has(sym)) { q.el.remove(); q.strip && q.strip.remove(); cardCache.delete(sym); }
@@ -211,9 +214,10 @@
     const readResult=await refresh(false);
     const snapshot=readResult.superseded?{ok:true,data:lastData}:readResult;
     if(!snapshot.ok||snapshot.pending)return snapshot;
+    const now=quoteClock.now(),readIntervalMs=currentPollingPolicy().marketMs;
     const requested=watchlist.filter(symbol=>{
       const card=cardCache.get(symbol);
-      return !card?.d||card.fetchStatus==='error'||quoteIsStale(card.d);
+      return !card?.d||card.fetchStatus==='error'||quoteIsStale(card.d,now,readIntervalMs);
     });
     if(!requested.length)return snapshot;
     ++marketGeneration;
@@ -242,7 +246,8 @@
       if (!market.ok) { flash('手动刷新失败: ' + (market.error && market.error.message || '行情暂不可用'), 'error'); return; }
       if (market.partial) { flash('行情部分刷新失败，请稍后重试', 'warn'); return; }
       if (market.pending) { flash('正在等待报价，将自动更新', 'warn'); return; }
-      const staleSymbols=market.data.filter(d=>quoteIsStale(d)).map(d=>d.symbol);
+      const now=quoteClock.now(),readIntervalMs=currentPollingPolicy().marketMs;
+      const staleSymbols=market.data.filter(d=>quoteIsStale(d,now,readIntervalMs)).map(d=>d.symbol);
       if(staleSymbols.length){
         const shown=staleSymbols.slice(0,3).join('、');
         flash('已重新查询来源；'+shown+(staleSymbols.length>3?' 等 '+staleSymbols.length+' 只':'')+'仍无更新报价，保留原时间', 'warn');return;
@@ -307,8 +312,8 @@
     if (s <= responseBudgetSeconds) return { text: '连接正常', stale: false };
     return { text: humanizeAge(s), stale: true };   // 大龄人性化: 50000s → 「更新于 13.9 小时前」
   }
-  function quoteIsStale(d, now = Date.now()) {
-    return window.PANEL_STATE.selectFreshness(d,now,{readIntervalMs:currentPollingPolicy().marketMs}).stale;
+  function quoteIsStale(d, now = Date.now(), readIntervalMs = currentPollingPolicy().marketMs) {
+    return window.PANEL_STATE.selectFreshness(d,now,{readIntervalMs}).stale;
   }
   // 大龄人性化: 秒数 → 可读时长(≥90s 转分钟, ≥1h 转小时保留1位)
   function humanizeAge(s) {
@@ -382,12 +387,12 @@
     $('clock').textContent=p2(d8.getUTCHours())+':'+p2(d8.getUTCMinutes())+':'+p2(d8.getUTCSeconds())+' UTC+8';
     updateRefreshModeLabel();
     if(!watchlist.length){$('updateAt').textContent='自选为空';$('updateAt').classList.remove('stale');$('session').textContent='未选择标的';return;}
-    const quoteNow = quoteClock.now();
-    for(const q of cardCache.values())updateQuoteMeta(q, quoteNow);
+    const quoteNow = quoteClock.now(),policy=currentPollingPolicy();
+    for(const q of cardCache.values())updateQuoteMeta(q, quoteNow, policy.marketMs);
     if(lastRefresh){
       const s=Math.round((Date.now()-lastRefresh)/1000);
-      const anyStale=lastErrorCount > 0 || lastData.some(d=>quoteIsStale(d));
-      const info=updateAtInfo(s,anyStale,Math.max(15,currentPollingPolicy().marketMs/1000+5));
+      const anyStale=lastErrorCount > 0 || lastData.some(d=>quoteIsStale(d,quoteNow,policy.marketMs));
+      const info=updateAtInfo(s,anyStale,Math.max(15,policy.marketMs/1000+5));
       $('updateAt').textContent=liveStore?.healthy()&&!anyStale?'推送连接正常':panelNetwork.retryAt('market')>Date.now()?'请求限流，稍后重试':lastPendingCount && !lastData.length && !lastErrorCount ? '等待首次报价' : info.text;
       $('updateAt').classList.toggle('stale',info.stale);
     }

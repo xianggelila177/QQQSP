@@ -21,18 +21,24 @@
   }
   // Selection only. All sample records originate in the durable server store.
   function createObservationSeries({now=()=>Date.now()}={}) {
-    const filtered=new WeakMap();
+    const empty=[];let sampleSelection=null;
     return function select(d,mode='history',samples){
       const history=Array.isArray(d?.regularChart?.bars)?d.regularChart.bars:[];
       if(mode==='samples'){
-        let points=Array.isArray(samples?.points)?samples.points:[];
-        if(d?.currency&&points.some(p=>p.currency!==d.currency)){
-          let cached=filtered.get(points);if(!cached||cached.currency!==d.currency){cached={currency:d.currency,points:points.filter(p=>p.currency===d.currency)};filtered.set(points,cached);}points=cached.points;
+        const input=Array.isArray(samples?.points)?samples.points:empty,currency=d?.currency,revision=samples?.revision;
+        const sessions=d?.regularChart?.recentSessions||[];
+        // Quotes can recreate equal session objects. Compare their relevant
+        // content, while the sample store supplies immutable, versioned points.
+        const sessionKey=d?.regularChart?JSON.stringify(sessions.map(day=>[day.date,day.sessions.map(s=>[s.open_at_ms,s.close_at_ms])])):null;
+        if(!sampleSelection||sampleSelection.input!==input||sampleSelection.revision!==revision||
+          sampleSelection.currency!==currency||sampleSelection.sessionKey!==sessionKey){
+          let points=input;
+          if(currency&&points.some(p=>p.currency!==currency))points=points.filter(p=>p.currency===currency);
+          if(d?.regularChart)points=points.filter(p=>sessions.some(day=>day.date===p.tradingDate&&
+            day.sessions.some(s=>p.t*1000>=s.open_at_ms&&p.t*1000<s.close_at_ms)));
+          sampleSelection={input,revision,currency,sessionKey,points,coverage:'已覆盖 '+new Set(points.map(p=>p.tradingDate)).size+'/3 个交易日常规时段'};
         }
-        if(d?.regularChart){const sessions=d.regularChart.recentSessions||[];
-          points=points.filter(p=>sessions.some(day=>day.date===p.tradingDate&&
-            day.sessions.some(s=>p.t*1000>=s.open_at_ms&&p.t*1000<s.close_at_ms)));}
-        const coverage='已覆盖 '+new Set(points.map(p=>p.tradingDate)).size+'/3 个交易日常规时段';
+        const {points,coverage}=sampleSelection;
         const note=samples?.status==='loading'?'正在读取服务器采样…':samples?.supported===false?samples.reason||'暂不支持三交易日采样':samples?.enabled===false?'服务器后台采样尚未启用':
           samples?.status==='paused'?(points.length?'后台已停止采集 · '+coverage:'该标的未在后台自选中，更新自选后同步'):
           samples?.error||samples?.persistenceError?(samples.error||'采样保存异常，已有记录仍可查看'):

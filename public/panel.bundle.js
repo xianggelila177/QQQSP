@@ -432,18 +432,24 @@
   }
   // Selection only. All sample records originate in the durable server store.
   function createObservationSeries({now=()=>Date.now()}={}) {
-    const filtered=new WeakMap();
+    const empty=[];let sampleSelection=null;
     return function select(d,mode='history',samples){
       const history=Array.isArray(d?.regularChart?.bars)?d.regularChart.bars:[];
       if(mode==='samples'){
-        let points=Array.isArray(samples?.points)?samples.points:[];
-        if(d?.currency&&points.some(p=>p.currency!==d.currency)){
-          let cached=filtered.get(points);if(!cached||cached.currency!==d.currency){cached={currency:d.currency,points:points.filter(p=>p.currency===d.currency)};filtered.set(points,cached);}points=cached.points;
+        const input=Array.isArray(samples?.points)?samples.points:empty,currency=d?.currency,revision=samples?.revision;
+        const sessions=d?.regularChart?.recentSessions||[];
+        // Quotes can recreate equal session objects. Compare their relevant
+        // content, while the sample store supplies immutable, versioned points.
+        const sessionKey=d?.regularChart?JSON.stringify(sessions.map(day=>[day.date,day.sessions.map(s=>[s.open_at_ms,s.close_at_ms])])):null;
+        if(!sampleSelection||sampleSelection.input!==input||sampleSelection.revision!==revision||
+          sampleSelection.currency!==currency||sampleSelection.sessionKey!==sessionKey){
+          let points=input;
+          if(currency&&points.some(p=>p.currency!==currency))points=points.filter(p=>p.currency===currency);
+          if(d?.regularChart)points=points.filter(p=>sessions.some(day=>day.date===p.tradingDate&&
+            day.sessions.some(s=>p.t*1000>=s.open_at_ms&&p.t*1000<s.close_at_ms)));
+          sampleSelection={input,revision,currency,sessionKey,points,coverage:'已覆盖 '+new Set(points.map(p=>p.tradingDate)).size+'/3 个交易日常规时段'};
         }
-        if(d?.regularChart){const sessions=d.regularChart.recentSessions||[];
-          points=points.filter(p=>sessions.some(day=>day.date===p.tradingDate&&
-            day.sessions.some(s=>p.t*1000>=s.open_at_ms&&p.t*1000<s.close_at_ms)));}
-        const coverage='已覆盖 '+new Set(points.map(p=>p.tradingDate)).size+'/3 个交易日常规时段';
+        const {points,coverage}=sampleSelection;
         const note=samples?.status==='loading'?'正在读取服务器采样…':samples?.supported===false?samples.reason||'暂不支持三交易日采样':samples?.enabled===false?'服务器后台采样尚未启用':
           samples?.status==='paused'?(points.length?'后台已停止采集 · '+coverage:'该标的未在后台自选中，更新自选后同步'):
           samples?.error||samples?.persistenceError?(samples.error||'采样保存异常，已有记录仍可查看'):
@@ -2315,7 +2321,7 @@
       fmtDate:window.PANEL_FORMAT.fmtDate,formatterFor,maSeries:window.PANEL_CHART.maSeries});
     const fmt=window.PANEL_FORMAT,periods=window.PANEL_TIMEFRAMES.all.flatMap(period=>period.key==='intraday'?[['intraday','一日'],['fiveDay','五日']]:[[period.key,period.label]]);
     let dialog=null,current=null,tf='intraday',tapeSession='auto',five=null,remote=null,poll=null,
-      drawFrame=null,resizeObserver=null,manualRotate=null,
+      drawFrame=null,resizeObserver=null,manualRotate=null,drawKey=null,drawBars=null,drawStore=null,
       hover=null,drag=null,lastTap=null,view={},pageAway=false,pollingAllowed=null;
     const historyReadAt=new Map(),fiveCache=new Map(),savedViews=new Map(),olderAttempts=new Map();
     let marketView=null,historyUnsubscribe=null,olderJob=null,currentViews=null;
@@ -2514,10 +2520,27 @@
       dialog.querySelector('.cd-chart-quality').textContent=quality.detail;
       return [label,mode,quality.short,...issues].filter(Boolean).join(' · ');
     }
+    function plotKey(model,dpr,now){
+      const {data,bars,candle}=model,last=bars.at(-1),chart=candle?null:data.regularChart,format=formatterFor(data);
+      const live=tf==='intraday'?window.PANEL_CHART_ENGINE.livePointFor?.(data):null;
+      // The active session's progressive axis uses wall time even without a new bar.
+      // Keep that path live; closed/history charts need no quote-driven recomputation.
+      const progressive=tf==='intraday'&&view.followEnd&&!view.fullSession&&data.marketState==='REGULAR'&&
+        chart?.regularSessions?.some(session=>now>=session.open_at_ms&&now<session.close_at_ms);
+      return JSON.stringify([current.symbol,tf,data.currency,data.instrumentType,data.regularChart?.intervalUnknown,drawingIdentity,
+        candle?current.historyStore?.getRevision?.(tf):tf==='fiveDay'?five?.revision:data.intradayVer,
+        bars.length,last?.t,last?.o,last?.h,last?.l,last?.c,last?.v,
+        chart&&[chart.tradeDate,chart.previousCloseReference,chart.regularSessions,chart.exchangeZone,
+          chart.pointKind,chart.intervalSeconds,chart.intervalUnknown,chart.volumeUnit],live,
+        tf==='intraday'?[data.marketState,progressive?data.quoteAt:null,progressive?now:null]:null,
+        view.winStart,view.followEnd,view.fullSession,view.visN?.[view.tf],chartStyle,chartSettings,
+        view._chartWidth,view._chartHeight,dpr,view._volumeUnit,view._displayZone,
+        format.unit,format.canConvert,format.convert?.(1),format.money(1),format.money(1000)]);
+    }
     function draw(){drawFrame=null;if(!current||!dialog?.open)return;
       updateOlderButton();
       const model=chartModel(),cv=dialog.querySelector('.cd-canvas'),cursor=dialog.querySelector('.cd-cursor'),drawingCanvas=dialog.querySelector('.cd-drawing-layer');
-      if(!model||!model.bars.length){view.plot=null;drawingDraft=null;drawingIdentity=null;dialog.querySelectorAll('[data-chart-style]').forEach(button=>{button.disabled=button.dataset.chartStyle==='candle';button.setAttribute('aria-pressed','false');});for(const c of [cv,cursor,drawingCanvas])c.getContext('2d').clearRect(0,0,c.width,c.height);
+      if(!model||!model.bars.length){view.plot=null;drawKey=null;drawBars=null;drawStore=null;drawingDraft=null;drawingIdentity=null;dialog.querySelectorAll('[data-chart-style]').forEach(button=>{button.disabled=button.dataset.chartStyle==='candle';button.setAttribute('aria-pressed','false');});for(const c of [cv,cursor,drawingCanvas])c.getContext('2d').clearRect(0,0,c.width,c.height);
         dialog.querySelector('.cd-chart-info').textContent=chartInfo(model,0);
         dialog.querySelector('.cd-point').textContent='该周期历史暂不可用';dialog.querySelector('.cd-studies').textContent='';dialog.querySelector('.chart-scale-note').textContent='';dialog.querySelector('.cd-range-state').textContent='';return;}
       const identityMeta=model.candle?model.meta:tf==='fiveDay'?five:model.data.regularChart;
@@ -2537,7 +2560,9 @@
         chartStyle,followEnd:view.followEnd??true,winStart:view.winStart??null,
         _chartWidth:Math.max(220,Math.round(width)),_chartHeight:Math.max(180,Math.round(height))};
       if(view.anchor&&!view.followEnd){view.winStart=viewport.restoreAnchor(model.bars,view.anchor,{visible:view.visible||1});view.anchor=null;}
-      const p=engine.computePlot(view);view.plot=p;
+      const now=Date.now(),key=plotKey(model,dpr,now);
+      const redraw=!view.plot||drawBars!==model.bars||drawStore!==current.historyStore||drawKey!==key;
+      const p=redraw?engine.computePlot(view):view.plot;view.plot=p;
       if(hover!=null)hover=Math.max(0,Math.min(p.n-1,hover));
       dialog.querySelector('[data-chart-style="line"]').textContent=model.candle||view._intervalUnknown?'收盘线':'分时线';
       dialog.querySelectorAll('[data-chart-style]').forEach(button=>{
@@ -2545,9 +2570,18 @@
         button.setAttribute('aria-pressed',String(button.dataset.chartStyle===(p.candle?'candle':'line')));
         button.title=button.disabled?p.candleUnavailableReason||'当前来源只提供价格点，无法绘制真实高低影线':'';
       });
-      for(const c of [cv,drawingCanvas,cursor]){c.width=Math.round(p.W*dpr);c.height=Math.round(p.H*dpr);c.style.width=p.W+'px';c.style.height=p.H+'px';}
-      p.ctx=cv.getContext('2d');p.ctx.setTransform(cv.width/p.W,0,0,cv.height/p.H,0,0);
-      engine.drawPlot(view,p,hover);paintDrawings();paintCursor();
+      if(redraw){
+        for(const c of [cv,drawingCanvas,cursor]){
+          const width=Math.round(p.W*dpr),height=Math.round(p.H*dpr);
+          if(c.width!==width)c.width=width;if(c.height!==height)c.height=height;
+          if(c.style.width!==p.W+'px')c.style.width=p.W+'px';if(c.style.height!==p.H+'px')c.style.height=p.H+'px';
+        }
+        p.ctx=cv.getContext('2d');p.ctx.setTransform(cv.width/p.W,0,0,cv.height/p.H,0,0);
+        engine.drawPlot(view,p,hover);paintDrawings();
+        // computePlot normalizes winStart; retain the post-layout viewport key.
+        drawKey=plotKey(model,dpr,now);drawBars=model.bars;drawStore=current.historyStore;
+      }
+      paintCursor();
       dialog.querySelector('.chart-scale-note').textContent=p.scaleNotice||(p.scale==='percent'&&number(p.scaleBase)!=null?'0% = '+formatterFor(model.data).money(p.scaleBase)+'（可见首根收盘）':'');
       dialog.querySelector('.cd-range-state').textContent='可见 '+p.n+' / 已加载 '+p.all.length+' 根';
       dialog.querySelectorAll('[data-range]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.range==='all'?view.fullSession===true:!view.fullSession&&view.visN?.[view.tf]===Number(b.dataset.range))));
@@ -2734,7 +2768,7 @@
       document.removeEventListener('visibilitychange',syncVisibility);window.removeEventListener('pagehide',onPageHide);window.removeEventListener('pageshow',onPageShow);
       if(drawFrame!=null)cancelAnimationFrame(drawFrame);drawFrame=null;
       modal.close(fromPop);
-      remote=null;five=null;fiveIdentityKey=null;view={};hover=null;drag=null;lastTap=null;manualRotate=null;pollingAllowed=null;historyReadAt.clear();historyAnchors.clear();
+      remote=null;five=null;fiveIdentityKey=null;view={};drawKey=null;drawBars=null;drawStore=null;hover=null;drag=null;lastTap=null;manualRotate=null;pollingAllowed=null;historyReadAt.clear();historyAnchors.clear();
     }
     function open(q,opener){ensure();if(current)close();current=q;
       const key=JSON.stringify([q.symbol,q.d?.currency]);currentViews=savedViews.get(key)||{};savedViews.delete(key);savedViews.set(key,currentViews);
@@ -2768,7 +2802,9 @@
       });
     }
     return Object.freeze({mount,update:q=>{if(current===q){
-        if(fiveKey(q)!==fiveIdentityKey){fiveIdentityKey=fiveKey(q);five=cachedFive(q);drawingDraft=null;cancelChart();if(tf==='fiveDay')void fetchFive();}
+        if(fiveKey(q)!==fiveIdentityKey){fiveIdentityKey=fiveKey(q);five=cachedFive(q);
+          if(drawingDraft){drawingDraft=null;paintDrawings();dialog.querySelector('.cd-draw-state').textContent='点击起点，再点击终点';}
+          cancelChart();if(tf==='fiveDay')void fetchFive();}
         renderSummary();renderMarket();queueDraw();}},
       remove:q=>{if(current===q)close();for(const key of savedViews.keys())if(JSON.parse(key)[0]===q.symbol)savedViews.delete(key);},close,syncVisibility});
   };
@@ -2836,9 +2872,9 @@
     }
   function cardHTML(sym) {
     return `
-    <section class="price-card" id="card-${esc(sym)}" data-sym="${esc(sym)}">
+    <section class="price-card" id="card-${esc(sym)}" data-sym="${esc(sym)}" aria-labelledby="card-heading-${esc(sym)}">
       <div class="cardhead">
-        <div class="headname"><span class="friendly"></span><span class="mkttag" data-mkt=""></span><span class="instrument-tag">待识别</span><span class="sym">${esc(sym)}</span></div>
+        <h2 class="headname" id="card-heading-${esc(sym)}"><span class="friendly"></span><span class="mkttag" data-mkt=""></span><span class="instrument-tag">待识别</span><span class="sym">${esc(sym)}</span></h2>
         <span class="card-actions"><span class="chip stale-warn" hidden>数据延迟</span><span class="chip state"></span><button class="cardretry" hidden type="button">重试</button><button class="cardclose" title="移除自选">×</button></span>
       </div>
       <div class="quote-meta"><span class="quote-details"></span><span class="quote-age" data-testid="quote-age"></span><span class="source-check-age"></span></div>
@@ -2933,8 +2969,8 @@
     return {html,regularPriceShown:matches(data.regularPrice)&&money(base)===money(data.regularPrice)};
   }
   // T2: 卡片头部延迟徽标分级 — staleInfo.reason 细分原因, title 写详细说明; 文案只承诺重试
-  function applyStaleBadge(q, d, now=quoteClock ? quoteClock.now() : Date.now()){
-    const freshness=window.PANEL_STATE.selectFreshness(d,now,{readIntervalMs:getReadIntervalMs()});
+  function applyStaleBadge(q, d, now, readIntervalMs){
+    const freshness=window.PANEL_STATE.selectFreshness(d,now,{readIntervalMs});
     if(!q.staleWarn) return freshness;
     const si=d.staleInfo;
     if(d.recovery||si?.reason==='offline-cache'){
@@ -2977,9 +3013,9 @@
     const n = Number(value);
     return Number.isFinite(n) && n > 0 ? (n < 1e12 ? n * 1000 : n) : null;
   }
-  function updateQuoteMeta(q, now = quoteClock ? quoteClock.now() : Date.now()) {
+  function updateQuoteMeta(q, now = quoteClock ? quoteClock.now() : Date.now(), readIntervalMs = getReadIntervalMs()) {
     const d = q.d; if (!d || !q.quoteMeta) return;
-    const freshness=applyStaleBadge(q,d,now);
+    const freshness=applyStaleBadge(q,d,now,readIntervalMs);
     const at = quoteTimeMs(d.quoteAt ?? d.ts);
     const ageText = '报价年龄 ' + window.PANEL_STATE.formatQuoteAge(d.quoteAt ?? d.ts, now);
     const coverage=d.feedCoverage==='us-sip'?'全美综合报价':d.feedCoverage==='us-iex'?'IEX 单一交易所':'覆盖未核验';
@@ -2995,13 +3031,13 @@
     q.quoteMeta.title = d.feedCoverage||'市场覆盖范围尚未核验';
   }
 
-  function render(q) {
+  function render(q, {now = quoteClock ? quoteClock.now() : Date.now(), readIntervalMs = getReadIntervalMs()} = {}) {
     const d = q.d; if (!d) return;
     // Historical bars live in the independent store. Quote refreshes must never
     // copy them into d.charts, where a later quote response can overwrite them.
     const format = formatterFor(d), money = format.money;
     q.currency = d.currency || 'USD';
-    updateQuoteMeta(q);
+    updateQuoteMeta(q,now,readIntervalMs);
     const up = d.change == null ? null : d.change >= 0;
     // 价格 flash
     q.cur.className = 'cur';
@@ -3036,7 +3072,6 @@
     const typeTag=q.el.querySelector('.instrument-tag');
     if(typeTag)typeTag.textContent=d.instrumentTypeSource==='inferred'?'待识别':({EQUITY:'股票',ETF:'ETF',MUTUALFUND:'基金',INDEX:'指数',FUTURE:'期货',CURRENCY:'汇率'}[d.instrumentType]||'待识别');
     if (q.mkttag) { const mk = d.market || '市场未核验'; q.mkttag.dataset.mkt = mk; q.mkttag.textContent = mk; }
-    applyStaleBadge(q, d);   // T2: stale 徽标分级 — 上游限流(含重试倒计时)/冷却重试/旧后端 d.stale 兼容
     const calendarEstimate = d.calendarCoverage && d.calendarCoverage.known === false;
     const calendar=window.PANEL_STATE.calendarStatus(d);
     const stName={REGULAR:(calendarEstimate ? '常规时段·节假日未核验' : '交易中'),PRE:'盘前',POST:'盘后',AUCTION:'集合竞价',BREAK:'午间休市',CLOSED:'已收盘',HOLIDAY:'休市',UNKNOWN:calendar.pending?'交易时段待公布':'时段未核验'}[d.marketState]||'时段未核验';
@@ -3979,8 +4014,11 @@
           marketStore.prepareQuote(d);
           const q=ensureCard(d.symbol); q.d=d;
           setFetchStatus(q,'success');
-          render(q); renderStrip(d);
         });
+        // All members must see this batch's policy, including a market that just
+        // opened. Compute it once after installing every incoming quote.
+        const renderContext={now:quoteClock.now(),readIntervalMs:currentPollingPolicy().marketMs};
+        incoming.forEach(d=>{render(cardCache.get(d.symbol),renderContext);renderStrip(d);});
         lastErrorCount=[...cardCache.values()].filter(q=>q.fetchStatus==='error').length;
         // Remove state belonging to symbols deleted while the request was in flight.
         for (const [sym, q] of cardCache) if (removedRequested.has(sym)) { q.el.remove(); q.strip && q.strip.remove(); cardCache.delete(sym); }
@@ -4027,9 +4065,10 @@
     const readResult=await refresh(false);
     const snapshot=readResult.superseded?{ok:true,data:lastData}:readResult;
     if(!snapshot.ok||snapshot.pending)return snapshot;
+    const now=quoteClock.now(),readIntervalMs=currentPollingPolicy().marketMs;
     const requested=watchlist.filter(symbol=>{
       const card=cardCache.get(symbol);
-      return !card?.d||card.fetchStatus==='error'||quoteIsStale(card.d);
+      return !card?.d||card.fetchStatus==='error'||quoteIsStale(card.d,now,readIntervalMs);
     });
     if(!requested.length)return snapshot;
     ++marketGeneration;
@@ -4058,7 +4097,8 @@
       if (!market.ok) { flash('手动刷新失败: ' + (market.error && market.error.message || '行情暂不可用'), 'error'); return; }
       if (market.partial) { flash('行情部分刷新失败，请稍后重试', 'warn'); return; }
       if (market.pending) { flash('正在等待报价，将自动更新', 'warn'); return; }
-      const staleSymbols=market.data.filter(d=>quoteIsStale(d)).map(d=>d.symbol);
+      const now=quoteClock.now(),readIntervalMs=currentPollingPolicy().marketMs;
+      const staleSymbols=market.data.filter(d=>quoteIsStale(d,now,readIntervalMs)).map(d=>d.symbol);
       if(staleSymbols.length){
         const shown=staleSymbols.slice(0,3).join('、');
         flash('已重新查询来源；'+shown+(staleSymbols.length>3?' 等 '+staleSymbols.length+' 只':'')+'仍无更新报价，保留原时间', 'warn');return;
@@ -4123,8 +4163,8 @@
     if (s <= responseBudgetSeconds) return { text: '连接正常', stale: false };
     return { text: humanizeAge(s), stale: true };   // 大龄人性化: 50000s → 「更新于 13.9 小时前」
   }
-  function quoteIsStale(d, now = Date.now()) {
-    return window.PANEL_STATE.selectFreshness(d,now,{readIntervalMs:currentPollingPolicy().marketMs}).stale;
+  function quoteIsStale(d, now = Date.now(), readIntervalMs = currentPollingPolicy().marketMs) {
+    return window.PANEL_STATE.selectFreshness(d,now,{readIntervalMs}).stale;
   }
   // 大龄人性化: 秒数 → 可读时长(≥90s 转分钟, ≥1h 转小时保留1位)
   function humanizeAge(s) {
@@ -4198,12 +4238,12 @@
     $('clock').textContent=p2(d8.getUTCHours())+':'+p2(d8.getUTCMinutes())+':'+p2(d8.getUTCSeconds())+' UTC+8';
     updateRefreshModeLabel();
     if(!watchlist.length){$('updateAt').textContent='自选为空';$('updateAt').classList.remove('stale');$('session').textContent='未选择标的';return;}
-    const quoteNow = quoteClock.now();
-    for(const q of cardCache.values())updateQuoteMeta(q, quoteNow);
+    const quoteNow = quoteClock.now(),policy=currentPollingPolicy();
+    for(const q of cardCache.values())updateQuoteMeta(q, quoteNow, policy.marketMs);
     if(lastRefresh){
       const s=Math.round((Date.now()-lastRefresh)/1000);
-      const anyStale=lastErrorCount > 0 || lastData.some(d=>quoteIsStale(d));
-      const info=updateAtInfo(s,anyStale,Math.max(15,currentPollingPolicy().marketMs/1000+5));
+      const anyStale=lastErrorCount > 0 || lastData.some(d=>quoteIsStale(d,quoteNow,policy.marketMs));
+      const info=updateAtInfo(s,anyStale,Math.max(15,policy.marketMs/1000+5));
       $('updateAt').textContent=liveStore?.healthy()&&!anyStale?'推送连接正常':panelNetwork.retryAt('market')>Date.now()?'请求限流，稍后重试':lastPendingCount && !lastData.length && !lastErrorCount ? '等待首次报价' : info.text;
       $('updateAt').classList.toggle('stale',info.stale);
     }
