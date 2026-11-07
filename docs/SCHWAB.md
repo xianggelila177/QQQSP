@@ -22,3 +22,7 @@ https://schwab-py.readthedocs.io/en/latest/auth.html
 诊断 `schwab` 包含 status、retryAt、lastSuccessAt、expiresAt、reauthorizationRequired，不包含密钥或上游错误正文。SCHWAB_AUTH_REQUIRED 表示缺少有效 token 或需要重新授权；此时备用源仍工作。替换 token 后最多等待 5 分钟冷却，或重启服务立即恢复检查。
 
 验收必须分别记录：代码与故障模拟通过、Schwab 真实授权与行情请求通过、公共接口实际 source 为 schwab、网页视觉检查。缺少 token 时不得宣称 Schwab 已实际供数。回滚可关闭 SCHWAB_ENABLED 或切回 previous 发布目录。
+
+## v126 实测修正
+
+真实授权刷新、NVDA/AAPL/QQQ/LITE 实时报价标记，以及 NVDA 日线和分钟线已通过服务器请求验证。配置主源切换允许同一交易日、同一时段的健康主源替换网站整秒/时段时间戳，保留真实毫秒成交时间；同一来源内仍严格拒绝倒退。休市确认周期与一分钟批量查询保持一致。完整业务与公共接口验收另记部署记录。

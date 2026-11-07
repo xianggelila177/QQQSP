@@ -149,7 +149,7 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
   let realtimeProvider,engine;
   const fundamentals=createFundamentalsService({...(providerOverrides.fetchFundamentals?{fetchFundamentals:providerOverrides.fetchFundamentals}:{sources:createFinancialSources({schwabSource:schwab?.financialSource,httpsGet,batch,fetchYahooSummary:yahoo.fetchQuoteSummary,finnhubRequest:finnhubRest?.request,now,statementTtlMs:config.FUNDAMENTALS_TTL_MS})}),now,
     enabled:config.FUNDAMENTALS_ENABLED==='1',ttlMs:config.FUNDAMENTALS_TTL_MS,retryMs:config.FUNDAMENTALS_RETRY_MS,maxAgeMs:config.FUNDAMENTALS_MAX_AGE_MS,onUpdate:symbol=>engine?.poke(symbol)});
-  const snapshots=env.REALTIME_SNAPSHOTS==='1'?createSnapshotService({env,streamAvailable:symbol=>{if(schwab&&schwabSupports(symbol))return false;const d=realtimeProvider?.read(symbol);return !streamAvailability(symbol,d,now()).needsBackup;},sessionFor:(symbol,q)=>marketStateFor(symbol,null,now(),q||''),fetchBatch:providerOverrides.fetchSnapshotBatch || polling.fetchSnapshotBatch,enrich:enrichCharts,onUpdate:symbol=>engine?.poke(symbol),now}):null;
+  const snapshots=env.REALTIME_SNAPSHOTS==='1'?createSnapshotService({primarySource:schwab?'schwab-quote':'',env,streamAvailable:symbol=>{if(schwab&&schwabSupports(symbol))return false;const d=realtimeProvider?.read(symbol);return !streamAvailability(symbol,d,now()).needsBackup;},sessionFor:(symbol,q)=>marketStateFor(symbol,null,now(),q||''),fetchBatch:providerOverrides.fetchSnapshotBatch || polling.fetchSnapshotBatch,enrich:enrichCharts,onUpdate:symbol=>engine?.poke(symbol),now}):null;
   const baseGetQuote=snapshots?snapshots.getCachedQuote:quoteCache.getCachedQuote;
   const recovery=redundancyEnabled?createRecoveryStore({filePath:env.RECOVERY_PATH,maxBytes:config.RECOVERY_MAX_BYTES,now,log:telemetry.log}):null;
   const redundancy=fx?createRedundancy({getQuote:baseGetQuote,fx,recovery,now}):null;
@@ -174,7 +174,7 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
     if(value?.price!=null&&!value.error&&!value.pending)await instruments.resolve(args[0],{quote:value});
     return instruments.decorate(refreshIndexSession(value,now()));
   };
-  engine=createQuoteEngine({readQuote:readSourceQuote,decorateQuote:fundamentals.decorate,now,onMembership:list=>{fundamentals.retain(list);tradeTape.retain(list.filter(s=>!isFutureSymbol(s)));snapshots?.retain(list.filter(s=>!isFutureSymbol(s)));realtimeProvider?.retain?.(list.filter(s=>!isFutureSymbol(s)));}});
+  engine=createQuoteEngine({primarySource:schwab?'schwab-quote':'',readQuote:readSourceQuote,decorateQuote:fundamentals.decorate,now,onMembership:list=>{fundamentals.retain(list);tradeTape.retain(list.filter(s=>!isFutureSymbol(s)));snapshots?.retain(list.filter(s=>!isFutureSymbol(s)));realtimeProvider?.retain?.(list.filter(s=>!isFutureSymbol(s)));}});
   realtimeProvider?.subscribe?.(symbol=>engine.poke(symbol));
   const getCachedQuote=symbol=>engine.read([symbol])[0];
   async function forceRefreshQuotes(symbols){

@@ -8,6 +8,9 @@ import {normalizeSchwabQuote,parseSchwabCandles,createSchwabMarket} from '../../
 import {createHistorySource} from '../../lib/history-source.js';
 import {createFastPolling} from '../../lib/providers/fast-polling.js';
 import {publicSourceHealth} from '../../lib/source-health-public.js';
+import {createQuoteEngine} from '../../lib/quote-engine.js';
+import {createSnapshotService} from '../../lib/snapshot-service.js';
+import {canPromotePrimaryQuote} from '../../lib/quote-freshness.js';
 
 const at=Date.parse('2026-11-06T16:00:00Z');
 const payload={symbol:'NVDA',assetMainType:'EQUITY',assetSubType:'COE',realtime:true,reference:{description:'NVIDIA'},
@@ -15,6 +18,24 @@ const payload={symbol:'NVDA',assetMainType:'EQUITY',assetSubType:'COE',realtime:
   regular:{regularMarketLastPrice:200,regularMarketTradeTime:at}};
 const candles={symbol:'NVDA',candles:[{datetime:at-60000,open:195,high:201,low:194,close:200,volume:100}]};
 const response=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers});
+test('healthy primary replaces rounded website/recovery timestamp without inventing trade time',async()=>{
+  const clock=Date.parse('2026-11-07T08:00:00Z'),time=Date.parse('2026-11-07T01:00:00Z');
+  const old={symbol:'NVDA',price:188.7,quoteAt:time,sourceCheckedAt:clock-1000,currency:'USD',instrumentType:'EQUITY',priceSession:'POST',src:'naver-us'};
+  const primary={...old,src:'schwab-quote',price:188.7001,quoteAt:time-251,sourceCheckedAt:clock};
+  assert.equal(canPromotePrimaryQuote(primary,old,'schwab-quote',clock),true);
+  for(const invalid of [{...primary,quoteAt:time-86400000},{...primary,priceSession:'REGULAR'},{...primary,currency:'JPY'},{...primary,stale:true}])
+    assert.equal(canPromotePrimaryQuote(invalid,old,'schwab-quote',clock),false);
+  let value=old;
+  const engine=createQuoteEngine({primarySource:'schwab-quote',now:()=>clock,readQuote:async()=>value});
+  engine.start();await engine.refreshNow(['NVDA']);value=primary;await engine.refreshNow(['NVDA']);
+  assert.equal(engine.read(['NVDA'],{lease:false})[0].quoteAt,time-251);
+  value={...primary,quoteAt:time-5000,price:1};await engine.refreshNow(['NVDA']);
+  assert.equal(engine.read(['NVDA'],{lease:false})[0].price,188.7001);engine.stop();
+  value=old;const snapshots=createSnapshotService({primarySource:'schwab-quote',now:()=>clock,fetchBatch:async()=>({quotes:[value]})});
+  snapshots.start();await snapshots.forceRefresh(['NVDA']);value=primary;await snapshots.forceRefresh(['NVDA']);
+  assert.equal(snapshots.getCachedQuote('NVDA').src,'schwab-quote');
+  assert.equal(snapshots.getCachedQuote('NVDA').quoteAt,time-251);snapshots.stop();
+});
 test('public health exposes reauthorization state without credential fields',()=>{
   const out=publicSourceHealth({schwab:{enabled:true,status:'SCHWAB_AUTH_REQUIRED',reauthorizationRequired:true,access_token:'sensitive',envFile:'private'}});
   assert.deepEqual(out.schwab,{enabled:true,status:'SCHWAB_AUTH_REQUIRED',reauthorizationRequired:true});
