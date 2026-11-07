@@ -29,8 +29,8 @@ export async function runSchwabBrowserAuthorization({authorization,executable,pr
     await browser.page('Fetch.enable',{patterns:[{urlPattern:authorization.redirect+'*',resourceType:'Document',requestStage:'Request'}]});
     if(interactive){consoleServer=await openSchwabAuthConsole(browser,{port,status:()=>({status:phase}),cancel:()=>{canceled=true;}});onListening(consoleServer.url);}
     await browser.page('Page.navigate',{url:authorization.url});
-    let lastAction='',actionAt=0;
-    while(Date.now()<deadline){
+    let lastAction='',actionAt=0,loginSince=0,mfaSince=0;
+    while(Date.now()<deadline||(exchanging&&Date.now()<deadline+20000)){
       if(fatal)throw fatal;if(canceled)throw schwabFailure('SCHWAB_AUTH_CANCELED');if(result){if(interactive)await delay(2000);return result;}
       if(exchanging){await delay(100);continue;}
       let state;
@@ -40,8 +40,10 @@ export async function runSchwabBrowserAuthorization({authorization,executable,pr
       if(state.denied)throw schwabFailure('SCHWAB_AUTH_BROWSER_BLOCKED');
       await report(state.login?'LOGIN':state.mfa?'MFA':state.trust?'TRUST_DEVICE':state.consent||state.accounts||state.confirmation?'CONSENT':'WAITING');
       if(!interactive){
-        if(state.login)throw schwabFailure('SCHWAB_AUTH_LOGIN_REQUIRED');
-        if(state.mfa)throw schwabFailure('SCHWAB_AUTH_MFA_REQUIRED');
+        loginSince=state.login?(loginSince||Date.now()):0;mfaSince=state.mfa?(mfaSince||Date.now()):0;
+        // A session check can briefly render the login route before redirecting.
+        if(loginSince&&Date.now()-loginSince>5000)throw schwabFailure('SCHWAB_AUTH_LOGIN_REQUIRED');
+        if(mfaSince&&Date.now()-mfaSince>5000)throw schwabFailure('SCHWAB_AUTH_MFA_REQUIRED');
         // Preserve preselected account permissions; never select every account.
         const expression=state.trust?`(()=>{const e=document.querySelector('#remember-device-yes'),b=document.querySelector('#btnContinue');if(e&&b&&!b.disabled){if(!e.checked)e.click();b.click();return 'trust';}})()`:
           state.consent?`(()=>{const modal=document.querySelector('#agree-modal-btn-');if(modal&&modal.getClientRects().length&&!modal.disabled){modal.click();return 'modal';}const e=document.querySelector('#acceptTerms'),b=document.querySelector('#submit-btn');if(e&&b){if(!e.checked)e.click();if(!b.disabled){b.click();return 'consent';}}})()`:
