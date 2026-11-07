@@ -13,7 +13,7 @@ for(const [key,symbol] of Object.entries(cases)){
   assert.equal(marketKeyFor(symbol),key,symbol);assert.equal(symbolValid(symbol),true,symbol);
   if(key!=='cn')assert.equal(instrumentMeta(symbol).market,MARKET_REGISTRY[key].label);
   if(!['us','cn','kr','hk','jp'].includes(key))assert.deepEqual(providerCapabilities(symbol).batchProviders,[]);
-  if(key==='jp')assert.deepEqual(providerCapabilities(symbol).batchProviders,['naver-jp']);
+  if(key==='jp')assert.deepEqual(providerCapabilities(symbol).batchProviders,['naver-jp','yahoo-jp','yahoo']);
 }
 assert.equal(marketKeyFor('FOO.XX'),null);assert.equal(marketKeyFor('BTC-USD'),null);
 assert.equal(marketKeyFor('BRK-B'),'us');assert.equal(marketKeyFor('^FTSE'),'uk');

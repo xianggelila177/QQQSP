@@ -1,0 +1,1297 @@
+{
+  "checkedAt": "2026-11-07T03:00:00Z",
+  "sources": [
+    "https://api.stock.naver.com/stock/285A.T/basic",
+    "https://api.stock.naver.com/chart/foreign/item/285A.T/day",
+    "https://api.stock.naver.com/chart/foreign/ITEM/TOKYO/285A.T/interval/5",
+    "https://finance.yahoo.co.jp/quote/285A.T/history"
+  ],
+  "basic": {
+    "stockEndType": "stock",
+    "reutersCode": "285A.T",
+    "symbolCode": "285A",
+    "stockExchangeType": {
+      "code": "TYO",
+      "zoneId": "Asia/Tokyo",
+      "nationType": "JPN",
+      "delayTime": 15,
+      "startTime": "0900",
+      "endTime": "1530",
+      "closePriceSendTime": "1901",
+      "nameKor": "도쿄 거래소",
+      "nameEng": "Tokyo Stock Exchange",
+      "nationCode": "JPN",
+      "stockType": "worldstock",
+      "nationName": "일본",
+      "name": "TOKYO"
+    },
+    "currencyType": {
+      "code": "JPY",
+      "text": "Japanese yen",
+      "name": "JPY"
+    },
+    "isEtf": false
+  },
+  "etfBasic": {
+    "stockEndType": "stock",
+    "reutersCode": "1306.T",
+    "symbolCode": "1306",
+    "stockExchangeType": {
+      "code": "TYO",
+      "zoneId": "Asia/Tokyo",
+      "nationType": "JPN",
+      "delayTime": 15,
+      "startTime": "0900",
+      "endTime": "1530",
+      "closePriceSendTime": "1901",
+      "nameKor": "도쿄 거래소",
+      "nameEng": "Tokyo Stock Exchange",
+      "nationName": "일본",
+      "stockType": "worldstock",
+      "nationCode": "JPN",
+      "name": "TOKYO"
+    },
+    "currencyType": {
+      "code": "JPY",
+      "text": "Japanese yen",
+      "name": "JPY"
+    },
+    "isEtf": true
+  },
+  "daily": [
+    {
+      "localDate": "20261001",
+      "closePrice": 19100.0,
+      "openPrice": 18635.0,
+      "highPrice": 19265.0,
+      "lowPrice": 18530.0,
+      "accumulatedTradingVolume": 52342100
+    },
+    {
+      "localDate": "20261002",
+      "closePrice": 19300.0,
+      "openPrice": 19145.0,
+      "highPrice": 19300.0,
+      "lowPrice": 18590.0,
+      "accumulatedTradingVolume": 41082900
+    },
+    {
+      "localDate": "20261005",
+      "closePrice": 19120.0,
+      "openPrice": 19620.0,
+      "highPrice": 19750.0,
+      "lowPrice": 19085.0,
+      "accumulatedTradingVolume": 37320000
+    },
+    {
+      "localDate": "20261006",
+      "closePrice": 18735.0,
+      "openPrice": 19000.0,
+      "highPrice": 19215.0,
+      "lowPrice": 18520.0,
+      "accumulatedTradingVolume": 33122300
+    },
+    {
+      "localDate": "20261007",
+      "closePrice": 17900.0,
+      "openPrice": 18535.0,
+      "highPrice": 18750.0,
+      "lowPrice": 17820.0,
+      "accumulatedTradingVolume": 35096800
+    },
+    {
+      "localDate": "20261008",
+      "closePrice": 17900.0,
+      "openPrice": 18270.0,
+      "highPrice": 18630.0,
+      "lowPrice": 17875.0,
+      "accumulatedTradingVolume": 40412300
+    },
+    {
+      "localDate": "20261009",
+      "closePrice": 17505.0,
+      "openPrice": 17100.0,
+      "highPrice": 17735.0,
+      "lowPrice": 17000.0,
+      "accumulatedTradingVolume": 35115300
+    },
+    {
+      "localDate": "20261013",
+      "closePrice": 15180.0,
+      "openPrice": 16000.0,
+      "highPrice": 16025.0,
+      "lowPrice": 15045.0,
+      "accumulatedTradingVolume": 63674200
+    },
+    {
+      "localDate": "20261014",
+      "closePrice": 14690.0,
+      "openPrice": 15500.0,
+      "highPrice": 15655.0,
+      "lowPrice": 14570.0,
+      "accumulatedTradingVolume": 53857300
+    },
+    {
+      "localDate": "20261015",
+      "closePrice": 12880.0,
+      "openPrice": 13790.0,
+      "highPrice": 13825.0,
+      "lowPrice": 12675.0,
+      "accumulatedTradingVolume": 79013300
+    },
+    {
+      "localDate": "20261016",
+      "closePrice": 13375.0,
+      "openPrice": 13055.0,
+      "highPrice": 13750.0,
+      "lowPrice": 12855.0,
+      "accumulatedTradingVolume": 57744400
+    },
+    {
+      "localDate": "20261019",
+      "closePrice": 13600.0,
+      "openPrice": 12705.0,
+      "highPrice": 13750.0,
+      "lowPrice": 12700.0,
+      "accumulatedTradingVolume": 56032900
+    },
+    {
+      "localDate": "20261020",
+      "closePrice": 13140.0,
+      "openPrice": 13680.0,
+      "highPrice": 13680.0,
+      "lowPrice": 12945.0,
+      "accumulatedTradingVolume": 52530100
+    },
+    {
+      "localDate": "20261021",
+      "closePrice": 13510.0,
+      "openPrice": 13740.0,
+      "highPrice": 14145.0,
+      "lowPrice": 13190.0,
+      "accumulatedTradingVolume": 53752300
+    },
+    {
+      "localDate": "20261022",
+      "closePrice": 12595.0,
+      "openPrice": 13350.0,
+      "highPrice": 13775.0,
+      "lowPrice": 12535.0,
+      "accumulatedTradingVolume": 58371700
+    },
+    {
+      "localDate": "20261023",
+      "closePrice": 12755.0,
+      "openPrice": 11995.0,
+      "highPrice": 12810.0,
+      "lowPrice": 11380.0,
+      "accumulatedTradingVolume": 85811000
+    },
+    {
+      "localDate": "20261026",
+      "closePrice": 12550.0,
+      "openPrice": 12530.0,
+      "highPrice": 13035.0,
+      "lowPrice": 12290.0,
+      "accumulatedTradingVolume": 58525300
+    },
+    {
+      "localDate": "20261027",
+      "closePrice": 12605.0,
+      "openPrice": 13450.0,
+      "highPrice": 13625.0,
+      "lowPrice": 12450.0,
+      "accumulatedTradingVolume": 73608800
+    },
+    {
+      "localDate": "20261028",
+      "closePrice": 14340.0,
+      "openPrice": 13230.0,
+      "highPrice": 14625.0,
+      "lowPrice": 12970.0,
+      "accumulatedTradingVolume": 107607100
+    },
+    {
+      "localDate": "20261029",
+      "closePrice": 14505.0,
+      "openPrice": 14850.0,
+      "highPrice": 15600.0,
+      "lowPrice": 14455.0,
+      "accumulatedTradingVolume": 143546800
+    },
+    {
+      "localDate": "20261030",
+      "closePrice": 13470.0,
+      "openPrice": 13485.0,
+      "highPrice": 13860.0,
+      "lowPrice": 13075.0,
+      "accumulatedTradingVolume": 70635200
+    },
+    {
+      "localDate": "20261102",
+      "closePrice": 11345.0,
+      "openPrice": 11670.0,
+      "highPrice": 12010.0,
+      "lowPrice": 11135.0,
+      "accumulatedTradingVolume": 97833400
+    },
+    {
+      "localDate": "20261104",
+      "closePrice": 10735.0,
+      "openPrice": 11595.0,
+      "highPrice": 11625.0,
+      "lowPrice": 9635.0,
+      "accumulatedTradingVolume": 163533500
+    },
+    {
+      "localDate": "20261105",
+      "closePrice": 9324.0,
+      "openPrice": 9820.0,
+      "highPrice": 10270.0,
+      "lowPrice": 9223.0,
+      "accumulatedTradingVolume": 147500900
+    },
+    {
+      "localDate": "20261106",
+      "closePrice": 8511.0,
+      "openPrice": 7900.0,
+      "highPrice": 8718.0,
+      "lowPrice": 7900.0,
+      "accumulatedTradingVolume": 169758100
+    }
+  ],
+  "minute": {
+    "reutersCode": "285A.T",
+    "stockExchangeType": "TOKYO",
+    "zoneId": "Asia/Tokyo",
+    "openTime": "2026-11-06T00:00:00Z",
+    "closeTime": "2026-11-06T06:30:00Z",
+    "tradeStop": false,
+    "lastClosePrice": 9324.0,
+    "hasVolume": true,
+    "newlyListed": false,
+    "decimalUnit": 1,
+    "candleList": [
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 7900.0,
+        "highPrice": 8210.0,
+        "lowPrice": 7900.0,
+        "closePrice": 8185.0,
+        "tradingVolume": 12527800,
+        "tradingValue": 99944098,
+        "accumulatedTradingVolume": 12527800,
+        "accumulatedTradingValue": 99944098,
+        "tradeAt": "2026-11-06T00:25Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8184.0,
+        "highPrice": 8398.0,
+        "lowPrice": 8001.0,
+        "closePrice": 8379.0,
+        "tradingVolume": 5107200,
+        "tradingValue": 41938389,
+        "accumulatedTradingVolume": 17635000,
+        "accumulatedTradingValue": 141882487,
+        "tradeAt": "2026-11-06T00:30Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8378.0,
+        "highPrice": 8409.0,
+        "lowPrice": 8265.0,
+        "closePrice": 8388.0,
+        "tradingVolume": 4665900,
+        "tradingValue": 38871332,
+        "accumulatedTradingVolume": 22300900,
+        "accumulatedTradingValue": 180753819,
+        "tradeAt": "2026-11-06T00:35Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8388.0,
+        "highPrice": 8580.0,
+        "lowPrice": 8351.0,
+        "closePrice": 8368.0,
+        "tradingVolume": 5132100,
+        "tradingValue": 43386946,
+        "accumulatedTradingVolume": 27433000,
+        "accumulatedTradingValue": 224140765,
+        "tradeAt": "2026-11-06T00:40Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8369.0,
+        "highPrice": 8373.0,
+        "lowPrice": 8140.0,
+        "closePrice": 8169.0,
+        "tradingVolume": 4593500,
+        "tradingValue": 37888942,
+        "accumulatedTradingVolume": 32026500,
+        "accumulatedTradingValue": 262029707,
+        "tradeAt": "2026-11-06T00:45Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8170.0,
+        "highPrice": 8278.0,
+        "lowPrice": 8029.0,
+        "closePrice": 8043.0,
+        "tradingVolume": 5160400,
+        "tradingValue": 42124076,
+        "accumulatedTradingVolume": 37186900,
+        "accumulatedTradingValue": 304153783,
+        "tradeAt": "2026-11-06T00:50Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8043.0,
+        "highPrice": 8134.0,
+        "lowPrice": 8001.0,
+        "closePrice": 8132.0,
+        "tradingVolume": 3904500,
+        "tradingValue": 31479130,
+        "accumulatedTradingVolume": 41091400,
+        "accumulatedTradingValue": 335632913,
+        "tradeAt": "2026-11-06T00:55Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8133.0,
+        "highPrice": 8223.0,
+        "lowPrice": 8060.0,
+        "closePrice": 8068.0,
+        "tradingVolume": 3681500,
+        "tradingValue": 29979077,
+        "accumulatedTradingVolume": 44772900,
+        "accumulatedTradingValue": 365611990,
+        "tradeAt": "2026-11-06T01:00Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8069.0,
+        "highPrice": 8164.0,
+        "lowPrice": 8057.0,
+        "closePrice": 8116.0,
+        "tradingVolume": 2796800,
+        "tradingValue": 22720399,
+        "accumulatedTradingVolume": 47569700,
+        "accumulatedTradingValue": 388332389,
+        "tradeAt": "2026-11-06T01:05Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8117.0,
+        "highPrice": 8268.0,
+        "lowPrice": 8099.0,
+        "closePrice": 8235.0,
+        "tradingVolume": 2829200,
+        "tradingValue": 23159078,
+        "accumulatedTradingVolume": 50398900,
+        "accumulatedTradingValue": 411491467,
+        "tradeAt": "2026-11-06T01:10Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8234.0,
+        "highPrice": 8254.0,
+        "lowPrice": 8154.0,
+        "closePrice": 8175.0,
+        "tradingVolume": 2693800,
+        "tradingValue": 22108432,
+        "accumulatedTradingVolume": 53092700,
+        "accumulatedTradingValue": 433599899,
+        "tradeAt": "2026-11-06T01:15Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8176.0,
+        "highPrice": 8266.0,
+        "lowPrice": 8090.0,
+        "closePrice": 8109.0,
+        "tradingVolume": 2689300,
+        "tradingValue": 21980861,
+        "accumulatedTradingVolume": 55782000,
+        "accumulatedTradingValue": 455580760,
+        "tradeAt": "2026-11-06T01:20Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8108.0,
+        "highPrice": 8220.0,
+        "lowPrice": 8101.0,
+        "closePrice": 8208.0,
+        "tradingVolume": 2267800,
+        "tradingValue": 18515807,
+        "accumulatedTradingVolume": 58049800,
+        "accumulatedTradingValue": 474096567,
+        "tradeAt": "2026-11-06T01:25Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8209.0,
+        "highPrice": 8397.0,
+        "lowPrice": 8174.0,
+        "closePrice": 8351.0,
+        "tradingVolume": 3336300,
+        "tradingValue": 27723686,
+        "accumulatedTradingVolume": 61386100,
+        "accumulatedTradingValue": 501820253,
+        "tradeAt": "2026-11-06T01:30Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8350.0,
+        "highPrice": 8355.0,
+        "lowPrice": 8234.0,
+        "closePrice": 8285.0,
+        "tradingVolume": 2934800,
+        "tradingValue": 24318194,
+        "accumulatedTradingVolume": 64320900,
+        "accumulatedTradingValue": 526138447,
+        "tradeAt": "2026-11-06T01:35Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8282.0,
+        "highPrice": 8339.0,
+        "lowPrice": 8219.0,
+        "closePrice": 8312.0,
+        "tradingVolume": 2706300,
+        "tradingValue": 22404804,
+        "accumulatedTradingVolume": 67027200,
+        "accumulatedTradingValue": 548543251,
+        "tradeAt": "2026-11-06T01:40Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8311.0,
+        "highPrice": 8449.0,
+        "lowPrice": 8287.0,
+        "closePrice": 8434.0,
+        "tradingVolume": 3573000,
+        "tradingValue": 29948251,
+        "accumulatedTradingVolume": 70600200,
+        "accumulatedTradingValue": 578491502,
+        "tradeAt": "2026-11-06T01:45Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8433.0,
+        "highPrice": 8512.0,
+        "lowPrice": 8360.0,
+        "closePrice": 8488.0,
+        "tradingVolume": 3409400,
+        "tradingValue": 28776321,
+        "accumulatedTradingVolume": 74009600,
+        "accumulatedTradingValue": 607267823,
+        "tradeAt": "2026-11-06T01:50Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8489.0,
+        "highPrice": 8499.0,
+        "lowPrice": 8367.0,
+        "closePrice": 8427.0,
+        "tradingVolume": 2652700,
+        "tradingValue": 22334417,
+        "accumulatedTradingVolume": 76662300,
+        "accumulatedTradingValue": 629602240,
+        "tradeAt": "2026-11-06T01:55Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8428.0,
+        "highPrice": 8525.0,
+        "lowPrice": 8414.0,
+        "closePrice": 8520.0,
+        "tradingVolume": 3417400,
+        "tradingValue": 29007512,
+        "accumulatedTradingVolume": 80079700,
+        "accumulatedTradingValue": 658609752,
+        "tradeAt": "2026-11-06T02:00Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8518.0,
+        "highPrice": 8540.0,
+        "lowPrice": 8417.0,
+        "closePrice": 8507.0,
+        "tradingVolume": 2642700,
+        "tradingValue": 22400262,
+        "accumulatedTradingVolume": 82722400,
+        "accumulatedTradingValue": 681010014,
+        "tradeAt": "2026-11-06T02:05Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8508.0,
+        "highPrice": 8664.0,
+        "lowPrice": 8487.0,
+        "closePrice": 8607.0,
+        "tradingVolume": 3232900,
+        "tradingValue": 27792262,
+        "accumulatedTradingVolume": 85955300,
+        "accumulatedTradingValue": 708802276,
+        "tradeAt": "2026-11-06T02:10Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8608.0,
+        "highPrice": 8673.0,
+        "lowPrice": 8547.0,
+        "closePrice": 8611.0,
+        "tradingVolume": 2595800,
+        "tradingValue": 22317327,
+        "accumulatedTradingVolume": 88551100,
+        "accumulatedTradingValue": 731119603,
+        "tradeAt": "2026-11-06T02:15Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8613.0,
+        "highPrice": 8695.0,
+        "lowPrice": 8572.0,
+        "closePrice": 8675.0,
+        "tradingVolume": 2553100,
+        "tradingValue": 22056549,
+        "accumulatedTradingVolume": 91104200,
+        "accumulatedTradingValue": 753176152,
+        "tradeAt": "2026-11-06T02:20Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8673.0,
+        "highPrice": 8718.0,
+        "lowPrice": 8583.0,
+        "closePrice": 8706.0,
+        "tradingVolume": 2202200,
+        "tradingValue": 19036633,
+        "accumulatedTradingVolume": 93306400,
+        "accumulatedTradingValue": 772212785,
+        "tradeAt": "2026-11-06T02:25Z"
+      },
+      {
+        "reutersCode": "285A.T",
+        "stockExchangeType": "TOKYO",
+        "openPrice": 8708.0,
+        "highPrice": 8708.0,
+        "lowPrice": 8708.0,
+        "closePrice": 8708.0,
+        "tradingVolume": 147300,
+        "tradingValue": 1282688,
+        "accumulatedTradingVolume": 93453700,
+        "accumulatedTradingValue": 773495473,
+        "tradeAt": "2026-11-06T02:30Z"
+      }
+    ],
+    "infoType": "item",
+    "marketStatus": "CLOSE",
+    "timeFrame": "minute5"
+  },
+  "page": {
+    "pageInfo": {
+      "code": "285A.T"
+    },
+    "priceBoard": {
+      "board": {
+        "code": "285A",
+        "codeWithMarketExtension": "285A.T",
+        "marketDetailCode": "T1",
+        "stockType": "STOCK",
+        "name": "キオクシアホールディングス(株)",
+        "price": {
+          "value": "8,511"
+        },
+        "priceChange": {
+          "value": "-813"
+        },
+        "japanUpdateTime": "11/6",
+        "delayMinutes": 0
+      }
+    },
+    "history": {
+      "history": {
+        "yearHighPrice": "37,567",
+        "yearHighPriceDate": "26/06/22",
+        "yearLowPrice": "3,648",
+        "yearLowPriceDate": "26/01/06",
+        "averagePerValue": "999,999.99",
+        "histories": [
+          {
+            "date": "2026-11-06",
+            "values": [
+              {
+                "value": "7,900"
+              },
+              {
+                "value": "8,718"
+              },
+              {
+                "value": "7,900"
+              },
+              {
+                "value": "8,511"
+              },
+              {
+                "value": "169,758,100"
+              },
+              {
+                "value": "8,511"
+              },
+              {
+                "value": "---",
+                "isMask": false
+              },
+              {
+                "value": "4.64",
+                "isMask": false
+              }
+            ]
+          },
+          {
+            "date": "2026-11-05",
+            "values": [
+              {
+                "value": "9,820"
+              },
+              {
+                "value": "10,270"
+              },
+              {
+                "value": "9,223"
+              },
+              {
+                "value": "9,324"
+              },
+              {
+                "value": "147,500,900"
+              },
+              {
+                "value": "9,324"
+              },
+              {
+                "value": "---",
+                "isMask": false
+              },
+              {
+                "value": "5.09",
+                "isMask": false
+              }
+            ]
+          },
+          {
+            "date": "2026-11-04",
+            "values": [
+              {
+                "value": "11,595"
+              },
+              {
+                "value": "11,625"
+              },
+              {
+                "value": "9,635"
+              },
+              {
+                "value": "10,735"
+              },
+              {
+                "value": "163,533,500"
+              },
+              {
+                "value": "10,735"
+              },
+              {
+                "value": "---",
+                "isMask": false
+              },
+              {
+                "value": "5.86",
+                "isMask": false
+              }
+            ]
+          },
+          {
+            "date": "2026-11-02",
+            "values": [
+              {
+                "value": "11,670"
+              },
+              {
+                "value": "12,010"
+              },
+              {
+                "value": "11,135"
+              },
+              {
+                "value": "11,345"
+              },
+              {
+                "value": "97,833,400"
+              },
+              {
+                "value": "11,345"
+              },
+              {
+                "value": "---",
+                "isMask": false
+              },
+              {
+                "value": "6.19",
+                "isMask": false
+              }
+            ]
+          },
+          {
+            "date": "2026-10-30",
+            "values": [
+              {
+                "value": "13,485"
+              },
+              {
+                "value": "13,860"
+              },
+              {
+                "value": "13,075"
+              },
+              {
+                "value": "13,470"
+              },
+              {
+                "value": "70,635,200"
+              },
+              {
+                "value": "13,470"
+              },
+              {
+                "value": "---",
+                "isMask": false
+              },
+              {
+                "value": "9.21",
+                "isMask": false
+              }
+            ]
+          },
+          {
+            "date": "2026-10-29",
+            "values": [
+              {
+                "value": "14,850"
+              },
+              {
+                "value": "15,600"
+              },
+              {
+                "value": "14,455"
+              },
+              {
+                "value": "14,505"
+              },
+              {
+                "value": "143,546,800"
+              },
+              {
+                "value": "14,505"
+              },
+              {
+                "value": "---",
+                "isMask": false
+              },
+              {
+                "value": "9.92",
+                "isMask": false
+              }
+            ]
+          },
+          {
+            "date": "2026-10-28",
+            "values": [
+              {
+                "value": "13,230"
+              },
+              {
+                "value": "14,625"
+              },
+              {
+                "value": "12,970"
+              },
+              {
+                "value": "14,340"
+              },
+              {
+                "value": "107,607,100"
+              },
+              {
+                "value": "14,340"
+              },
+              {
+                "value": "---",
+                "isMask": false
+              },
+              {
+                "value": "9.81",
+                "isMask": false
+              }
+            ]
+          },
+          {
+            "date": "2026-10-27",
+            "values": [
+              {
+                "value": "13,450"
+              },
+              {
+                "value": "13,625"
+              },
+              {
+                "value": "12,450"
+              },
+              {
+                "value": "12,605"
+              },
+              {
+                "value": "73,608,800"
+              },
+              {
+                "value": "12,605"
+              },
+              {
+                "value": "---",
+                "isMask": false
+              },
+              {
+                "value": "8.62",
+                "isMask": false
+              }
+            ]
+          },
+          {
+            "date": "2026-10-26",
+            "values": [
+              {
+                "value": "12,530"
+              },
+              {
+                "value": "13,035"
+              },
+              {
+                "value": "12,290"
+              },
+              {
+                "value": "12,550"
+              },
+              {
+                "value": "58,525,300"
+              },
+              {
+                "value": "12,550"
+              },
+              {
+                "value": "---",
+                "isMask": false
+              },
+              {
+                "value": "8.58",
+                "isMask": false
+              }
+            ]
+          },
+          {
+            "date": "2026-10-23",
+            "values": [
+              {
+                "value": "11,995"
+              },
+              {
+                "value": "12,810"
+              },
+              {
+                "value": "11,380"
+              },
+              {
+                "value": "12,755"
+              },
+              {
+                "value": "85,811,000"
+              },
+              {
+                "value": "12,755"
+              },
+              {
+                "value": "",
+                "isMask": true
+              },
+              {
+                "value": "",
+                "isMask": true
+              }
+            ]
+          },
+          {
+            "date": "2026-10-22",
+            "values": [
+              {
+                "value": "13,350"
+              },
+              {
+                "value": "13,775"
+              },
+              {
+                "value": "12,535"
+              },
+              {
+                "value": "12,595"
+              },
+              {
+                "value": "58,371,700"
+              },
+              {
+                "value": "12,595"
+              },
+              {
+                "value": "",
+                "isMask": true
+              },
+              {
+                "value": "",
+                "isMask": true
+              }
+            ]
+          },
+          {
+            "date": "2026-10-21",
+            "values": [
+              {
+                "value": "13,740"
+              },
+              {
+                "value": "14,145"
+              },
+              {
+                "value": "13,190"
+              },
+              {
+                "value": "13,510"
+              },
+              {
+                "value": "53,752,300"
+              },
+              {
+                "value": "13,510"
+              },
+              {
+                "value": "",
+                "isMask": true
+              },
+              {
+                "value": "",
+                "isMask": true
+              }
+            ]
+          },
+          {
+            "date": "2026-10-20",
+            "values": [
+              {
+                "value": "13,680"
+              },
+              {
+                "value": "13,680"
+              },
+              {
+                "value": "12,945"
+              },
+              {
+                "value": "13,140"
+              },
+              {
+                "value": "52,530,100"
+              },
+              {
+                "value": "13,140"
+              },
+              {
+                "value": "",
+                "isMask": true
+              },
+              {
+                "value": "",
+                "isMask": true
+              }
+            ]
+          },
+          {
+            "date": "2026-10-19",
+            "values": [
+              {
+                "value": "12,705"
+              },
+              {
+                "value": "13,750"
+              },
+              {
+                "value": "12,700"
+              },
+              {
+                "value": "13,600"
+              },
+              {
+                "value": "56,032,900"
+              },
+              {
+                "value": "13,600"
+              },
+              {
+                "value": "",
+                "isMask": true
+              },
+              {
+                "value": "",
+                "isMask": true
+              }
+            ]
+          },
+          {
+            "date": "2026-10-16",
+            "values": [
+              {
+                "value": "13,055"
+              },
+              {
+                "value": "13,750"
+              },
+              {
+                "value": "12,855"
+              },
+              {
+                "value": "13,375"
+              },
+              {
+                "value": "57,744,400"
+              },
+              {
+                "value": "13,375"
+              },
+              {
+                "value": "",
+                "isMask": true
+              },
+              {
+                "value": "",
+                "isMask": true
+              }
+            ]
+          },
+          {
+            "date": "2026-10-15",
+            "values": [
+              {
+                "value": "13,790"
+              },
+              {
+                "value": "13,825"
+              },
+              {
+                "value": "12,675"
+              },
+              {
+                "value": "12,880"
+              },
+              {
+                "value": "79,013,300"
+              },
+              {
+                "value": "12,880"
+              },
+              {
+                "value": "",
+                "isMask": true
+              },
+              {
+                "value": "",
+                "isMask": true
+              }
+            ]
+          },
+          {
+            "date": "2026-10-14",
+            "values": [
+              {
+                "value": "15,500"
+              },
+              {
+                "value": "15,655"
+              },
+              {
+                "value": "14,570"
+              },
+              {
+                "value": "14,690"
+              },
+              {
+                "value": "53,857,300"
+              },
+              {
+                "value": "14,690"
+              },
+              {
+                "value": "",
+                "isMask": true
+              },
+              {
+                "value": "",
+                "isMask": true
+              }
+            ]
+          },
+          {
+            "date": "2026-10-13",
+            "values": [
+              {
+                "value": "16,000"
+              },
+              {
+                "value": "16,025"
+              },
+              {
+                "value": "15,045"
+              },
+              {
+                "value": "15,180"
+              },
+              {
+                "value": "63,674,200"
+              },
+              {
+                "value": "15,180"
+              },
+              {
+                "value": "",
+                "isMask": true
+              },
+              {
+                "value": "",
+                "isMask": true
+              }
+            ]
+          },
+          {
+            "date": "2026-10-09",
+            "values": [
+              {
+                "value": "17,100"
+              },
+              {
+                "value": "17,735"
+              },
+              {
+                "value": "17,000"
+              },
+              {
+                "value": "17,505"
+              },
+              {
+                "value": "35,115,300"
+              },
+              {
+                "value": "17,505"
+              },
+              {
+                "value": "",
+                "isMask": true
+              },
+              {
+                "value": "",
+                "isMask": true
+              }
+            ]
+          },
+          {
+            "date": "2026-10-08",
+            "values": [
+              {
+                "value": "18,270"
+              },
+              {
+                "value": "18,630"
+              },
+              {
+                "value": "17,875"
+              },
+              {
+                "value": "17,900"
+              },
+              {
+                "value": "40,412,300"
+              },
+              {
+                "value": "17,900"
+              },
+              {
+                "value": "",
+                "isMask": true
+              },
+              {
+                "value": "",
+                "isMask": true
+              }
+            ]
+          }
+        ]
+      },
+      "pager": {
+        "hasNext": true,
+        "totalSize": 25,
+        "page": 1,
+        "startIndex": 1,
+        "endIndex": 20,
+        "displayedPageNumbers": [
+          1,
+          2
+        ]
+      },
+      "isApiError": false,
+      "selected": {
+        "fromDate": "20261001",
+        "toDate": "20261107",
+        "timeFrameId": "d",
+        "term": "1y"
+      },
+      "filtered": {
+        "fromDate": "20261001",
+        "toDate": "20261107",
+        "timeFrameId": "d",
+        "term": "1y"
+      },
+      "hasPerValues": true,
+      "isLoading": false
+    }
+  }
+}

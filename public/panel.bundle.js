@@ -1781,6 +1781,7 @@
 
     const sourceName=source=>({'finnhub-candle':'Finnhub K 线','finnhub-quote':'Finnhub 报价',
       'naver-world-chart':'Naver 美股分时','naver-world-daily':'Naver 美股历史','nasdaq-history':'Nasdaq 历史','nasdaq-intraday':'Nasdaq 分时',
+      'naver-jp-chart':'Naver 日股分时','naver-jp-daily':'Naver 日股历史','yahoo-jp-daily':'Yahoo 日本历史',
       'eastmoney-history':'东方财富历史','naver-index-history':'Naver 指数历史','naver-index-candles':'Naver 指数K线','naver-fchart':'Naver 韩国历史',
       'yahoo-tw-chart':'Yahoo 台股分时','twse-mis':'台湾证券交易所','twse-stock-day':'台湾证券交易所日线',
       'yahoo':'Yahoo','sina':'新浪','tencent':'腾讯'})[source]||source||'未知来源';

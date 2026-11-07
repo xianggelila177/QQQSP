@@ -63,6 +63,7 @@ import {createFinnhubRestPool,parseFinnhubTokens} from './lib/providers/finnhub-
 import {createFinnhubHistory} from './lib/providers/finnhub-history.js';
 import {createNaverWorldHistory} from './lib/providers/naver-world-history.js';
 import {createNaverWorldDailyHistory} from './lib/providers/naver-world-daily.js';
+import {createYahooJapan} from './lib/providers/yahoo-jp.js';
 import {createFinnhubQuotes} from './lib/providers/finnhub-quotes.js';
 import {createTwseHistory} from './lib/providers/twse-history.js';
 import {createTwseQuotes} from './lib/providers/twse-quotes.js';
@@ -105,11 +106,12 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
     },now};
   const worldHistory=providerOverrides.fetchChart?null:createNaverWorldHistory(naverHistoryOptions);
   const worldDaily=providerOverrides.fetchChart?null:createNaverWorldDailyHistory(naverHistoryOptions);
+  const japan=providerOverrides.fetchChart?null:createYahooJapan({httpsGet,now});
   const fetchHistory=createHistorySource({index:providerOverrides.fetchChart?null:indexProvider.fetchChart,
     primary:providerOverrides.fetchChart || yahoo.fetchChart,sina:sina.getSinaDaily,
     naver:providerOverrides.fetchChart?null:naverHistory,
     alternative:providerOverrides.fetchChart?null:createPublicHistory({httpsGet,now,resolveInstrument,getQuote:symbol=>engine.read([symbol],{lease:false})[0]}),
-    finnhub:providerOverrides.fetchChart?null:finnhubHistory,world:worldHistory,worldDaily,
+    finnhub:providerOverrides.fetchChart?null:finnhubHistory,world:worldHistory,worldDaily,japan:japan?.fetchHistory,
     twse:providerOverrides.fetchChart?null:twseHistory,taiwan:providerOverrides.fetchChart?null:createYahooTwHistory({httpsGet,now}),
     resolveInstrument,getQuote:symbol=>engine.read([symbol],{lease:false})[0],now});
   const history=createHistoryService({fetchChart:fetchHistory,getQuote:symbol=>engine.read([symbol],{lease:false})[0],now,cacheTtl:60000,maxEntries:config.HISTORY_MAX_SYMBOLS,maxConcurrent:config.HISTORY_MAX_ACTIVE,maxQueued:config.HISTORY_MAX_QUEUE,deadlineMs:config.HISTORY_EXECUTION_DEADLINE_MS,totalDeadlineMs:config.HISTORY_TOTAL_DEADLINE_MS,maxBytes:config.HISTORY_MAX_BYTES});
@@ -133,7 +135,7 @@ export function createApplication({env={},now=()=>Date.now(),telemetry:providedT
   quote=createQuoteService({now,log:telemetry.log,...yahoo,...tx,...nasdaq,...em,...fx,extSessions,providers});
   const cacheMs=config.CACHE_MS,upstreamTimeout=config.UPSTREAM_TIMEOUT;
   const quoteCache=createQuoteCache({...quote,now,cacheSet,fetchQuote:providerOverrides.fetchQuote || (symbol=>twseQuotes.supports(symbol)?twseQuotes.getQuote(symbol):quote.fetchQuote(symbol)),breaker,cacheMs,quoteMaxAge:config.QUOTE_MAX_AGE,stats:telemetry.stats,log:telemetry.log});
-  batch=createBatchProvider({httpsGet,now,indexProvider,fallbackQuote:quoteCache.getCachedQuote,pollMs:config.POLL_MS});
+  batch=createBatchProvider({httpsGet,now,indexProvider,fallbackQuote:quoteCache.getCachedQuote,japanQuote:japan?.getQuote,pollMs:config.POLL_MS});
   const polling=createFastPolling({httpsGet,legacy:batch,finnhubQuotes:providerOverrides.fetchSnapshotBatch?null:finnhubQuotes,
     twseQuotes:providerOverrides.fetchSnapshotBatch?null:twseQuotes,
     now,pollMs:config.POLL_MS,preferred:config.POLL_PRIMARY});

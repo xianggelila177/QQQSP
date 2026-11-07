@@ -95,92 +95,92 @@
     {
       "path": "public/modules/panel-chart-controller.js",
       "startOffset": 93491,
-      "endOffset": 127795
+      "endOffset": 127893
     },
     {
       "path": "public/modules/panel-fundamentals.js",
-      "startOffset": 127843,
-      "endOffset": 143986
+      "startOffset": 127941,
+      "endOffset": 144084
     },
     {
       "path": "public/modules/panel-detail.js",
-      "startOffset": 144028,
-      "endOffset": 157228
+      "startOffset": 144126,
+      "endOffset": 157326
     },
     {
       "path": "public/modules/panel-trade-direction.js",
-      "startOffset": 157279,
-      "endOffset": 160158
+      "startOffset": 157377,
+      "endOffset": 160256
     },
     {
       "path": "public/modules/panel-market-detail-model.js",
-      "startOffset": 160213,
-      "endOffset": 162181
+      "startOffset": 160311,
+      "endOffset": 162279
     },
     {
       "path": "public/modules/panel-market-detail-view.js",
-      "startOffset": 162235,
-      "endOffset": 171723
+      "startOffset": 162333,
+      "endOffset": 171821
     },
     {
       "path": "public/modules/panel-detail-dialog.js",
-      "startOffset": 171772,
-      "endOffset": 172903
+      "startOffset": 171870,
+      "endOffset": 173001
     },
     {
       "path": "public/modules/panel-chart-detail.js",
-      "startOffset": 172951,
-      "endOffset": 217004
+      "startOffset": 173049,
+      "endOffset": 217102
     },
     {
       "path": "public/modules/panel-card-view.js",
-      "startOffset": 217049,
-      "endOffset": 239083
+      "startOffset": 217147,
+      "endOffset": 239181
     },
     {
       "path": "public/modules/panel-search-controller.js",
-      "startOffset": 239136,
-      "endOffset": 246085
+      "startOffset": 239234,
+      "endOffset": 246183
     },
     {
       "path": "public/modules/panel-market-directory.js",
-      "startOffset": 246137,
-      "endOffset": 252245
+      "startOffset": 246235,
+      "endOffset": 252343
     },
     {
       "path": "public/modules/panel-news-controller.js",
-      "startOffset": 252296,
-      "endOffset": 258630
+      "startOffset": 252394,
+      "endOffset": 258728
     },
     {
       "path": "public/modules/panel-macro-context.js",
-      "startOffset": 258679,
-      "endOffset": 267618
+      "startOffset": 258777,
+      "endOffset": 267716
     },
     {
       "path": "public/modules/panel-macro-controller.js",
-      "startOffset": 267670,
-      "endOffset": 279434
+      "startOffset": 267768,
+      "endOffset": 279532
     },
     {
       "path": "public/modules/panel-market-store.js",
-      "startOffset": 279482,
-      "endOffset": 282827
+      "startOffset": 279580,
+      "endOffset": 282925
     },
     {
       "path": "public/modules/panel-live-store.js",
-      "startOffset": 282873,
-      "endOffset": 287122
+      "startOffset": 282971,
+      "endOffset": 287220
     },
     {
       "path": "public/modules/panel-updates.js",
-      "startOffset": 287165,
-      "endOffset": 293544
+      "startOffset": 287263,
+      "endOffset": 293642
     },
     {
       "path": "public/app.js",
-      "startOffset": 293569,
-      "endOffset": 326862
+      "startOffset": 293667,
+      "endOffset": 326960
     }
   ]
 }

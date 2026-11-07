@@ -11,7 +11,7 @@ const row=(symbol='9766.T')=>({reutersCode:symbol,symbolCode:symbol.slice(0,-2),
  openPriceRaw:'21255.0',highPriceRaw:'21270.0',lowPriceRaw:'20640.0',accumulatedTradingVolumeRaw:'534900',
  accumulatedTradingValueRaw:'11248143000',localTradedAt:'2026-09-18T15:30:00+09:00',marketStatus:'CLOSE'});
 test('numeric and alphanumeric Japanese listings have their own supported quote route',()=>{
- for(const symbol of ['9766.T','6758.T','130A.T','1306.T']){assert.equal(providerCapabilities(symbol).batchGroup,'jp');assert.deepEqual(providerCapabilities(symbol).batchProviders,['naver-jp']);}
+ for(const symbol of ['9766.T','6758.T','130A.T','1306.T']){assert.equal(providerCapabilities(symbol).batchGroup,'jp');assert.deepEqual(providerCapabilities(symbol).batchProviders,['naver-jp','yahoo-jp','yahoo']);}
  assert.notEqual(providerCapabilities('9766.HK').batchGroup,'jp');assert.notEqual(providerCapabilities('^N225').batchGroup,'jp');
  assert.equal(catalogSearch('130A.T')[0].symbol,'130A.T');assert.equal(catalogSearch('130A')[0].symbol,'130A.T');
 });
