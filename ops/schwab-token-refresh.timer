@@ -1,11 +1,11 @@
 [Unit]
-Description=Attempt Schwab token refresh every seven days and after boot
+Description=Check Schwab authorization every ten minutes; renew after six days
 
 [Timer]
-OnCalendar=Sun *-*-* 04:17:00 Asia/Shanghai
+OnCalendar=*-*-* *:0/10:00 Asia/Shanghai
 OnBootSec=5min
 Persistent=true
-AccuracySec=1min
+AccuracySec=15s
 Unit=schwab-token-refresh.service
 
 [Install]

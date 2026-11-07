@@ -4328,6 +4328,10 @@
       }
       const streams=data.stream?.primary||data.stream?.backup?[['主流',data.stream.primary],['备流',data.stream.backup]]:[['行情流',data.stream]];
       for(const [name,v] of streams)if(v)rows.unshift(name+'：'+(labels[v.status]||v.status||'未启用')+(v.errorCode?'（'+v.errorCode+'）':''));
+      if(data.schwab?.enabled){const s=data.schwab,states={READY:'已设置自动续期',BOOTSTRAP_REQUIRED:'需要在服务器首次登录',AUTHORIZING:'正在重新授权',SCHWAB_AUTH_LOGIN_REQUIRED:'会话已失效，需要登录',SCHWAB_AUTH_MFA_REQUIRED:'需要完成二次验证',SCHWAB_AUTH_ACCOUNT_SELECTION_REQUIRED:'需要确认授权范围',SCHWAB_AUTH_BROWSER_BLOCKED:'嘉信暂时拒绝浏览器授权',SCHWAB_AUTH_CANCELED:'上次授权已取消'};
+        rows.unshift('嘉信报价：'+(labels[s.status]||s.status||'待检查'));
+        if(s.renewalStatus)rows.unshift('嘉信授权：'+(states[s.renewalStatus]||'续期暂未完成')+(s.renewalRequiresUserAction?'；需要手动完成服务器授权':s.renewAt?'；下次 '+new Date(s.renewAt).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false})+'（北京时间）':''));
+      }
       sourceText.textContent=rows.join('\n')||'尚未向上游发起请求';
     }catch{sourceText.textContent='暂时无法读取状态，请稍后重试。';}
   }

@@ -1,5 +1,5 @@
 [Unit]
-Description=Refresh Schwab token using the shared QQQSP token manager
+Description=Maintain Schwab access and renew browser authorization before expiry
 After=network-online.target
 Wants=network-online.target
 StartLimitIntervalSec=1h
@@ -12,11 +12,12 @@ Group=qqqsp
 UMask=0077
 Environment=SCHWAB_ENV_FILE=/opt/schwab/schwab.env
 Environment=SCHWAB_TOKEN_FILE=/opt/schwab/token.json
-ExecStart=/opt/dsh-node/bin/node /opt/qqqsp-v2/current/scripts/schwab-keepalive.mjs
-TimeoutStartSec=30s
-Restart=on-failure
-RestartSec=5min
-RestartPreventExitStatus=2
+Environment=HOME=/opt/qqqsp-v2/shared/state/schwab
+ExecStart=/usr/bin/flock --nonblock --conflict-exit-code 0 /opt/schwab/authorization.lock /opt/dsh-node/bin/node /opt/qqqsp-v2/current/scripts/schwab-renewal.mjs
+TimeoutStartSec=180s
+KillMode=control-group
+MemoryMax=768M
+TasksMax=256
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true

@@ -1,0 +1,25 @@
+[Unit]
+Description=Private manual login for the Schwab server browser
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=qqqsp
+Group=qqqsp
+UMask=0077
+Environment=HOME=/opt/qqqsp-v2/shared/state/schwab
+Environment=SCHWAB_ENV_FILE=/opt/schwab/schwab.env
+Environment=SCHWAB_TOKEN_FILE=/opt/schwab/token.json
+ExecStart=/usr/bin/flock --nonblock --conflict-exit-code 0 /opt/schwab/authorization.lock /opt/dsh-node/bin/node /opt/qqqsp-v2/current/scripts/schwab-renewal.mjs --interactive
+TimeoutStartSec=960s
+KillMode=control-group
+MemoryMax=768M
+TasksMax=256
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/qqqsp-v2/shared/state/schwab
+StandardOutput=journal
+StandardError=journal
