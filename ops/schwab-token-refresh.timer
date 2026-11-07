@@ -1,0 +1,12 @@
+[Unit]
+Description=Attempt Schwab token refresh every seven days and after boot
+
+[Timer]
+OnCalendar=Sun *-*-* 04:17:00 Asia/Shanghai
+OnBootSec=5min
+Persistent=true
+AccuracySec=1min
+Unit=schwab-token-refresh.service
+
+[Install]
+WantedBy=timers.target

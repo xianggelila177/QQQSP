@@ -1,0 +1,26 @@
+[Unit]
+Description=Refresh Schwab token using the shared QQQSP token manager
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=1h
+StartLimitBurst=4
+
+[Service]
+Type=oneshot
+User=qqqsp
+Group=qqqsp
+UMask=0077
+Environment=SCHWAB_ENV_FILE=/opt/schwab/schwab.env
+Environment=SCHWAB_TOKEN_FILE=/opt/schwab/token.json
+ExecStart=/opt/dsh-node/bin/node /opt/qqqsp-v2/current/scripts/schwab-keepalive.mjs
+TimeoutStartSec=30s
+Restart=on-failure
+RestartSec=5min
+RestartPreventExitStatus=2
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/qqqsp-v2/shared/state/schwab
+StandardOutput=journal
+StandardError=journal

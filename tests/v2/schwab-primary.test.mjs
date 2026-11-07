@@ -65,6 +65,33 @@ test('invalid grant preserves old token, reports reauthorization and suppresses 
   assert.equal(calls,1);assert.equal(await readFile(opts.tokenFile,'utf8'),before);
   assert.equal(client.diagnostics().reauthorizationRequired,true);assert.ok(!JSON.stringify(client.diagnostics()).includes('old-refresh'));
 }));
+test('scheduled keepalive refreshes a valid access token and preserves audit history across processes',()=>fixture(async opts=>{
+  let clock=at,calls=0;
+  await writeFile(opts.tokenFile,JSON.stringify({access_token:'old-access',refresh_token:'old-refresh',expires_at_ms:at+1800000,refreshed_at_ms:at-1000}));
+  const options={...opts,now:()=>clock,fetchImpl:async url=>{
+    assert.ok(url.endsWith('/v1/oauth/token'));calls++;
+    return response({access_token:'new-access-'+calls,refresh_token:'new-refresh-'+calls,expires_in:1800});
+  }};
+  const first=createSchwabClient(options);
+  const [one,two]=await Promise.all([first.keepAlive(),first.keepAlive()]);
+  assert.equal(calls,1);assert.deepEqual(one,two);assert.equal(one.totalRefreshes,1);assert.equal(one.firstObservedAt,at-1000);first.close();
+  clock+=7*86400000;const second=createSchwabClient(options),result=await second.keepAlive();
+  assert.equal(calls,2);assert.equal(result.totalRefreshes,2);assert.equal(result.firstObservedAt,at-1000);assert.equal(result.refreshTokenRotated,true);
+  const saved=JSON.parse(await readFile(opts.tokenFile,'utf8'));assert.equal(saved.created_at,null);
+  assert.equal(saved.qqqsp_refresh_audit.last_success_at_ms,clock);second.close();
+}));
+test('weekly keepalive respects the app token lock and never deletes another owner lock',()=>fixture(async opts=>{
+  await writeFile(opts.tokenFile+'.lock','app owner');
+  const client=createSchwabClient({...opts,fetchImpl:async()=>{throw new Error('must not call upstream');}});
+  await assert.rejects(client.keepAlive(),{code:'SCHWAB_REFRESH_BUSY'});
+  assert.equal(await readFile(opts.tokenFile+'.lock','utf8'),'app owner');client.close();
+}));
+test('expired refresh-token client errors require reauthorization without overwriting the last token',()=>fixture(async opts=>{
+  const original=await readFile(opts.tokenFile,'utf8');
+  const client=createSchwabClient({...opts,fetchImpl:async()=>response({error:'invalid_client',error_description:'refresh token invalid'},400)});
+  await assert.rejects(client.keepAlive(),{code:'SCHWAB_AUTH_REQUIRED'});
+  assert.equal(client.diagnostics().reauthorizationRequired,true);assert.equal(await readFile(opts.tokenFile,'utf8'),original);client.close();
+}));
 test('401 refresh retries only once; omitted refresh token preserves the last valid token',()=>fixture(async opts=>{
   await writeFile(opts.tokenFile,JSON.stringify({access_token:'old-access',refresh_token:'old-refresh',expires_at_ms:at+1800000}));
   let calls=0;
