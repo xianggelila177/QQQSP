@@ -1779,7 +1779,7 @@
       if(q.slider){q.slider.min=0;q.slider.max=Math.max(0,p.all.length-p.vis);q.slider.value=p.a;q.slider.hidden=p.all.length-p.vis<=0;}
     }
 
-    const sourceName=source=>({'finnhub-candle':'Finnhub K 线','finnhub-quote':'Finnhub 报价',
+    const sourceName=source=>({'schwab-history':'Schwab K 线','schwab-quote':'Schwab 报价','finnhub-candle':'Finnhub K 线','finnhub-quote':'Finnhub 报价',
       'naver-world-chart':'Naver 美股分时','naver-world-daily':'Naver 美股历史','nasdaq-history':'Nasdaq 历史','nasdaq-intraday':'Nasdaq 分时',
       'naver-jp-chart':'Naver 日股分时','naver-jp-daily':'Naver 日股历史','yahoo-jp-daily':'Yahoo 日本历史',
       'eastmoney-history':'东方财富历史','naver-index-history':'Naver 指数历史','naver-index-candles':'Naver 指数K线','naver-fchart':'Naver 韩国历史',
