@@ -7,6 +7,7 @@ import {createSchwabClient} from '../../lib/providers/schwab-client.js';
 import {normalizeSchwabQuote,parseSchwabCandles,createSchwabMarket} from '../../lib/providers/schwab-market.js';
 import {createHistorySource} from '../../lib/history-source.js';
 import {createFastPolling} from '../../lib/providers/fast-polling.js';
+import {publicSourceHealth} from '../../lib/source-health-public.js';
 
 const at=Date.parse('2026-11-06T16:00:00Z');
 const payload={symbol:'NVDA',assetMainType:'EQUITY',assetSubType:'COE',realtime:true,reference:{description:'NVIDIA'},
@@ -14,6 +15,10 @@ const payload={symbol:'NVDA',assetMainType:'EQUITY',assetSubType:'COE',realtime:
   regular:{regularMarketLastPrice:200,regularMarketTradeTime:at}};
 const candles={symbol:'NVDA',candles:[{datetime:at-60000,open:195,high:201,low:194,close:200,volume:100}]};
 const response=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers});
+test('public health exposes reauthorization state without credential fields',()=>{
+  const out=publicSourceHealth({schwab:{enabled:true,status:'SCHWAB_AUTH_REQUIRED',reauthorizationRequired:true,access_token:'sensitive',envFile:'private'}});
+  assert.deepEqual(out.schwab,{enabled:true,status:'SCHWAB_AUTH_REQUIRED',reauthorizationRequired:true});
+});
 async function fixture(fn){
   const dir=await mkdtemp(join(tmpdir(),'qqqsp-schwab-'));
   const tokenFile=join(dir,'token.json'),envFile=join(dir,'schwab.env');
