@@ -7,8 +7,8 @@ import {schwabFailure} from '../lib/providers/schwab-token-store.js';
 const trusted=url=>{try{const u=new URL(url);return u.protocol==='https:'&&['schwab.com','schwabapi.com'].some(d=>u.hostname===d||u.hostname.endsWith('.'+d));}catch{return false;}};
 const inspect=`(()=>{const visible=s=>{const e=document.querySelector(s);return !!e&&!!e.getClientRects().length&&!e.hidden;};const p=location.pathname;return {href:location.href,
   login:visible('#loginIdInput')||visible('#passwordInput')||p.includes('/login-one-step'),
-  mfa:/authenticators|mobile_approve|otp|verification/i.test(p),trust:p.includes('/devicetag/remember'),
-  consent:p.includes('/third-party-auth/cag'),accounts:p.includes('/third-party-auth/account'),confirmation:p.includes('/third-party-auth/confirmation'),
+  mfa:/authenticators|mobile_approve|otp|verification/i.test(p)||visible('input[autocomplete="one-time-code"]')||visible('#mobile_approve'),trust:p.includes('/devicetag/remember')||visible('#remember-device-yes'),
+  consent:p.includes('/third-party-auth/cag')||visible('#acceptTerms')||visible('#agree-modal-btn-'),accounts:p.includes('/third-party-auth/account'),confirmation:p.includes('/third-party-auth/confirmation')||visible('#cancel-btn')&&/done|完成/i.test(document.querySelector('#cancel-btn').textContent),
   denied:/access denied|request blocked/i.test(document.title)||!!document.querySelector('iframe[src*="captcha"]')};})()`;
 export async function runSchwabBrowserAuthorization({authorization,executable,profile,interactive=false,onCode,onPhase=async()=>{},onListening=()=>{},port=18774,timeoutMs=interactive?900000:120000}={}){
   const browser=await launchSchwabBrowser({executable,profile});let consoleServer,result,fatal,exchanging=false,phase='WAITING',canceled=false;

@@ -1,4 +1,4 @@
-# Schwab 美股主源（v128）
+# Schwab 美股主源（v129）
 
 在服务端私有配置中启用：
 
@@ -53,7 +53,7 @@ token 中的 `qqqsp_refresh_audit` 持久化首次观察时间、最后成功时
 
 此模式由用户选择：首次手动登录，后续只复用服务器专用浏览器的会话，不保存或自动填写网页登录密码。它通过完整 `authorization_code` 流程取得新的 token 对，不把普通 `refresh_token` 调用当成延长七天授权。只有完整授权成功才更新 `qqqsp_authorization.authorized_at_ms` 和六天后的 `renew_at_ms`。七天到期时间仅为估计；嘉信仍可使会话或凭证提前失效。
 
-运行要求：Linux 已安装 Google Chrome，Node 24，`flock`；无需新增 npm 运行时依赖。浏览器由 qqqsp 用户运行，使用 `/opt/schwab/browser` 专用配置；保留会话 Cookie 和受信任设备状态，禁用密码管理器保存密码。Chrome 保持沙箱及 TLS 验证。DevTools 通过继承管道通信，不开放调试端口。
+运行要求：Linux 已安装 Google Chrome、Xvfb、Node 24 和 `flock`；无需新增 npm 运行时依赖。v129 使用虚拟显示中的普通 Chrome，因为服务器实测嘉信拒绝 headless Chrome，而普通 Chrome 能打开登录表单。浏览器由 qqqsp 用户运行，使用 `/opt/schwab/browser` 专用配置；保留会话 Cookie 和受信任设备状态，禁用密码管理器保存密码。Chrome 保持沙箱及 TLS 验证。DevTools 通过继承管道通信，不开放调试端口，Xvfb 禁止 TCP 监听。
 
 安装三个 unit 后运行：
 

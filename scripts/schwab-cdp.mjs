@@ -6,15 +6,23 @@ import {schwabFailure,atomicSchwabJson} from '../lib/providers/schwab-token-stor
 
 // Dedicated persistent profile and inherited pipes: no public debugging port,
 // no browser output or page content in the journal, no disabled TLS validation.
-export async function launchSchwabBrowser({executable,profile,headless=true}={}){
+export async function launchSchwabBrowser({executable,profile,headless=false}={}){
   await mkdir(profile,{recursive:true,mode:0o700});
   await mkdir(join(profile,'Default'),{recursive:true,mode:0o700});
   const preferences=join(profile,'Default','Preferences');let prefs={};try{prefs=JSON.parse(await readFile(preferences,'utf8'));}catch{}
   await atomicSchwabJson(preferences,{...prefs,credentials_enable_service:false,
     profile:{...prefs.profile,password_manager_enabled:false},session:{...prefs.session,restore_on_startup:1}});
+  let display,displayName;
+  if(!headless){
+    display=spawn('/usr/bin/Xvfb',['-displayfd','3','-screen','0','1200x900x24','-nolisten','tcp'],{stdio:['ignore','ignore','ignore','pipe']});
+    try{displayName=await new Promise((resolve,reject)=>{let text='';const timer=setTimeout(()=>reject(schwabFailure('SCHWAB_DISPLAY_TIMEOUT')),10000);
+      const fail=()=>{clearTimeout(timer);reject(schwabFailure('SCHWAB_DISPLAY_FAILED'));};display.once('error',fail);display.once('exit',fail);
+      display.stdio[3].on('data',part=>{text+=part.toString();if(/^\d+\n$/.test(text)){clearTimeout(timer);resolve(':'+text.trim());}});
+    });}catch(error){display.kill();throw error;}
+  }
   const child=spawn(executable,[...(headless?['--headless=new']:[]),'--no-first-run','--no-default-browser-check',
     '--disable-dev-shm-usage','--remote-debugging-pipe','--window-size=1200,900','--user-data-dir='+profile,'about:blank'],
-    {stdio:['ignore','ignore','ignore','pipe','pipe'],windowsHide:true});
+    {stdio:['ignore','ignore','ignore','pipe','pipe'],windowsHide:true,env:{...process.env,...(displayName?{DISPLAY:displayName}:{})}});
   let sequence=0,buffer=Buffer.alloc(0),stopped=false;const pending=new Map(),listeners=new Map();
   function end(){if(stopped)return;stopped=true;for(const p of pending.values()){clearTimeout(p.timer);p.reject(schwabFailure('SCHWAB_BROWSER_CLOSED'));}pending.clear();}
   child.once('error',end);child.once('exit',end);
@@ -33,7 +41,7 @@ export async function launchSchwabBrowser({executable,profile,headless=true}={})
       pending.set(id,{resolve,reject,timer});child.stdio[3].write(JSON.stringify({id,method,params,...(sessionId?{sessionId}:{})})+'\0',error=>{if(error)end();});});
   }
   const on=(event,fn)=>{if(!listeners.has(event))listeners.set(event,new Set());listeners.get(event).add(fn);return ()=>listeners.get(event)?.delete(fn);};
-  async function close(){if(!stopped)await send('Browser.close').catch(()=>{});await Promise.race([new Promise(resolve=>child.once('exit',resolve)),delay(1200)]);if(!stopped)child.kill('SIGTERM');end();}
+  async function close(){if(!stopped)await send('Browser.close').catch(()=>{});await Promise.race([new Promise(resolve=>child.once('exit',resolve)),delay(1200)]);if(!stopped)child.kill('SIGTERM');end();display?.kill('SIGTERM');}
   try{
     await send('Browser.getVersion');
     const {targetInfos}=await send('Target.getTargets');
