@@ -76,6 +76,8 @@ ssh -N -L 127.0.0.1:18774:127.0.0.1:18774 root@YOUR_SERVER
 
 定时器每十分钟检查一次，六天前只维护短期 access token，不启动浏览器；六天后复用会话尝试重新授权。网络或浏览器临时错误按 5 分钟、30 分钟、2 小时、6 小时退避（实际执行取下一次十分钟调度）。需要登录、二次验证、授权范围确认或浏览器被拒绝时持久化 `requiresUserAction`，停止自动登录重试；备用行情继续工作。再次启动 bootstrap 完成人工授权即可恢复。会话由嘉信决定是否继续有效，因此该模式不能保证永久无人值守。
 
-检查：`journalctl -u schwab-token-refresh.service`、`systemctl list-timers schwab-token-refresh.timer`，以及网站“来源状态”中的嘉信授权行。公开 API 只显示授权时间、续期时间和状态，私有状态文件是 `/opt/schwab/token.json.renewal.json`。首次观察时间不作为授权起点；缺少可信授权时间时显示 `BOOTSTRAP_REQUIRED`。
+服务的启动限流为五分钟内四次，窗口短于十分钟调度间隔；systemd 也计数成功启动，不能沿用 v127 的“一小时四次”，否则正常定时任务会出现 `start-limit-hit`。更新 unit 后执行 `systemctl daemon-reload` 和 `systemctl reset-failed schwab-token-refresh.service`，再运行一次该服务核验。无需重启行情服务。
+
+检查：`journalctl -u schwab-token-refresh.service`、`systemctl list-timers schwab-token-refresh.timer`，以及网站“来源状态”中的嘉信授权行。公开 API 只显示授权时间、续期时间和状态，私有状态文件是 `/opt/schwab/token.json.renewal.json`。首次观察时间不作为授权起点；缺少可信授权时间时显示 `BOOTSTRAP_REQUIRED`。不能完成网页授权时保留此状态，只维护现有 access token，并让原有备用行情链路接管失效的主源；这不代表已实现跨七天授权续期。
 
 验收要区分：代码模拟、服务器真实浏览器、一次真实人工授权、一次关闭再启动浏览器后的无人工重新授权，以及跨两个真实周期的连续运行。短期成功不证明永久免登录。回滚到 v127 时恢复 v127 的刷新 service/timer 并停用 bootstrap；保留最新 token 和浏览器配置，不恢复旧凭证。

@@ -2,7 +2,9 @@
 Description=Maintain Schwab access and renew browser authorization before expiry
 After=network-online.target
 Wants=network-online.target
-StartLimitIntervalSec=1h
+# The timer runs every ten minutes. Count only rapid manual/retry starts;
+# an hour-long window would also block successful scheduled runs.
+StartLimitIntervalSec=5min
 StartLimitBurst=4
 
 [Service]
